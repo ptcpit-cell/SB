@@ -1,0 +1,286 @@
+<div class="min-h-screen bg-gray-100 p-3">
+  <h4 class="uppercase bg-teal-600 rounded-lg p-2">Quản lý user</h4>
+  <div class="container-fluid bg-white p-0 shadow-sm rounded-lg">
+    <div class="flex items-center justify-between border-b px-4 pt-3">
+      <div class="flex gap-1">
+        <button
+          class="rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors"
+          [ngClass]="
+            activeTab === 0
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          "
+          (click)="goToTab(0)"
+        >
+          <i class="fa-solid fa-users"></i>
+          Danh sách
+        </button>
+
+        <ng-container *ngIf="mode === 'form'">
+          <button
+            class="rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors"
+            [ngClass]="
+              activeTab === 1
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : canGoNext
+                ? 'text-gray-500 hover:text-gray-700'
+                : 'cursor-not-allowed text-gray-300'
+            "
+            [disabled]="!canGoNext"
+            (click)="goToTab(1)"
+          >
+            <i class="fa-solid fa-user-lock"></i>
+            Cấp role
+          </button>
+        </ng-container>
+      </div>
+
+      <div class="flex gap-2 pb-2.5">
+        <ng-container *ngIf="mode === 'view'">
+          <button class="btn btn-success btn-sm" (click)="startAdd()">
+            <i class="fa-solid fa-plus"></i>
+            Thêm user
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="mode === 'form'">
+          <button
+            class="btn btn-success"
+            [disabled]="!canGoNext || saving"
+            (click)="save()"
+          >
+            <i class="fa-solid fa-floppy-disk"></i>
+          </button>
+          <button class="btn btn-danger" (click)="cancelForm()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Lỗi trả về từ server (VD: trùng username phát hiện ở backend) -->
+    <div
+      class="mx-5 mt-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-600"
+      *ngIf="serverError"
+    >
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ serverError }}
+    </div>
+
+    <!-- ===== TAB 1: Danh sách user / Nhập thông tin user ===== -->
+    <div *ngIf="activeTab === 0" class="p-2">
+      <!-- Chế độ thêm/sửa: hiện form nhập, ẩn bảng -->
+      <div *ngIf="mode === 'form'" class="mb-2 pt-2 text-left">
+        <div class="col-md-12 row">
+          <div class="col-md-2">
+            <label class="font-medium text-gray-700 ml-2">Tên username</label>
+            <input
+              type="text"
+              name="acc-username-new"
+              autocomplete="off"
+              class="form-control"
+              [ngClass]="duplicateError ? 'border-red-400' : 'border-gray-300'"
+              [disabled]="editingUserId !== 0"
+              placeholder="Nhập username..."
+              [(ngModel)]="userNameInput"
+              (ngModelChange)="checkDuplicateUserName()"
+            />
+            <p
+              class="mt-1.5 d-flex align-items-center gap-1.5 text-sm text-red-500"
+              *ngIf="duplicateError"
+            >
+              <i class="fa-solid fa-circle-exclamation"></i>
+              Tên username này đã tồn tại, vui lòng chọn tên khác.
+            </p>
+          </div>
+
+          <div class="col-md-3">
+            <label class="font-medium text-gray-700 ml-2">Tên hiển thị</label>
+            <input
+              type="text"
+              name="display-name-new"
+              autocomplete="off"
+              class="form-control"
+              placeholder="Nhập tên hiển thị..."
+              [(ngModel)]="tenNguoiDungInput"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="font-medium text-gray-700 ml-2">Mật khẩu</label>
+            <input
+              type="password"
+              name="acc-password-new"
+              autocomplete="new-password"
+              [readonly]="passwordReadonly"
+              (focus)="passwordReadonly = false"
+              class="form-control"
+              [placeholder]="
+                editingUserId === 0
+                  ? 'Để trống sẽ dùng mật khẩu mặc định'
+                  : 'Để trống nếu không đổi mật khẩu'
+              "
+              [(ngModel)]="passwordInput"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="font-medium text-gray-700 ml-2">Email</label>
+            <input
+              type="email"
+              name="email-new"
+              autocomplete="off"
+              class="form-control"
+              placeholder="Nhập email..."
+              [(ngModel)]="emailInput"
+            />
+          </div>
+        </div>
+        <div class="col-md-12 row pt-2">
+          <div class="col-md-2">
+            <label class="font-medium text-gray-700 ml-2">Chi nhánh</label>
+            <select
+              class="form-select"
+              [(ngModel)]="chiNhanhInput"
+              [disabled]="editingUserId !== 0"
+            >
+              <option [ngValue]="null">Chọn chi nhánh</option>
+              <option *ngFor="let cn of listChiNhanh" [ngValue]="cn.chiNhanhId">
+                {{ cn.maChiNhanh }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="font-medium text-gray-700 ml-2">Phòng ban</label>
+            <select class="form-select" [(ngModel)]="phongBanInput">
+              <option [ngValue]="null">Chọn phòng ban</option>
+              <option *ngFor="let pb of listPhongBan" [ngValue]="pb.id">
+                {{ pb.tenPhongBan }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="font-medium text-gray-700 ml-2">Chức vụ</label>
+            <select class="form-select" [(ngModel)]="chucVuInput">
+              <option [ngValue]="null">Chọn chức vụ</option>
+              <option *ngFor="let cv of listChucVu" [ngValue]="cv.id">
+                {{ cv.tenChucVu }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="font-medium text-gray-700 ml-2">Số điện thoại</label>
+            <input
+              type="text"
+              name="phone-new"
+              autocomplete="off"
+              class="form-control"
+              placeholder="Nhập số điện thoại..."
+              [(ngModel)]="phoneInput"
+            />
+          </div>
+        </div>
+        <div class="mt-4 d-flex justify-content-end">
+          <button
+            class="btn btn-warning btn-sm"
+            [disabled]="!canGoNext"
+            (click)="nextTab()"
+          >
+            Tiếp theo
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bảng user -->
+      <table class="table table-striped table-hover" *ngIf="mode === 'view'">
+        <thead class="text-left">
+          <tr>
+            <th class="font-medium">Tên đăng nhập</th>
+            <th class="font-medium text-center">Tên người dùng</th>
+            <th class="font-medium text-center">Phòng ban</th>
+            <th class="font-medium text-center">Chức vụ</th>
+            <th class="font-medium text-center">Chi nhánh</th>
+            <th class="font-medium text-center">Trạng thái</th>
+            <th class="font-medium text-center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of pagedUsers; trackBy: trackByUserId">
+            <td class="text-left">{{ u.userName }}</td>
+            <td class="text-center">{{ u.tenNguoiDung }}</td>
+            <td class="text-center">{{ u.tenPhongBan }}</td>
+            <td class="text-center">{{ u.tenChucVu }}</td>
+            <td class="text-center">{{ u.tenChiNhanh }}</td>
+            <td class="text-center">
+              <span
+                class="badge"
+                [ngClass]="u.isActived ? 'bg-success' : 'bg-danger'"
+                style="cursor: pointer"
+                (click)="toggleUserStatus(u)"
+              >
+                {{ u.isActived ? "Đang hoạt động" : "Ngưng hoạt động" }}
+              </span>
+            </td>
+            <td class="text-center">
+              <div class="d-flex justify-content-center gap-3 text-gray-500">
+                <button
+                  class="btn btn-sm btn-warning"
+                  (click)="startEdit(u)"
+                  title="Sửa"
+                >
+                  <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  (click)="deleteUser(u)"
+                  title="Xóa"
+                >
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="users.length === 0">
+            <td colspan="4" class="py-8 text-center text-gray-400">
+              Chưa có user nào.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <mat-paginator
+        *ngIf="total > 0"
+        [length]="total"
+        [pageIndex]="pageIndex"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+        aria-label="Chọn trang user"
+      ></mat-paginator>
+    </div>
+
+    <!-- ===== TAB 2: Cấp role cho user ===== -->
+    <div class="p-2" *ngIf="activeTab === 1 && mode === 'form'">
+      <div class="rounded-lg border px-4 py-2">
+        <div
+          class="d-flex align-items-center gap-2 py-1.5"
+          *ngFor="let r of roles; trackBy: trackByRoleId"
+        >
+          <input
+            type="checkbox"
+            class="form-check-input mt-0"
+            style="cursor: pointer"
+            [checked]="selectedRoleIds.has(r.roleId)"
+            (change)="toggleRole(r.roleId)"
+          />
+          <span
+            class="text-start text-sm text-gray-700 cursor-pointer"
+            (click)="toggleRole(r.roleId)"
+          >
+            {{ r.tenRole }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

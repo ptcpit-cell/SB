@@ -1,0 +1,184 @@
+<!-- nhan-vien.component.html -->
+<div class="container pt-1">
+
+  <!-- Tiêu đề + nút tạo mới -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h4 class="mb-2">Yêu cầu trình của tôi</h4>
+      <div class="text-secondary small">Theo dõi từng giai đoạn của hồ sơ, báo cáo đã gửi lên lãnh đạo</div>
+    </div>
+    <button class="btn btn-success" (click)="taoMoi()">
+      <i class="fa-solid fa-plus me-1"></i> Tạo yêu cầu mới
+    </button>
+  </div>
+
+  <!-- Nhắc việc cần nhân viên xử lý -->
+  <div class="alert alert-warning d-flex align-items-center gap-2 py-2 small" *ngIf="canHanhDong > 0">
+    <i class="fa-solid fa-bell"></i>
+    <span>
+      Bạn có <b>{{ canHanhDong }}</b> yêu cầu đang chờ bạn phản hồi hoặc bổ sung.
+      Tìm các thẻ có viền vàng bên dưới.
+    </span>
+  </div>
+
+  <!-- Tab + bộ lọc -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div class="nav nav-pills bg-body-secondary rounded-3 p-1">
+      <button type="button" class="nav-link py-1 px-3" [class.active]="tab === 1" (click)="chonTab(1)">
+        Đang xử lý <span class="badge rounded-pill bg-light text-dark ms-1">{{ tabCount.dangXuLy }}</span>
+      </button>
+      <button type="button" class="nav-link py-1 px-3" [class.active]="tab === 2" (click)="chonTab(2)">
+        Lịch sử <span class="badge rounded-pill bg-light text-dark ms-1">{{ tabCount.lichSu }}</span>
+      </button>
+      <button type="button" class="nav-link py-1 px-3" [class.active]="tab === 0" (click)="chonTab(0)">
+        Tất cả <span class="badge rounded-pill bg-light text-dark ms-1">{{ tabCount.all }}</span>
+      </button>
+    </div>
+
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm w-auto" [(ngModel)]="trangThaiLoc" (ngModelChange)="onLocTrangThai()">
+        <option [ngValue]="null">Mọi trạng thái</option>
+        <option *ngFor="let s of statusOptions" [ngValue]="s.value">{{ s.label }}</option>
+      </select>
+      <div class="input-group input-group-sm" style="width: 260px">
+        <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+        <input type="text" class="form-control" placeholder="Tìm theo mã hoặc tiêu đề..."
+               [(ngModel)]="keyword" (ngModelChange)="onSearch()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Đang tải -->
+  <div class="text-center text-secondary py-4" *ngIf="loading && items.length === 0">
+    <div class="spinner-border spinner-border-sm me-2"></div> Đang tải...
+  </div>
+
+  <!-- Rỗng -->
+  <div class="text-center text-secondary py-5" *ngIf="!loading && items.length === 0">
+    <i class="fa-regular fa-folder-open fa-3x mb-3"></i>
+    <p class="mb-3">Chưa có yêu cầu nào.</p>
+    <button class="btn btn-outline-primary btn-sm" (click)="taoMoi()">Tạo yêu cầu đầu tiên</button>
+  </div>
+
+  <!-- Danh sách -->
+  <div [class.list-loading]="loading">
+    <div class="card shadow-sm mb-3" *ngFor="let r of items; trackBy: trackById"
+         [class.border-start]="r.needAction" [class.border-4]="r.needAction" [class.border-warning]="r.needAction">
+      <div class="card-body">
+
+        <!-- Đầu thẻ -->
+        <div class="d-flex justify-content-between gap-3">
+          <div class="flex-grow-1 req-click" (click)="xemChiTiet(r)">
+            <div class="small text-secondary d-flex flex-wrap align-items-center gap-2">
+              <span>{{ r.maYeuCau }}</span>
+              <span class="badge text-bg-light border" *ngIf="r.maNhom" title="Trình nhiều lãnh đạo">Nhóm {{ r.maNhom }}</span>
+              <span class="badge text-bg-warning" *ngIf="r.mucKhan === 2">Gấp</span>
+              <span class="badge text-bg-danger" *ngIf="r.mucKhan === 3">Rất gấp</span>
+            </div>
+            <div class="fs-6 fw-semibold my-1">{{ r.tieuDe }}</div>
+            <div class="small text-body-secondary d-flex flex-wrap gap-3">
+              <span><i class="fa-solid fa-user-tie me-1"></i>{{ r.tenLanhDao }}</span>
+              <span><i class="fa-solid fa-tag me-1"></i>{{ r.tenLoai }}</span>
+              <span *ngIf="r.ngayGui"><i class="fa-solid fa-paper-plane me-1"></i>Gửi {{ r.ngayGui | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngIf="!r.ngayGui"><i class="fa-solid fa-pen-to-square me-1"></i>Tạo {{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+          <div>
+            <span class="badge rounded-pill border px-3 py-2"
+                  [ngClass]="'bg-' + r.statusCss + '-subtle text-' + r.statusCss + '-emphasis border-' + r.statusCss + '-subtle'">
+              {{ r.statusLabel }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Khung giai đoạn -->
+        <div class="stepper">
+          <div class="step" *ngFor="let s of r.steps; let i = index" [ngClass]="s.state">
+            <div class="dot">
+              <i class="fa-solid fa-check" *ngIf="s.state === 'done'"></i>
+              <i class="fa-solid fa-exclamation" *ngIf="s.state === 'warn'"></i>
+              <i class="fa-solid fa-xmark" *ngIf="s.state === 'error'"></i>
+              <span *ngIf="s.state === 'current' || s.state === 'todo'">{{ i + 1 }}</span>
+            </div>
+            <div class="step-label">{{ s.label }}</div>
+          </div>
+        </div>
+
+        <!-- Thông tin theo trạng thái -->
+        <div class="alert alert-primary py-2 mb-0 mt-3 small"
+             *ngIf="r.lichBatDau && (r.trangThai === 5 || r.trangThai === 10)">
+          <i class="fa-regular fa-calendar-check me-1"></i>
+          Lịch trình: {{ r.lichBatDau | date:'EEEE, dd/MM/yyyy' }},
+          {{ r.lichBatDau | date:'HH:mm' }} - {{ r.lichKetThuc | date:'HH:mm' }}
+        </div>
+        <div class="alert alert-warning py-2 mb-0 mt-3 small" *ngIf="r.trangThai === 3">
+          <i class="fa-regular fa-clock me-1"></i> Trợ lý đã đề xuất khung giờ khác, đang chờ bạn đồng ý.
+        </div>
+        <div class="alert alert-warning py-2 mb-0 mt-3 small" *ngIf="r.trangThai === 4">
+          <i class="fa-regular fa-circle-question me-1"></i> Trợ lý cần bạn bổ sung thêm thông tin.
+        </div>
+        <div class="alert alert-danger py-2 mb-0 mt-3 small"
+             *ngIf="(r.trangThai === 8 || r.trangThai === 9) && r.lyDoTuChoiHuy">
+          <i class="fa-solid fa-circle-info me-1"></i> Lý do: {{ r.lyDoTuChoiHuy }}
+        </div>
+
+        <!-- Nút thao tác -->
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mt-3">
+          <button class="btn btn-warning btn-sm" *ngIf="r.needAction" (click)="xemChiTiet(r)">{{ r.actionLabel }}</button>
+          <button class="btn btn-primary btn-sm" *ngIf="r.canSend" (click)="gui(r)">
+            <i class="fa-solid fa-paper-plane me-1"></i> Gửi yêu cầu
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" *ngIf="r.canEdit" (click)="sua(r)">
+            <i class="fa-solid fa-pen me-1"></i> Sửa
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" (click)="xemChiTiet(r)">
+            <i class="fa-regular fa-eye me-1"></i> Xem chi tiết
+          </button>
+          <button class="btn btn-danger btn-sm text-decoration-none" *ngIf="r.canCancel" (click)="moHopHuy(r)">
+            <i class="fa-solid fa-ban me-1"></i> Hủy yêu cầu
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <mat-paginator *ngIf="total > 0"
+    [length]="total" [pageIndex]="pageIndex" [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions" showFirstLastButtons
+    (page)="onPage($event)">
+  </mat-paginator>
+</div>
+
+<!-- Modal hủy: điều khiển bằng showHuyModal -->
+<ng-container *ngIf="showHuyModal && huyTarget">
+  <div class="modal fade show d-block" tabindex="-1" (click)="dongHopHuy()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Hủy yêu cầu {{ huyTarget.maYeuCau }}?</h5>
+          <button type="button" class="btn-close" (click)="dongHopHuy()" [disabled]="dangHuy"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-secondary small mb-2">{{ huyTarget.tieuDe }}</p>
+          <div class="alert alert-warning py-2 small" *ngIf="huyTarget.huyCanLyDo">
+            <i class="fa-solid fa-calendar-xmark me-1"></i>
+            Yêu cầu đã được xếp lịch, lịch trình sẽ bị hủy theo.
+          </div>
+          <label class="form-label small fw-medium">
+            Lý do hủy <span class="text-danger" *ngIf="huyTarget.huyCanLyDo">*</span>
+          </label>
+          <textarea class="form-control" rows="3" maxlength="500" placeholder="Nhập lý do..."
+                    [(ngModel)]="lyDoHuy"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" (click)="dongHopHuy()" [disabled]="dangHuy">Đóng</button>
+          <button class="btn btn-danger" (click)="xacNhanHuy()" [disabled]="dangHuy">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="dangHuy"></span>
+            {{ dangHuy ? 'Đang hủy...' : 'Xác nhận hủy' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>

@@ -1,0 +1,64 @@
+<aside
+  class="flex h-full flex-col bg-gradient-to-b from-[#1e2a4a] to-[#16213e] text-white shadow-[2px_0_12px_rgba(0,0,0,0.12)] transition-[width,min-width] duration-200 ease-in-out"
+  [ngClass]="collapsed ? 'w-[72px] min-w-[72px]' : 'w-[250px] min-w-[250px]'" *appHasPermission="'Hiển thị sidebar'">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between p-3">
+    <div class="flex items-center gap-2.5 overflow-hidden whitespace-nowrap" *ngIf="!collapsed">
+      <i class="fa-solid fa-boxes-stacked text-xl text-blue-400"></i>
+      <span class="text-base font-semibold tracking-wide">Stock App</span>
+    </div>
+
+    <button
+      class="flex h-[30px] w-[30px] items-center justify-center hover:bg-white/15"
+      (click)="toggleCollapse()"
+      [attr.aria-label]="collapsed ? 'Mở rộng' : 'Thu gọn'">
+      <i class="fa-solid" [class.fa-angles-right]="collapsed" [class.fa-angles-left]="!collapsed"></i>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <nav class="flex-1 overflow-y-auto overflow-x-hidden py-3.5 [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15">
+
+    <ul class="flex flex-col gap-1" style="padding-left: 0.5rem; padding-right: 0.5rem;">
+      <ng-container *ngFor="let t of visibleMainTabs">
+        <li class="group relative flex cursor-pointer items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 transition-colors duration-150"
+            [ngClass]="activeMainTab === t.id
+              ? 'bg-blue-400/15 text-white'
+              : 'text-white/60 hover:bg-white/5 hover:text-white'"
+            (click)="selectMain(t)">
+
+          <span class="w-[22px] min-w-[22px] text-center text-base"><i [class]="t.icon"></i></span>
+          <span class="overflow-hidden text-ellipsis text-[14.5px] font-medium" *ngIf="!collapsed">{{ t.label }}</span>
+
+          <i *ngIf="!collapsed && !t.route"
+             class="fa-solid fa-chevron-down ml-auto text-[11px] text-white/60 transition-transform duration-200"
+             [class.rotate-180]="expandedTab === t.id"
+             [class.text-blue-400]="expandedTab === t.id"></i>
+
+          <!-- Tooltip khi thu gọn -->
+          <span *ngIf="collapsed"
+                class="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#0f1729] px-2.5 py-1.5 text-xs text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            {{ t.label }}
+          </span>
+        </li>
+
+        <!-- Submenu — tự động lấy đúng subtab của tab cha t.id, không hardcode -->
+        <div *ngIf="!t.route && expandedTab === t.id && !collapsed && subTabsOf(t.id).length > 0"
+             class="ml-2 mt-1 animate-[fadeIn_0.18s_ease] border-l border-dashed border-white/15">
+          <ul class="flex flex-col gap-0.5">
+            <li *ngFor="let s of subTabsOf(t.id)"
+                class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] transition-colors duration-150"
+                [ngClass]="isActiveSubTab(s.route)
+                  ? 'bg-blue-400/15 text-white border border-blue-400/25'
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'"
+                (click)="go(s.route)">
+              <span class="w-[18px] min-w-[18px] text-center text-[13px]"><i [class]="s.icon"></i></span>
+              <span>{{ s.label }}</span>
+            </li>
+          </ul>
+        </div>
+      </ng-container>
+    </ul>
+  </nav>
+</aside>

@@ -1,0 +1,35 @@
+h4{
+    color: white;
+    font-weight: 500;
+    display: inline-flex;
+    position: relative;
+    right: 42%;
+}
+
+.main-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.main-tab {
+  padding: 0.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #ccfbf1;              /* teal-100 */
+  color: #0f766e;                   /* teal-700 */
+  font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  font-size: 1.25rem;
+}
+
+.main-tab:hover:not(.active) {
+  background: #99f6e4;              /* teal-200 */
+}
+
+.main-tab.active {
+  background: #0d9488;              /* teal-600, giống màu cũ */
+  color: #fff;
+}
+

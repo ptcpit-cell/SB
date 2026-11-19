@@ -1,0 +1,295 @@
+<div class="min-h-screen bg-gray-100 p-3">
+  <div class="main-tabs" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="main-tab"
+      [class.active]="activeMainTab === 'role'"
+      (click)="activeMainTab = 'role'"
+    >
+      Quản lý role
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="main-tab"
+      [class.active]="activeMainTab === 'permission'"
+      (click)="activeMainTab = 'permission'"
+    >
+      Quản lý permission
+    </button>
+  </div>
+  <div class="container-fluid bg-white p-0 shadow-sm rounded-lg mt-2.5">
+      <div
+        class="flex items-center justify-between border-b px-4 pt-3"
+        *ngIf="activeMainTab === 'role'"
+      >
+        <div class="flex gap-1">
+          <button
+            class="rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors"
+            [ngClass]="
+              activeTab === 0
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            "
+            (click)="goToTab(0)"
+          >
+            <i class="fa-solid fa-lock"></i> Danh sách
+          </button>
+          <ng-container *ngIf="mode === 'form'">
+            <button
+              class="rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors"
+              [ngClass]="
+                activeTab === 1
+                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  : canGoNext
+                  ? 'text-gray-500 hover:text-gray-700'
+                  : 'cursor-not-allowed text-gray-300'
+              "
+              [disabled]="!canGoNext"
+              (click)="goToTab(1)"
+            >
+              <i class="fa-solid fa-user-lock"></i> Cấp quyền
+            </button>
+
+            <button
+              class="rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors"
+              [ngClass]="
+                activeTab === 2
+                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  : canGoNext
+                  ? 'text-gray-500 hover:text-gray-700'
+                  : 'cursor-not-allowed text-gray-300'
+              "
+              [disabled]="!canGoNext"
+              (click)="goToTab(2)"
+            >
+              <i class="fa-solid fa-user-shield"></i> Gán user
+            </button>
+          </ng-container>
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="flex gap-2 pb-2.5">
+          <ng-container *ngIf="mode === 'view'">
+            <button class="btn btn-success btn-sm" (click)="startAdd()">
+              <i class="fa-solid fa-plus"></i>
+              Thêm role
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="mode === 'form'">
+            <button class="text-blue-800 pr-2" title="Hướng dẫn" (click)="openHelp = !openHelp">
+              <i class="fa-regular fa-circle-question"></i>
+            </button>
+            <button
+              class="btn btn-success"
+              [disabled]="!canGoNext || saving"
+              (click)="save()"
+            >
+              <i class="fa-solid fa-floppy-disk"></i>
+            </button>
+            <button class="btn btn-danger" (click)="cancelForm()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </ng-container>
+        </div>
+      </div>
+      <div
+        class="flex items-center justify-between border-b px-4 pt-3"
+        *ngIf="activeMainTab === 'permission'"
+      >
+        No content for permission tab yet.
+      </div>
+
+      <div *ngIf="activeTab === 0 && activeMainTab === 'role'" class="p-2">
+        <div *ngIf="mode === 'form'" class="mb-2 pt-2 text-left">
+          <span class="font-medium text-gray-700 ml-2">Tên role</span>
+          <input
+            type="text"
+            class="form-control w-25"
+            [ngClass]="duplicateError ? 'border-red-400' : 'border-gray-300'"
+            placeholder="Nhập tên role..."
+            [(ngModel)]="roleNameInput"
+            (ngModelChange)="checkDuplicateRoleName()"
+          />
+
+          <p
+            class="mt-1.5 pt-1 flex items-center gap-1.5 text-sm text-red-500"
+            *ngIf="duplicateError"
+          >
+            <i class="fa-solid fa-circle-exclamation"></i>
+            Tên role này đã tồn tại, vui lòng chọn tên khác.
+          </p>
+
+          <div class="mt-4 flex justify-end">
+            <button
+              class="btn btn-warning btn-sm"
+              [disabled]="!canGoNext"
+              (click)="nextTab()"
+            >
+              Tiếp theo
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bảng role: chỉ hiện khi không ở chế độ form -->
+        <table
+          class="table table-striped table-hover p-0"
+          *ngIf="mode === 'view'"
+        >
+          <thead class="text-left">
+            <tr>
+              <th class="font-medium">Tên</th>
+              <th class="font-medium text-center">Trạng thái</th>
+              <th class="font-medium text-center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let r of pagedRoles"
+              class="border-b last:border-0 hover:bg-gray-50"
+            >
+              <td class="uppercase text-left">{{ r.tenRole }}</td>
+              <td>
+                <span
+                  class="badge"
+                  style="cursor: pointer"
+                  [ngClass]="r.isActived ? 'bg-success' : 'bg-danger'"
+                  (click)="toggleRoleStatus(r)"
+                >
+                  {{ r.isActived ? "Đang hoạt động" : "Ngưng hoạt động" }}
+                </span>
+              </td>
+              <td>
+                <div class="flex justify-center gap-3">
+                  <button
+                    class="btn btn-warning btn-sm"
+                    (click)="startEdit(r)"
+                    title="Sửa"
+                  >
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    (click)="deleteRole(r)"
+                    title="Xóa"
+                  >
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="roles.length === 0">
+              <td colspan="3" class="py-8 text-center text-gray-400">
+                Chưa có role nào.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <mat-paginator
+          *ngIf="total > 0"
+          [length]="total"
+          [pageIndex]="pageIndex"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPageChange($event)"
+          aria-label="Chọn trang role"
+        ></mat-paginator>
+      </div>
+
+      <!-- ===== TAB 2: Phân quyền, gom theo Component ===== -->
+      <div class="p-2" *ngIf="activeTab === 1 && mode === 'form' && activeMainTab === 'role'">
+        <div
+          class="mb-4 overflow-hidden rounded-lg border"
+          *ngFor="let group of groupedPermissions; trackBy: trackByGroup"
+        >
+          <div
+            class="d-flex align-items-center gap-2 bg-gray-50 px-4 py-2.5 border-b cursor-pointer"
+            (click)="toggleGroup(group)"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input mt-0"
+              style="cursor: pointer"
+              [checked]="isGroupFullySelected(group)"
+              (click)="onGroupCheckboxClick($event, group)"
+            />
+            <span
+              class="text-start text-sm font-semibold uppercase tracking-wide text-gray-600"
+            >
+              {{ group.component }}
+            </span>
+          </div>
+
+          <div class="px-4 py-2 d-flex gap-3">
+            <div
+              class="d-flex align-items-center gap-2 py-1.5"
+              *ngFor="let p of group.items; trackBy: trackByPermission"
+            >
+              <input
+                type="checkbox"
+                class="form-check-input mt-0"
+                style="cursor: pointer"
+                [checked]="selectedPermissionIds.has(p.permissionId)"
+                (change)="togglePermission(p.permissionId)"
+              />
+              <span
+                class="text-start text-sm text-gray-700 cursor-pointer"
+                (click)="togglePermission(p.permissionId)"
+              >
+                {{ p.permissionName }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 3: Gán user ===== -->
+      <div class="p-2" *ngIf="activeTab === 2 && mode === 'form' && activeMainTab === 'role'">
+        <div class="rounded-lg border px-4 py-2">
+          <div
+            class="d-flex align-items-center gap-2 py-1.5"
+            *ngFor="let u of users; trackBy: trackByUserId"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input mt-0"
+              style="cursor: pointer"
+              [checked]="selectedUserIds.has(u.userId)"
+              (change)="toggleUser(u.userId)"
+            />
+
+            <span
+              class="text-start text-sm text-gray-700 cursor-pointer"
+              (click)="toggleUser(u.userId)"
+            >
+              {{ u.tenNguoiDung }}
+              <span
+                class="text-xs text-gray-400"
+                *ngIf="getOtherRoleNamesOf(u.userId).length > 0"
+              >
+                (đang có role: {{ getOtherRoleNamesOf(u.userId).join(", ") }})
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" *ngIf="openHelp">
+  <div class="bg-white rounded-lg p-6 w-3/4 max-w-2xl relative">
+    <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" (click)="openHelp = false">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+      <h2 class="text-xl font-semibold mb-4">Hướng dẫn phân quyền</h2>
+      <div class="text-start">
+        <p><span class="text-red-700 font-bold">*</span>&nbsp;Mặc định quyền "View nhân viên" và "Hiển thị sidebar" sẽ được chọn.</p>
+        <p><span class="text-red-700 font-bold">*</span>&nbsp;Chỉ có thể chọn cùng lúc một quyền "View...".</p>
+        <p><span class="text-red-700 font-bold">*</span>&nbsp;Các quyền không được chọn sẽ không hiển thị lên giao diện.</p>
+      </div>
+  </div>

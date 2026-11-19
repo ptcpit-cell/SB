@@ -1,0 +1,112 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+  <div class="container-fluid">
+    <div class="navbar-collapse d-flex justify-content-between align-items-center" id="navbarNav">
+      <div class="text-start text-lg text-white"><i class="fa-solid fa-briefcase me-1"></i> 
+        Scheduling <br> Reporting System
+      </div>
+      <div class="d-flex text-white align-items-center">
+        <div
+        class="me-3 cursor-pointer text-white text-lg position-relative transition-all text-end"
+        (click)="toggleDropdown($event)">
+        <i class="fa-solid fa-bell"></i>
+
+        <span
+          *ngIf="unreadCount > 0"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          style="
+            font-size: 0.65rem;
+            padding: 0.25em 0.5em;
+            margin-top: -2px;
+            margin-left: -5px;
+          "
+        >
+          {{ unreadCount > 9 ? "9+" : unreadCount }}
+        </span>
+      </div>
+        <div class="dropdown">
+          <span>Xin chào,</span>
+          <a
+            class="nav-link d-inline"
+            href="#"
+            id="ddlUser"
+            role="button"
+            data-bs-toggle="dropdown"
+            style="cursor: pointer; text-decoration: underline"
+          >
+            {{ currentUser?.tenNguoiDung }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <!-- <li>
+              <a class="dropdown-item" routerLink="/thay-doi-mat-khau">
+                Thay đổi mật khẩu
+              </a>
+            </li> -->
+            <li>
+              <a
+                class="dropdown-item"
+                href="javascript:void(0)"
+                (click)="onLogout()"
+              >
+                Đăng xuất
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div
+  *ngIf="isDropdownOpen"
+  class="dropdown-menu-custom shadow-lg rounded-3 border bg-white text-dark position-absolute end-0 mt-2"
+  style="width: 330px; z-index: 1050"
+>
+  <div
+    class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light rounded-top-3"
+  >
+    <h6 class="mb-0 fw-bold">
+      <i class="fa-solid fa-bell text-primary me-2"></i>Thông báo mới nhận
+    </h6>
+  </div>
+
+  <div class="notification-body" style="max-height: 380px; overflow-y: auto">
+
+    <div
+      *ngIf="!isLoading && notifications.length === 0"
+      class="text-center py-5 text-muted"
+    >
+      <i class="fa-solid fa-bell-slash fs-3 mb-2 opacity-50"></i>
+      <p class="small mb-0">Bạn chưa có thông báo nào hôm nay.</p>
+    </div>
+
+    <div *ngIf="!isLoading && notifications.length > 0">
+      <div
+        *ngFor="let item of notifications"
+        (click)="onNotificationClick(item)"
+        class="notification-item p-3 border-bottom cursor-pointer transition-all d-flex align-items-start gap-2"
+        [ngClass]="{ 'bg-unread': !item.isRead, 'bg-white': item.isRead }"
+      >
+        <div class="mt-1">
+          <span
+            *ngIf="!item.isRead"
+            class="d-inline-block bg-primary rounded-circle"
+            style="width: 8px; height: 8px"
+          ></span>
+        </div>
+
+        <div class="flex-grow-1">
+          <p
+            class="mb-1 small text-wrap-custom"
+            [ngClass]="{
+              'fw-bold text-dark': !item.isRead,
+              'text-secondary': item.isRead
+            }"
+          >
+            {{ item.noiDungTB }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

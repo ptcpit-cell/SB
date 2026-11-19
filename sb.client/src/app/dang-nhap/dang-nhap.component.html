@@ -1,0 +1,23 @@
+<form (ngSubmit)="onSubmit()" class="form_main">
+    <p class="heading">Login</p>
+
+    <div class="inputContainer">
+      <i class="fa-solid fa-circle-user inputIcon"></i>
+        <input type="text" name="userName" [(ngModel)]="loginData.userName"
+            class="inputField" id="username" placeholder="Username" required>
+    </div>
+
+    <div class="inputContainer">
+      <i class="fa-solid fa-lock inputIcon"></i>
+        <input type="password" name="password" [(ngModel)]="loginData.password"
+            class="inputField" id="password" placeholder="Password" required>
+    </div>
+
+    <div *ngIf="error" class="error-msg">
+        {{ error }}
+    </div>
+
+    <button id="button" type="submit" [disabled]="loading">
+        {{ loading ? 'Loading...' : 'Submit' }}
+    </button>
+</form>

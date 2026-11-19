@@ -1,0 +1,177 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Code\\SB\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{6D8D14E8-4AA9-7160-75E8-0F535EF6615E}|SB.Server\\SB.Server.csproj|d:\\code\\sb\\sb.server\\controllers\\requestcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6D8D14E8-4AA9-7160-75E8-0F535EF6615E}|SB.Server\\SB.Server.csproj|solutionrelative:sb.server\\controllers\\requestcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|d:\\code\\sb\\sb_services\\services\\requests\\irequestservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|solutionrelative:sb_services\\services\\requests\\irequestservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|d:\\code\\sb\\sb_services\\services\\requests\\requestservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|solutionrelative:sb_services\\services\\requests\\requestservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|d:\\code\\sb\\sb_services\\dto\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|solutionrelative:sb_services\\dto\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|d:\\code\\sb\\sb_services\\services\\common\\commonservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|solutionrelative:sb_services\\services\\common\\commonservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6D8D14E8-4AA9-7160-75E8-0F535EF6615E}|SB.Server\\SB.Server.csproj|d:\\code\\sb\\sb.server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6D8D14E8-4AA9-7160-75E8-0F535EF6615E}|SB.Server\\SB.Server.csproj|solutionrelative:sb.server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6D8D14E8-4AA9-7160-75E8-0F535EF6615E}|SB.Server\\SB.Server.csproj|d:\\code\\sb\\sb.server\\controllers\\commoncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6D8D14E8-4AA9-7160-75E8-0F535EF6615E}|SB.Server\\SB.Server.csproj|solutionrelative:sb.server\\controllers\\commoncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|d:\\code\\sb\\sb_services\\services\\common\\icommonservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|solutionrelative:sb_services\\services\\common\\icommonservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|d:\\code\\sb\\sb_services\\ef\\coreflag.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F429B7D0-3215-3329-5A93-F18B5AFC2153}|SB_Services\\SB_Services.csproj|solutionrelative:sb_services\\ef\\coreflag.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "RequestDTO.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB_Services\\DTO\\RequestDTO.cs",
+              "RelativeDocumentMoniker": "SB_Services\\DTO\\RequestDTO.cs",
+              "ToolTip": "D:\\Code\\SB\\SB_Services\\DTO\\RequestDTO.cs",
+              "RelativeToolTip": "SB_Services\\DTO\\RequestDTO.cs",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAiwGQAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-17T08:25:28.689Z",
+              "EditorCaption": "",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "RequestController.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB.Server\\Controllers\\RequestController.cs",
+              "RelativeDocumentMoniker": "SB.Server\\Controllers\\RequestController.cs",
+              "ToolTip": "D:\\Code\\SB\\SB.Server\\Controllers\\RequestController.cs",
+              "RelativeToolTip": "SB.Server\\Controllers\\RequestController.cs",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAACgAAABQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-17T08:16:22.407Z",
+              "EditorCaption": "",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "IRequestServices.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB_Services\\Services\\Requests\\IRequestServices.cs",
+              "RelativeDocumentMoniker": "SB_Services\\Services\\Requests\\IRequestServices.cs",
+              "ToolTip": "D:\\Code\\SB\\SB_Services\\Services\\Requests\\IRequestServices.cs",
+              "RelativeToolTip": "SB_Services\\Services\\Requests\\IRequestServices.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-17T08:09:42.404Z",
+              "EditorCaption": "",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RequestServices.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB_Services\\Services\\Requests\\RequestServices.cs",
+              "RelativeDocumentMoniker": "SB_Services\\Services\\Requests\\RequestServices.cs",
+              "ToolTip": "D:\\Code\\SB\\SB_Services\\Services\\Requests\\RequestServices.cs",
+              "RelativeToolTip": "SB_Services\\Services\\Requests\\RequestServices.cs",
+              "ViewState": "AgIAAFoAAAAAAAAAAAAiwGQAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-17T08:09:37.398Z",
+              "EditorCaption": "",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "CommonController.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB.Server\\Controllers\\CommonController.cs",
+              "RelativeDocumentMoniker": "SB.Server\\Controllers\\CommonController.cs",
+              "ToolTip": "D:\\Code\\SB\\SB.Server\\Controllers\\CommonController.cs",
+              "RelativeToolTip": "SB.Server\\Controllers\\CommonController.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAzwDIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-16T03:06:54.667Z",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ICommonServices.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB_Services\\Services\\Common\\ICommonServices.cs",
+              "RelativeDocumentMoniker": "SB_Services\\Services\\Common\\ICommonServices.cs",
+              "ToolTip": "D:\\Code\\SB\\SB_Services\\Services\\Common\\ICommonServices.cs",
+              "RelativeToolTip": "SB_Services\\Services\\Common\\ICommonServices.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-16T03:06:34.712Z",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CommonServices.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB_Services\\Services\\Common\\CommonServices.cs",
+              "RelativeDocumentMoniker": "SB_Services\\Services\\Common\\CommonServices.cs",
+              "ToolTip": "D:\\Code\\SB\\SB_Services\\Services\\Common\\CommonServices.cs",
+              "RelativeToolTip": "SB_Services\\Services\\Common\\CommonServices.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-16T03:05:47.354Z",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "CoreFlag.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB_Services\\EF\\CoreFlag.cs",
+              "RelativeDocumentMoniker": "SB_Services\\EF\\CoreFlag.cs",
+              "ToolTip": "D:\\Code\\SB\\SB_Services\\EF\\CoreFlag.cs",
+              "RelativeToolTip": "SB_Services\\EF\\CoreFlag.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAQwB8AAABMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-13T03:19:09.477Z",
+              "OwnerCaption": "%2"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Code\\SB\\SB.Server\\Program.cs",
+              "RelativeDocumentMoniker": "SB.Server\\Program.cs",
+              "ToolTip": "D:\\Code\\SB\\SB.Server\\Program.cs",
+              "RelativeToolTip": "SB.Server\\Program.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAAABkAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-13T01:19:38.074Z",
+              "OwnerCaption": "%2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

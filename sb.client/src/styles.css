@@ -1,0 +1,19 @@
+/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+@import 'ngx-toastr/toastr';
+body {
+  margin: 0;
+}
+app-root {
+  padding:0 !important;
+}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.ag-header-cell.ag-center-header .ag-header-cell-label {
+  justify-content: center;
+}

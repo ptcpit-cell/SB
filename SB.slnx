@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Library/">
+    <Project Path="SB_DAL/SB_DAL.csproj" />
+    <Project Path="SB_Services/SB_Services.csproj" />
+  </Folder>
+  <Project Path="sb.client/sb.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="SB.Server/SB.Server.csproj" />
+</Solution>

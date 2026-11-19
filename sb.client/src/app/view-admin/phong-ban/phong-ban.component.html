@@ -1,0 +1,159 @@
+<div class="min-h-screen bg-gray-100 p-3">
+  <h4 class="uppercase bg-teal-600 rounded-lg p-2">Danh mục phòng ban</h4>
+  <div class="container-fluid bg-white p-0 shadow-sm rounded-lg">
+    <div class="flex items-center justify-end border-b px-4 pt-3 pb-3">
+      <button class="btn btn-success btn-sm" (click)="onAdd()">
+        Thêm phòng ban
+      </button>
+    </div>
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th class="font-medium text-center">Mã phòng ban</th>
+          <th class="font-medium text-center">Tên phòng ban</th>
+          <th class="font-medium text-center">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let phongBan of pagedPhongBan; let i = index">
+          <td class="text-center">{{ phongBan.maPhongBan }}</td>
+          <td class="text-center">{{ phongBan.tenPhongBan }}</td>
+          <td class="text-center">
+            <div class="d-flex justify-content-center gap-3 text-gray-500">
+              <button class="btn btn-warning btn-sm" (click)="onEdit(phongBan)">
+                <i class="fa-regular fa-pen-to-square"></i>
+              </button>
+              <button
+                class="btn btn-danger btn-sm"
+                (click)="onDelete(phongBan.id)"
+              >
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <mat-paginator
+      *ngIf="total > 0"
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)"
+      aria-label="Chọn trang phòng ban"
+    ></mat-paginator>
+  </div>
+</div>
+
+<ng-container *ngIf="showModal">
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" (click)="closeModal()">
+    <div
+      class="modal-dialog modal-dialog-centered modal-md"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-content p-2">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ editingId ? "Chỉnh sửa phòng ban" : "Thêm phòng ban" }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body p-2">
+      <form (ngSubmit)="onSave()">
+        <div class="col-md-12 row">
+          <div class="col-md-6">
+            <div>
+              <label for="code" class="form-label mb-1"
+                >Mã phòng ban/bộ phận</label
+              >
+              <input
+                id="code"
+                type="text"
+                [(ngModel)]="codeInput"
+                name="code"
+                required
+                autocomplete="off"
+                class="form-control"
+              />
+            </div>
+            <div class="mt-2">
+              <label for="chiNhanh" class="form-label mb-1"
+                >Chi nhánh</label
+              >
+              <select
+                id="chiNhanh"
+                [(ngModel)]="selectedChiNhanhId"
+                name="chiNhanh"
+                required
+                class="form-control form-select"
+              >
+                <option value="null">Chọn chi nhánh</option>
+                <option
+                  *ngFor="let chiNhanh of listChiNhanh"
+                  [value]="chiNhanh.chiNhanhId"
+                >
+                  {{ chiNhanh.tenChiNhanh }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div>
+              <label for="name" class="form-label mb-1"
+                >Tên phòng ban/bộ phận</label
+              >
+              <input
+                id="name"
+                type="text"
+                [(ngModel)]="nameInput"
+                name="name"
+                required
+                autocomplete="off"
+                class="form-control"
+              />
+            </div>
+            <div class="mt-2">
+              <label for="parentId" class="form-label mb-1"
+                >Phòng ban cha</label
+              >
+              <select
+                id="parentId"
+                [(ngModel)]="parenntIdInput"
+                name="parentId"
+                class="form-control form-select"
+              >
+                <option value="null">Chọn phòng ban cha</option>
+                <option
+                  *ngFor="let phongBan of listPhongBan"
+                  [value]="phongBan.id"
+                >
+                  {{ phongBan.tenPhongBan }}
+                </option>
+              </select>
+              <p class="text-muted italic text-xs">Chỉ cần chọn khi phòng ban này là con của một phòng ban khác</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button
+            type="button"
+            (click)="closeModal()"
+            [disabled]="saving"
+            class="btn btn-danger"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+          <button type="submit" [disabled]="saving" class="btn btn-success">
+            <i class="fa-solid fa-floppy-disk"></i>
+          </button>
+        </div>
+      </form>
+      </div>
+    </div>
+  </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>
