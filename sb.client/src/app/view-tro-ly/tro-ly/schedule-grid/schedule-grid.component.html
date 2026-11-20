@@ -1,0 +1,125 @@
+<div class="card shadow-sm h-100 border-0">
+  <div class="card-header bg-white py-2.5 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <div class="fw-bold text-dark">
+        <i class="fa-regular fa-calendar-days text-primary me-2"></i>Lịch trình ngày {{ ngay | date:'dd/MM/yyyy' }}
+      </div>
+      <div class="text-secondary" style="font-size: 0.74rem" *ngIf="cauHinh">
+        Giờ làm việc: <b>{{ cauHinh.gioBatDau.slice(0,5) }} - {{ cauHinh.gioKetThuc.slice(0,5) }}</b>
+        <span *ngIf="cauHinh.nghiTruaTu && cauHinh.nghiTruaDen">
+          · Nghỉ trưa {{ cauHinh.nghiTruaTu.slice(0,5) }} - {{ cauHinh.nghiTruaDen.slice(0,5) }}
+        </span>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 small">
+      <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+        <i class="fa-solid fa-layer-group me-1"></i>Cho phép xếp chồng khung giờ
+      </span>
+    </div>
+  </div>
+
+  <div class="card-body p-2 grid-scroll">
+    <div class="schedule-canvas position-relative" [style.height.px]="totalHeightPx">
+      <!-- Lưới khung giờ 30 phút (vùng thả kéo-thả) -->
+      <div
+        *ngFor="let slot of slots"
+        class="time-slot-row d-flex"
+        [style.height.px]="slotHeightPx"
+        [class.slot-hour]="slot.isHour"
+        [class.slot-half]="!slot.isHour"
+        [class.slot-lunch]="slot.isLunch"
+        [class.slot-drag-over]="hoveredSlotMinute === slot.startMinute"
+        (dragover)="onDragOverSlot($event, slot)"
+        (dragleave)="onDragLeaveSlot(slot)"
+        (drop)="onDropOnSlot($event, slot)"
+      >
+        <div class="time-axis text-end pe-2 text-secondary">
+          <span *ngIf="slot.isHour">{{ slot.label }}</span>
+          <span *ngIf="!slot.isHour" class="opacity-50" style="font-size: 0.68rem">{{ slot.label }}</span>
+        </div>
+        <div class="slot-dropzone flex-grow-1 position-relative">
+          <span class="lunch-tag" *ngIf="slot.isLunch && slot.isHour">
+            <i class="fa-solid fa-mug-hot me-1"></i>Nghỉ trưa
+          </span>
+          <span class="drop-hint" *ngIf="hoveredSlotMinute === slot.startMinute">
+            <i class="fa-solid fa-arrow-down me-1"></i>Thả vào {{ slot.label }} (hỗ trợ xếp chồng)
+          </span>
+        </div>
+      </div>
+
+      <!-- Lớp sự kiện bận của lãnh đạo -->
+      <div class="events-overlay">
+        <div
+          *ngFor="let sk of positionedSuKiens"
+          class="busy-event-block rounded-2 px-2 py-1 d-flex justify-content-between align-items-start"
+          [ngStyle]="getSuKienStyle(sk)"
+        >
+          <div class="min-w-0">
+            <div class="fw-semibold small text-truncate">
+              <i class="fa-solid fa-calendar-minus me-1"></i>[{{ suKienLoaiLabel(sk.item.loai) }}] {{ sk.item.tieuDe }}
+            </div>
+            <div style="font-size: 0.7rem" class="opacity-75 text-truncate">
+              {{ sk.item.batDau | date:'HH:mm' }} - {{ sk.item.ketThuc | date:'HH:mm' }}
+              <span *ngIf="sk.item.diaDiem"> · {{ sk.item.diaDiem }}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn-link btn-sm text-secondary p-0 ms-1"
+            title="Xóa sự kiện bận"
+            (click)="onDeleteSuKien($event, sk.item)"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Lớp lịch trình nhân viên trình (xếp chồng hiển thị song song cạnh nhau) -->
+        <div
+          *ngFor="let p of positionedLichs"
+          class="appt-block rounded-2 px-2 py-1 shadow-sm"
+          [ngClass]="lichStateClass(p.item.trangThaiLich)"
+          [ngStyle]="getBlockStyle(p)"
+          draggable="true"
+          (dragstart)="onDragStartAppointment($event, p.item)"
+          (click)="selectLich.emit(p.item)"
+          title="Nhấp để xem chi tiết / đổi giờ, hoặc kéo sang khung giờ khác"
+        >
+          <div class="d-flex justify-content-between align-items-center gap-1">
+            <span class="fw-bold text-primary text-nowrap" style="font-size: 0.72rem">
+              {{ p.item.batDau | date:'HH:mm' }}–{{ p.item.ketThuc | date:'HH:mm' }}
+              <span class="text-muted fw-normal">({{ p.item.thoiLuongPhut }}p)</span>
+            </span>
+            <div class="d-flex align-items-center gap-1">
+              <span *ngIf="p.hasOverlap" class="badge bg-info text-white px-1 py-0" style="font-size: 0.62rem" title="Xếp chồng khung giờ">
+                Chồng giờ
+              </span>
+              <span
+                *ngIf="p.item.maMucUuTien"
+                class="badge text-white px-1 py-0"
+                style="font-size: 0.62rem"
+                [style.background-color]="p.item.mauMucUuTien || '#0d6efd'"
+              >
+                {{ p.item.maMucUuTien }}
+              </span>
+              <span class="badge bg-light text-dark border px-1 py-0" style="font-size: 0.62rem">
+                {{ lichStateLabel(p.item.trangThaiLich) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="fw-semibold text-dark text-truncate" style="font-size: 0.78rem; line-height: 1.25">
+            <i class="fa-solid fa-lock text-secondary me-1" *ngIf="p.item.laBaoMat"></i>
+            {{ p.item.tieuDe }}
+          </div>
+
+          <div class="text-secondary text-truncate" style="font-size: 0.71rem" *ngIf="p.heightPx >= 52">
+            <i class="fa-solid fa-user me-1"></i>{{ p.item.tenNguoiTrinh }}
+            <span *ngIf="p.item.phongBanNguoiTrinh"> · {{ p.item.phongBanNguoiTrinh }}</span>
+            <span *ngIf="p.item.diaDiem"> · <i class="fa-solid fa-location-dot"></i> {{ p.item.diaDiem }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

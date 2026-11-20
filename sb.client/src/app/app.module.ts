@@ -31,6 +31,14 @@ import { ChucVuComponent } from './view-admin/chuc-vu/chuc-vu.component';
 import { CreateRequestComponent } from './view-nhan-vien/nhan-vien/create-request/create-request.component';
 import { EditRequestComponent } from './view-nhan-vien/nhan-vien/edit-request/edit-request.component';
 import { DetailRequestComponent } from './view-nhan-vien/nhan-vien/detail-request/detail-request.component';
+import { RequestQueueComponent } from './view-tro-ly/tro-ly/request-queue/request-queue.component';
+import { ScheduleGridComponent } from './view-tro-ly/tro-ly/schedule-grid/schedule-grid.component';
+import { WorkingHoursModalComponent } from './view-tro-ly/tro-ly/working-hours-modal/working-hours-modal.component';
+import { ScheduleActionModalComponent } from './view-tro-ly/tro-ly/schedule-action-modal/schedule-action-modal.component';
+import { LeaderTimelineComponent } from './view-lanh-dao/lanh-dao/leader-timeline/leader-timeline.component';
+import { TodayTasksComponent } from './view-lanh-dao/lanh-dao/today-tasks/today-tasks.component';
+import { FeedbackModalComponent } from './view-lanh-dao/lanh-dao/feedback-modal/feedback-modal.component';
+import { BusyEventModalComponent } from './shared/busy-event-modal/busy-event-modal.component';
 import { MatIconModule } from '@angular/material/icon';
 
 
@@ -51,13 +59,20 @@ export function appInitializer(authService: AuthService) {
     NavbarComponent,
     NhanVienComponent,
     TroLyComponent,
+    RequestQueueComponent,
+    ScheduleGridComponent,
+    WorkingHoursModalComponent,
+    ScheduleActionModalComponent,
     LanhDaoComponent,
+    LeaderTimelineComponent,
+    TodayTasksComponent,
+    FeedbackModalComponent,
+    BusyEventModalComponent,
     PhongBanComponent,
     ChucVuComponent,
     CreateRequestComponent,
     EditRequestComponent,
     DetailRequestComponent
-
   ],
   imports: [
     BrowserModule, HttpClientModule,

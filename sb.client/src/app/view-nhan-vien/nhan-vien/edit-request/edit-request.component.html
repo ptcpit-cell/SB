@@ -1,13 +1,18 @@
-<!-- create-request.component.html -->
-<div class="container py-4" style="max-width: 980px">
+<!-- edit-request.component.html -->
+<div class="p-3">
 
+  <!-- Tiêu đề -->
   <div class="d-flex align-items-center gap-2 mb-3">
-    <button class="btn btn-outline-secondary btn-sm" (click)="quayLai()">
+    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="quayLai()">
       <i class="fa-solid fa-arrow-left"></i>
     </button>
     <div>
-      <h4 class="mb-0">Sửa yêu cầu <span class="text-secondary">{{ maYeuCau }}</span></h4>
-      <div class="text-secondary small">Chỉ sửa được bản nháp. Lãnh đạo và tiêu đề được khóa để giữ định danh yêu cầu.</div>
+      <h5 class="mb-0">
+        Sửa yêu cầu <span class="text-secondary fw-normal font-monospace">{{ maYeuCau }}</span>
+      </h5>
+      <div class="text-secondary small">
+        Chỉ sửa được bản nháp. Lãnh đạo và tiêu đề được khóa để giữ định danh yêu cầu.
+      </div>
     </div>
   </div>
 
@@ -15,166 +20,204 @@
     <div class="spinner-border spinner-border-sm me-2"></div> Đang tải dữ liệu...
   </div>
 
-  <ng-container *ngIf="!loadingInit">
+  <div class="row g-3" *ngIf="!loadingInit">
 
-    <!-- 1. Người tạo -->
-    <div class="card shadow-sm mb-3">
-      <div class="card-header bg-body fw-semibold"><i class="fa-solid fa-user me-2 text-primary"></i>Người trình</div>
-      <div class="card-body">
-        <div class="row g-3 small">
-          <div class="col-md-3"><div class="text-secondary">Họ tên</div><div class="fw-medium">{{ nguoiTao.hoTen || '—' }}</div></div>
-          <div class="col-md-3"><div class="text-secondary">Chi nhánh</div><div class="fw-medium">{{ nguoiTao.chiNhanh || '—' }}</div></div>
-          <div class="col-md-3"><div class="text-secondary">Phòng ban</div><div class="fw-medium">{{ nguoiTao.phongBan || '—' }}</div></div>
-          <div class="col-md-3"><div class="text-secondary">Chức vụ</div><div class="fw-medium">{{ nguoiTao.chucVu || '—' }}</div></div>
+    <!-- ============ CỘT TRÁI: người trình, lãnh đạo (khóa), người tham dự ============ -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-body fw-semibold py-2">
+          <i class="fa-solid fa-users me-2 text-primary"></i>Người trình &amp; tham dự
         </div>
-      </div>
-    </div>
+        <div class="card-body py-3">
 
-    <!-- 2. Lãnh đạo -->
-    <div class="card shadow-sm mb-3">
-  <div class="card-header bg-body fw-semibold">
-    <i class="fa-solid fa-user-tie me-2 text-primary"></i>Lãnh đạo cần trình
-    <i class="fa-solid fa-lock ms-2 text-secondary small" title="Không thể đổi lãnh đạo"></i>
-  </div>
-  <div class="card-body">
-    <span class="badge rounded-pill text-bg-secondary py-2 px-3">{{ tenLanhDao }}</span>
-    <div class="form-text">Muốn trình lãnh đạo khác, hãy tạo yêu cầu mới.</div>
-  </div>
-</div>
-
-    <!-- 3. Nội dung -->
-    <div class="card shadow-sm mb-3">
-      <div class="card-header bg-body fw-semibold"><i class="fa-solid fa-file-lines me-2 text-primary"></i>Nội dung trình</div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label small fw-medium">Loại yêu cầu <span class="text-danger">*</span></label>
-            <select class="form-select" [(ngModel)]="loaiId" (ngModelChange)="onLoaiChange()">
-              <option [ngValue]="null">-- Chọn loại --</option>
-              <option *ngFor="let t of loaiList" [ngValue]="t.id">{{ t.tenLoai }}</option>
-            </select>
-          </div>
-          <div class="col-md-8">
-            <label class="form-label small fw-medium">Tiêu đề <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" maxlength="500" [(ngModel)]="tieuDe"
-                   placeholder="VD: Báo cáo kết quả kinh doanh quý III" disabled/>
+          <!-- Người trình -->
+          <div class="info-grid small mb-3">
+            <div><span class="text-secondary">Họ tên:</span> <b>{{ nguoiTao.hoTen || '—' }}</b></div>
+            <div><span class="text-secondary">Chi nhánh:</span> <b>{{ nguoiTao.chiNhanh || '—' }}</b></div>
+            <div><span class="text-secondary">Phòng ban:</span> <b>{{ nguoiTao.phongBan || '—' }}</b></div>
+            <div><span class="text-secondary">Chức vụ:</span> <b>{{ nguoiTao.chucVu || '—' }}</b></div>
           </div>
 
-          <div class="col-12">
-            <label class="form-label small fw-medium d-flex justify-content-between">
-              <span>Tóm tắt nội dung</span>
-              <span class="text-secondary fw-normal">{{ tomTat.length }}/500</span>
+          <hr class="my-2" />
+
+          <!-- Lãnh đạo (khóa khi sửa) -->
+          <label class="form-label small fw-medium mb-1 d-flex align-items-center justify-content-between">
+            <span>Lãnh đạo cần trình</span>
+            <span class="text-secondary fw-normal locked-tag">
+              <i class="fa-solid fa-lock me-1"></i>Đã khóa
+            </span>
+          </label>
+          <div class="input-group input-group-sm mb-1">
+            <span class="input-group-text bg-body-tertiary text-secondary">
+              <i class="fa-solid fa-user-tie"></i>
+            </span>
+            <input type="text" class="form-control bg-body-tertiary fw-medium" [value]="tenLanhDao || '—'" disabled />
+          </div>
+          <div class="form-text mt-0 mb-2">
+            Không thể đổi lãnh đạo. Muốn trình lãnh đạo khác, hãy tạo yêu cầu mới.
+          </div>
+
+          <hr class="my-2" />
+
+          <!-- Người tham dự -->
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small fw-medium mb-0">
+              Người cùng tham dự <span class="text-secondary fw-normal">(nếu có)</span>
             </label>
-            <textarea class="form-control" rows="3" maxlength="500" [(ngModel)]="tomTat"
-                      placeholder="Tóm tắt ngắn gọn nội dung cần trình, để trợ lý đánh giá mức ưu tiên"></textarea>
+            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" (click)="addThamDu()">
+              <i class="fa-solid fa-user-plus me-1"></i>Thêm
+            </button>
           </div>
-
-          <div class="col-md-6">
-            <label class="form-label small fw-medium">Mức độ khẩn</label>
-            <div class="btn-group w-100">
-              <input type="radio" class="btn-check" name="mk" id="mk1" [value]="1" [(ngModel)]="mucKhan" />
-              <label class="btn btn-outline-secondary" for="mk1">Thường</label>
-              <input type="radio" class="btn-check" name="mk" id="mk2" [value]="2" [(ngModel)]="mucKhan" />
-              <label class="btn btn-outline-warning" for="mk2">Gấp</label>
-              <input type="radio" class="btn-check" name="mk" id="mk3" [value]="3" [(ngModel)]="mucKhan" />
-              <label class="btn btn-outline-danger" for="mk3">Rất gấp</label>
+          <div class="thamdu-list">
+            <div class="row g-1 mb-1" *ngFor="let t of thamDus; let i = index; trackBy: trackByIdx">
+              <div class="col-4">
+                <input class="form-control form-control-sm" placeholder="Họ tên" [(ngModel)]="t.hoTenNgoai" />
+              </div>
+              <div class="col-4">
+                <input class="form-control form-control-sm" placeholder="Đơn vị" [(ngModel)]="t.donViNgoai" />
+              </div>
+              <div class="col-3">
+                <input class="form-control form-control-sm" placeholder="Vai trò" [(ngModel)]="t.vaiTro" />
+              </div>
+              <div class="col-1 text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger px-2" (click)="removeThamDu(i)">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
             </div>
-            <div class="form-text">Trợ lý sẽ đánh giá lại mức ưu tiên thực tế.</div>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label small fw-medium">Thời lượng (phút)</label>
-            <select class="form-select" [(ngModel)]="thoiLuongPhut" (ngModelChange)="onThoiLuongChange()">
-              <option [ngValue]="15">15</option>
-              <option [ngValue]="30">30</option>
-              <option [ngValue]="45">45</option>
-              <option [ngValue]="60">60</option>
-              <option [ngValue]="90">90</option>
-              <option [ngValue]="120">120</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-  <label class="form-label small fw-medium">Hạn chót <span class="text-danger">*</span></label>
-  <input type="date" class="form-control" [min]="today" [max]="maxHanChot" [(ngModel)]="hanChot" />
-  <div class="d-flex flex-wrap gap-1 mt-1">
-    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" *ngFor="let d of quickDays"
-            (click)="chonNhanh(d)">+{{ d }} ngày</button>
-  </div>
-</div>
-
-          <div class="col-12" *ngIf="mucKhan > 1">
-            <label class="form-label small fw-medium">Lý do khẩn <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" maxlength="500" [(ngModel)]="lyDoKhan"
-                   placeholder="Vì sao cần trình gấp?" />
+            <div class="small text-secondary" *ngIf="thamDus.length === 0">Chưa có, có thể để trống.</div>
           </div>
 
-          <div class="col-12">
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="baoMat" [(ngModel)]="laBaoMat" />
-              <label class="form-check-label" for="baoMat">
-                <i class="fa-solid fa-lock me-1"></i>Nội dung bảo mật (chỉ trợ lý và lãnh đạo xem được)
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CỘT PHẢI: thông tin trình + tệp ============ -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-body fw-semibold py-2">
+          <i class="fa-solid fa-file-lines me-2 text-primary"></i>Thông tin trình
+        </div>
+        <div class="card-body py-3">
+          <div class="row g-2">
+
+            <div class="col-md-4">
+              <label class="form-label small fw-medium mb-1">Loại yêu cầu <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="loaiId" (ngModelChange)="onLoaiChange()">
+                <option [ngValue]="null">-- Chọn loại --</option>
+                <option *ngFor="let t of loaiList" [ngValue]="t.id">{{ t.tenLoai }}</option>
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small fw-medium mb-1 d-flex align-items-center justify-content-between">
+                <span>Tiêu đề <span class="text-danger">*</span></span>
+                <span class="text-secondary fw-normal locked-tag">
+                  <i class="fa-solid fa-lock me-1"></i>Đã khóa
+                </span>
               </label>
+              <input type="text" class="form-control form-control-sm bg-body-tertiary" maxlength="500" [(ngModel)]="tieuDe"
+                     placeholder="VD: Báo cáo kết quả kinh doanh quý III" disabled />
             </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-medium mb-1 d-flex justify-content-between">
+                <span>Tóm tắt nội dung</span>
+                <span class="text-secondary fw-normal tabular-nums">{{ tomTat.length }}/500</span>
+              </label>
+              <textarea class="form-control form-control-sm" rows="2" maxlength="500" [(ngModel)]="tomTat"
+                        placeholder="Tóm tắt ngắn gọn để trợ lý đánh giá mức ưu tiên"></textarea>
+            </div>
+
+            <div class="col-md-5">
+              <label class="form-label small fw-medium mb-1">Mức độ khẩn</label>
+              <div class="btn-group btn-group-sm w-100">
+                <input type="radio" class="btn-check" name="mk" id="mk1" [value]="1" [(ngModel)]="mucKhan" />
+                <label class="btn btn-outline-secondary" for="mk1">Thường</label>
+                <input type="radio" class="btn-check" name="mk" id="mk2" [value]="2" [(ngModel)]="mucKhan" />
+                <label class="btn btn-outline-warning" for="mk2">Gấp</label>
+                <input type="radio" class="btn-check" name="mk" id="mk3" [value]="3" [(ngModel)]="mucKhan" />
+                <label class="btn btn-outline-danger" for="mk3">Rất gấp</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-medium mb-1">Thời lượng</label>
+              <select class="form-select form-select-sm" [(ngModel)]="thoiLuongPhut" (ngModelChange)="onThoiLuongChange()">
+                <option *ngFor="let m of [15,30,45,60,90,120]" [ngValue]="m">{{ m }} phút</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-medium mb-1">Hạn chót <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" [min]="today" [max]="maxHanChot" [(ngModel)]="hanChot" />
+            </div>
+
+            <div class="col-md-5 d-flex align-items-end">
+              <div class="form-check form-switch mb-1">
+                <input class="form-check-input" type="checkbox" id="baoMat" [(ngModel)]="laBaoMat" />
+                <label class="form-check-label small" for="baoMat">
+                  <i class="fa-solid fa-lock me-1"></i>Nội dung bảo mật
+                </label>
+              </div>
+            </div>
+            <div class="col-md-7 d-flex align-items-end justify-content-md-end">
+              <div class="d-flex flex-wrap gap-1">
+                <span class="small text-secondary me-1 align-self-center">Chọn nhanh:</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" *ngFor="let d of quickDays"
+                        (click)="chonNhanh(d)">+{{ d }} ngày</button>
+              </div>
+            </div>
+
+            <div class="col-12" *ngIf="mucKhan > 1">
+              <label class="form-label small fw-medium mb-1">Lý do khẩn <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm" maxlength="500" [(ngModel)]="lyDoKhan"
+                     placeholder="Vì sao cần trình gấp?" />
+            </div>
+
+            <!-- Tệp đính kèm -->
+            <div class="col-12">
+              <hr class="my-1" />
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label small fw-medium mb-0">
+                  <i class="fa-solid fa-paperclip me-1"></i>Tệp đính kèm
+                </label>
+                <label class="btn btn-outline-secondary btn-sm py-0 px-2 mb-0" [class.disabled]="uploading">
+                  <span class="spinner-border spinner-border-sm me-1" *ngIf="uploading"></span>
+                  <i class="fa-solid fa-upload me-1" *ngIf="!uploading"></i>{{ uploading ? 'Đang tải...' : 'Chọn tệp' }}
+                  <input type="file" multiple hidden [disabled]="uploading" (change)="onFilesSelected($event)"
+                         accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.zip" />
+                </label>
+              </div>
+              <ul class="list-group file-list" *ngIf="teps.length">
+                <li class="list-group-item d-flex align-items-center gap-2 py-1 small" *ngFor="let f of teps; let i = index">
+                  <i class="fa-regular fa-file text-secondary"></i>
+                  <span class="flex-grow-1 text-truncate">{{ f.tenFile }}</span>
+                  <span class="text-secondary tabular-nums">{{ formatSize(f.kichThuoc) }}</span>
+                  <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="removeTep(i)">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </li>
+              </ul>
+              <div class="form-text mt-0">Tối đa 10 tệp, mỗi tệp ≤ 20MB (PDF, Word, Excel, PowerPoint, ảnh, zip).</div>
+            </div>
+
           </div>
         </div>
       </div>
     </div>
-
-    <!-- 5. Người tham dự -->
-    <div class="card shadow-sm mb-3">
-      <div class="card-header bg-body fw-semibold"><i class="fa-solid fa-users me-2 text-primary"></i>Người cùng tham dự (nếu có)</div>
-      <div class="card-body">
-        <div class="row g-2 mb-2" *ngFor="let t of thamDus; let i = index; trackBy: trackByIdx">
-          <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Họ tên" [(ngModel)]="t.hoTenNgoai" /></div>
-          <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Đơn vị" [(ngModel)]="t.donViNgoai" /></div>
-          <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Vai trò" [(ngModel)]="t.vaiTro" /></div>
-          <div class="col-md-1 text-end">
-            <button class="btn btn-sm btn-outline-danger" (click)="removeThamDu(i)"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </div>
-        <button class="btn btn-outline-secondary btn-sm" (click)="addThamDu()">
-          <i class="fa-solid fa-user-plus me-1"></i>Thêm người tham dự
-        </button>
-      </div>
-    </div>
-
-    <!-- 6. Tệp đính kèm -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-header bg-body fw-semibold"><i class="fa-solid fa-paperclip me-2 text-primary"></i>Tệp đính kèm</div>
-      <div class="card-body">
-        <ul class="list-group mb-2" *ngIf="teps.length">
-          <li class="list-group-item d-flex align-items-center gap-2 py-2" *ngFor="let f of teps; let i = index">
-            <i class="fa-regular fa-file text-secondary"></i>
-            <span class="flex-grow-1 text-truncate">{{ f.tenFile }}</span>
-            <span class="small text-secondary">{{ formatSize(f.kichThuoc) }}</span>
-            <button class="btn btn-sm btn-link text-danger p-0" (click)="removeTep(i)"><i class="fa-solid fa-xmark"></i></button>
-          </li>
-        </ul>
-        <label class="btn btn-outline-secondary btn-sm mb-0" [class.disabled]="uploading">
-          <span class="spinner-border spinner-border-sm me-1" *ngIf="uploading"></span>
-          <i class="fa-solid fa-upload me-1" *ngIf="!uploading"></i>
-          {{ uploading ? 'Đang tải lên...' : 'Chọn tệp' }}
-          <input type="file" multiple hidden [disabled]="uploading" (change)="onFilesSelected($event)"
-                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.zip" />
-        </label>
-        <div class="form-text">Tối đa 10 tệp, mỗi tệp không quá 20MB (PDF, Word, Excel, PowerPoint, ảnh, zip).</div>
-      </div>
-    </div>
-
-  </ng-container>
+  </div>
 </div>
 
 <!-- Thanh thao tác cố định cuối trang -->
 <div class="action-bar" *ngIf="!loadingInit">
-  <div class="container d-flex justify-content-end gap-2">
-    <button class="btn btn-danger" (click)="quayLai()" [disabled]="!!submitting"><i class="fa-solid fa-xmark"></i></button>
-    <button class="btn btn-primary" (click)="submit(false)" [disabled]="!!submitting || uploading">
-  <span class="spinner-border spinner-border-sm me-1" *ngIf="submitting === 'draft'"></span>
-  <i class="fa-regular fa-floppy-disk me-1" *ngIf="submitting !== 'draft'"></i>Lưu thay đổi
-</button>
-    <button class="btn btn-success" (click)="submit(true)" [disabled]="!!submitting || uploading">
-  <span class="spinner-border spinner-border-sm me-1" *ngIf="submitting === 'send'"></span>
-  <i class="fa-solid fa-paper-plane me-1" *ngIf="submitting !== 'send'"></i>Lưu và gửi
-</button>
+  <div class="container-xl d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-outline-secondary" (click)="quayLai()" [disabled]="!!submitting">Quay lại</button>
+    <button type="button" class="btn btn-outline-primary" (click)="submit(false)" [disabled]="!!submitting || uploading">
+      <span class="spinner-border spinner-border-sm me-1" *ngIf="submitting === 'draft'"></span>
+      <i class="fa-regular fa-floppy-disk me-1" *ngIf="submitting !== 'draft'"></i>Lưu thay đổi
+    </button>
+    <button type="button" class="btn btn-primary" (click)="submit(true)" [disabled]="!!submitting || uploading">
+      <span class="spinner-border spinner-border-sm me-1" *ngIf="submitting === 'send'"></span>
+      <i class="fa-solid fa-paper-plane me-1" *ngIf="submitting !== 'send'"></i>Lưu và gửi
+    </button>
   </div>
 </div>
 
@@ -187,10 +230,10 @@
           <h5 class="modal-title">Rời khỏi trang?</h5>
           <button type="button" class="btn-close" (click)="showLeaveModal = false"></button>
         </div>
-        <div class="modal-body">Nội dung bạn vừa nhập chưa được lưu và sẽ bị mất.</div>
+        <div class="modal-body">Các thay đổi bạn vừa chỉnh sửa chưa được lưu và sẽ bị mất.</div>
         <div class="modal-footer">
-          <button class="btn btn-outline-secondary" (click)="showLeaveModal = false">Ở lại</button>
-          <button class="btn btn-danger" (click)="roiTrang()">Rời trang</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="showLeaveModal = false">Ở lại</button>
+          <button type="button" class="btn btn-danger" (click)="roiTrang()">Rời trang</button>
         </div>
       </div>
     </div>

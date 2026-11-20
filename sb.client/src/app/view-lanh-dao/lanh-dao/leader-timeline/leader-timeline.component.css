@@ -1,0 +1,100 @@
+.timeline-scroll {
+  max-height: 760px;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.timeline-canvas {
+  min-width: 420px;
+}
+
+.time-axis {
+  width: 56px;
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding-top: 2px;
+  user-select: none;
+}
+
+.time-slot-row {
+  box-sizing: border-box;
+  border-top: 1px solid #e2e8f0;
+}
+
+.slot-half {
+  border-top: 1px dashed #edf2f7;
+}
+
+.slot-lunch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #f8fafc,
+    #f8fafc 6px,
+    #f1f5f9 6px,
+    #f1f5f9 12px
+  );
+}
+
+.lunch-tag {
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.events-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 58px;
+  right: 4px;
+  pointer-events: none;
+}
+
+.busy-event-block {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  background-color: #f1f5f9;
+  border: 1px dashed #94a3b8;
+  border-left: 4px solid #64748b;
+  color: #334155;
+  pointer-events: auto;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.appt-block {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 4;
+  overflow: hidden;
+  border: 1px solid #bfdbfe;
+  border-left-width: 4px;
+  background-color: #eff6ff;
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.appt-block:hover {
+  z-index: 10;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14) !important;
+  transform: translateY(-1px);
+}
+
+.appt-done {
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.appt-postponed {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+}
+
+.appt-absent {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}

@@ -1,30 +1,29 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
   <div class="container-fluid">
     <div class="navbar-collapse d-flex justify-content-between align-items-center" id="navbarNav">
-      <div class="text-start text-lg text-white"><i class="fa-solid fa-briefcase me-1"></i> 
+      <div class="text-start text-lg text-white leading-tight">
+        <i class="fa-solid fa-briefcase me-1"></i>
         Scheduling <br> Reporting System
       </div>
       <div class="d-flex text-white align-items-center">
         <div
-        class="me-3 cursor-pointer text-white text-lg position-relative transition-all text-end"
-        (click)="toggleDropdown($event)">
-        <i class="fa-solid fa-bell"></i>
-
-        <span
-          *ngIf="unreadCount > 0"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          style="
-            font-size: 0.65rem;
-            padding: 0.25em 0.5em;
-            margin-top: -2px;
-            margin-left: -5px;
-          "
+          class="me-4 cursor-pointer text-white text-lg position-relative transition-all"
+          title="Thông báo"
+          (click)="toggleDropdown($event)"
         >
-          {{ unreadCount > 9 ? "9+" : unreadCount }}
-        </span>
-      </div>
+          <i class="fa-solid fa-bell"></i>
+
+          <span
+            *ngIf="totalUnreadCount > 0"
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+            style="font-size: 0.65rem; padding: 0.25em 0.5em; margin-top: -2px; margin-left: -3px;"
+          >
+            {{ totalUnreadCount > 9 ? '9+' : totalUnreadCount }}
+          </span>
+        </div>
+
         <div class="dropdown">
-          <span>Xin chào,</span>
+          <span>Xin chào, </span>
           <a
             class="nav-link d-inline"
             href="#"
@@ -36,18 +35,9 @@
             {{ currentUser?.tenNguoiDung }}
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <!-- <li>
-              <a class="dropdown-item" routerLink="/thay-doi-mat-khau">
-                Thay đổi mật khẩu
-              </a>
-            </li> -->
             <li>
-              <a
-                class="dropdown-item"
-                href="javascript:void(0)"
-                (click)="onLogout()"
-              >
-                Đăng xuất
+              <a class="dropdown-item" href="javascript:void(0)" (click)="onLogout()">
+                <i class="fa-solid fa-right-from-bracket me-2 text-danger"></i>Đăng xuất
               </a>
             </li>
           </ul>
@@ -57,56 +47,147 @@
   </div>
 </nav>
 
+<!-- Dropdown Thông báo 2 tầng (ThongBao & ThongBaoLichTrinh) -->
 <div
   *ngIf="isDropdownOpen"
-  class="dropdown-menu-custom shadow-lg rounded-3 border bg-white text-dark position-absolute end-0 mt-2"
-  style="width: 330px; z-index: 1050"
+  (click)="$event.stopPropagation()"
+  class="dropdown-menu-custom shadow-lg rounded-3 border bg-white text-dark position-absolute end-0 mt-2 me-2"
+  style="width: 390px; max-width: calc(100vw - 16px); z-index: 1050"
 >
-  <div
-    class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light rounded-top-3"
-  >
-    <h6 class="mb-0 fw-bold">
-      <i class="fa-solid fa-bell text-primary me-2"></i>Thông báo mới nhận
-    </h6>
+  <div class="p-3 pb-2 border-bottom bg-light rounded-top-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0 fw-bold text-dark">
+        <i class="fa-solid fa-bell text-primary me-2"></i>Thông báo
+      </h6>
+      <button
+        *ngIf="activeTab === 'schedule' && unreadScheduleCount > 0"
+        type="button"
+        class="btn btn-link btn-sm p-0 text-decoration-none small"
+        (click)="markAllScheduleRead($event)"
+      >
+        Đọc tất cả
+      </button>
+    </div>
+
+    <div class="btn-group btn-group-sm w-100" role="group">
+      <button
+        type="button"
+        class="btn"
+        [ngClass]="activeTab === 'schedule' ? 'btn-primary' : 'btn-outline-secondary bg-white'"
+        (click)="switchTab('schedule', $event)"
+      >
+        <i class="fa-regular fa-calendar-check me-1"></i>Lịch trình &amp; Việc
+        <span *ngIf="unreadScheduleCount > 0" class="badge rounded-pill bg-danger ms-1">{{ unreadScheduleCount }}</span>
+      </button>
+      <button
+        type="button"
+        class="btn"
+        [ngClass]="activeTab === 'basic' ? 'btn-primary' : 'btn-outline-secondary bg-white'"
+        (click)="switchTab('basic', $event)"
+      >
+        <i class="fa-regular fa-bell me-1"></i>Trạng thái
+        <span *ngIf="unreadBasicCount > 0" class="badge rounded-pill bg-danger ms-1">{{ unreadBasicCount }}</span>
+      </button>
+    </div>
   </div>
 
-  <div class="notification-body" style="max-height: 380px; overflow-y: auto">
+  <!-- TAB 1: ThongBaoLichTrinh (clickable điều hướng) -->
+  <div *ngIf="activeTab === 'schedule'" class="notification-body" style="max-height: 400px; overflow-y: auto">
+    <div *ngIf="scheduleNotifications.length === 0" class="text-center py-5 text-muted">
+      <i class="fa-regular fa-calendar-xmark fs-3 mb-2 opacity-50"></i>
+      <p class="small mb-0">Chưa có thông báo lịch trình hay công việc nào.</p>
+    </div>
 
-    <div
-      *ngIf="!isLoading && notifications.length === 0"
-      class="text-center py-5 text-muted"
+    <div *ngFor="let item of scheduleNotifications"
+      (click)="onScheduleNotificationClick(item)"
+      class="notification-item p-3 border-bottom cursor-pointer transition-all d-flex align-items-start gap-2"
+      [ngClass]="{ 'bg-unread': !item.daDoc, 'bg-white': item.daDoc }"
     >
+      <div
+        class="notif-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+        [ngClass]="getScheduleIcon(item.loaiSuKien).css"
+      >
+        <i [class]="getScheduleIcon(item.loaiSuKien).icon"></i>
+      </div>
+      <div class="flex-grow-1 min-w-0">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div class="small fw-semibold text-dark text-truncate">{{ item.tieuDe }}</div>
+          <span *ngIf="!item.daDoc" class="d-inline-block bg-primary rounded-circle flex-shrink-0 mt-1" style="width: 8px; height: 8px"></span>
+        </div>
+        <p class="mb-1 small text-wrap-custom" [ngClass]="!item.daDoc ? 'text-dark' : 'text-secondary'">
+          {{ item.noiDung }}
+        </p>
+        <div class="d-flex justify-content-between align-items-center mt-1">
+          <span class="notif-time text-muted">
+            <i class="fa-regular fa-clock me-1"></i>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}
+          </span>
+          <span class="text-primary notif-link fw-medium">
+            Xem ngay <i class="fa-solid fa-arrow-right ms-1"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: ThongBao cơ bản (trạng thái ngắn gọn + dòng thời gian nhỏ) -->
+  <div *ngIf="activeTab === 'basic'" class="notification-body" style="max-height: 400px; overflow-y: auto">
+    <div *ngIf="!isLoading && notifications.length === 0" class="text-center py-5 text-muted">
       <i class="fa-solid fa-bell-slash fs-3 mb-2 opacity-50"></i>
-      <p class="small mb-0">Bạn chưa có thông báo nào hôm nay.</p>
+      <p class="small mb-0">Bạn chưa có thông báo trạng thái nào.</p>
     </div>
 
     <div *ngIf="!isLoading && notifications.length > 0">
       <div
         *ngFor="let item of notifications"
-        (click)="onNotificationClick(item)"
+        (click)="onBasicNotificationClick(item)"
         class="notification-item p-3 border-bottom cursor-pointer transition-all d-flex align-items-start gap-2"
         [ngClass]="{ 'bg-unread': !item.isRead, 'bg-white': item.isRead }"
       >
-        <div class="mt-1">
+        <div class="mt-1 flex-shrink-0">
           <span
-            *ngIf="!item.isRead"
-            class="d-inline-block bg-primary rounded-circle"
+            class="d-inline-block rounded-circle"
+            [ngClass]="!item.isRead ? 'bg-primary' : 'bg-secondary-subtle'"
             style="width: 8px; height: 8px"
           ></span>
         </div>
 
-        <div class="flex-grow-1">
+        <div class="flex-grow-1 min-w-0">
           <p
             class="mb-1 small text-wrap-custom"
             [ngClass]="{
-              'fw-bold text-dark': !item.isRead,
+              'fw-semibold text-dark': !item.isRead,
               'text-secondary': item.isRead
             }"
           >
-            {{ item.noiDungTB }}
+            {{ item.noiDung || item.noiDungTB }}
           </p>
+          <div class="notif-time text-muted">
+            <i class="fa-regular fa-clock me-1"></i>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal xác nhận đăng xuất -->
+<ng-container *ngIf="showLogoutModal">
+  <div class="modal fade show d-block" tabindex="-1" (click)="showLogoutModal = false">
+    <div class="modal-dialog modal-dialog-centered modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h6 class="modal-title fw-bold">Xác nhận đăng xuất</h6>
+          <button type="button" class="btn-close" (click)="showLogoutModal = false"></button>
+        </div>
+        <div class="modal-body small">
+          Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showLogoutModal = false">Hủy</button>
+          <button type="button" class="btn btn-sm btn-danger" (click)="confirmLogout()">Đăng xuất</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>

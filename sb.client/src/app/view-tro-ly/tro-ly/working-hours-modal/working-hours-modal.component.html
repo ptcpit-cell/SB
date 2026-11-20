@@ -1,0 +1,82 @@
+<ng-container *ngIf="visible">
+  <div class="modal fade show d-block" tabindex="-1" (click)="closeModal.emit()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header py-2.5">
+          <h6 class="modal-title fw-bold">
+            <i class="fa-solid fa-sliders text-primary me-2"></i>Thiết lập giờ làm việc của {{ lanhDao?.hoTen || 'Lãnh đạo' }}
+          </h6>
+          <button type="button" class="btn-close" (click)="closeModal.emit()" [disabled]="saving"></button>
+        </div>
+
+        <div class="modal-body small">
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold mb-1">Giờ bắt đầu làm việc</label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="gioBatDau" />
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold mb-1">Giờ kết thúc làm việc</label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="gioKetThuc" />
+            </div>
+          </div>
+
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="chkNghiTrua" [(ngModel)]="coNghiTrua" />
+            <label class="form-check-label fw-semibold" for="chkNghiTrua">Có khung giờ nghỉ trưa</label>
+          </div>
+          <div class="row g-2 mb-3" *ngIf="coNghiTrua">
+            <div class="col-6">
+              <label class="form-label text-secondary mb-1">Nghỉ trưa từ</label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="nghiTruaTu" />
+            </div>
+            <div class="col-6">
+              <label class="form-label text-secondary mb-1">Nghỉ trưa đến</label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="nghiTruaDen" />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold mb-1">Ngày làm việc trong tuần</label>
+            <div class="d-flex flex-wrap gap-1">
+              <button
+                type="button"
+                *ngFor="let d of days"
+                class="btn btn-sm"
+                [ngClass]="hasDay(d.bit) ? 'btn-primary' : 'btn-outline-secondary'"
+                (click)="toggleDay(d.bit)"
+              >
+                {{ d.label }}
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold mb-1">Thời gian đệm gợi ý (phút)</label>
+              <input type="number" min="0" max="60" class="form-control form-control-sm" [(ngModel)]="thoiGianDemPhut" />
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold mb-1">Giới hạn tiếp trình / ngày (phút)</label>
+              <input type="number" min="30" max="600" class="form-control form-control-sm" [(ngModel)]="gioiHanPhutMoiNgay" />
+            </div>
+          </div>
+
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="chkXemLich" [(ngModel)]="choNhanVienXemLichTrongBan" />
+            <label class="form-check-label" for="chkXemLich">Cho phép nhân viên xem khung bận/trống cơ bản</label>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeModal.emit()" [disabled]="saving">Đóng</button>
+          <button type="button" class="btn btn-sm btn-primary" (click)="submit()" [disabled]="saving">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="saving"></span>
+            <i class="fa-regular fa-floppy-disk me-1" *ngIf="!saving"></i>Lưu giờ làm việc
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>

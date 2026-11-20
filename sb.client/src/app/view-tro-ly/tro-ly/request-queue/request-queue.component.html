@@ -1,0 +1,160 @@
+<div class="card shadow-sm h-100 border-0">
+  <div class="card-header bg-white py-2.5 border-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="fw-bold text-dark">
+        <i class="fa-solid fa-inbox text-primary me-2"></i>Yêu cầu cần xử lý
+        <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis ms-1">{{ hangCho.length }}</span>
+      </div>
+      <span class="text-muted" style="font-size: 0.74rem">
+        <i class="fa-solid fa-grip-vertical me-1"></i>Kéo thả vào lịch bên phải
+      </span>
+    </div>
+
+    <!-- Bộ lọc nhanh -->
+    <div class="d-flex flex-wrap gap-1 mb-2">
+      <button type="button" class="btn btn-sm py-0 px-2"
+        [ngClass]="filterTab === 'all' ? 'btn-primary' : 'btn-outline-secondary'"
+        (click)="filterTab = 'all'">
+        Tất cả ({{ hangCho.length }})
+      </button>
+      <button type="button" class="btn btn-sm py-0 px-2"
+        [ngClass]="filterTab === 'pending' ? 'btn-primary' : 'btn-outline-secondary'"
+        (click)="filterTab = 'pending'">
+        Cần xếp ({{ countPending }})
+      </button>
+      <button type="button" class="btn btn-sm py-0 px-2"
+        [ngClass]="filterTab === 'urgent' ? 'btn-danger' : 'btn-outline-danger'"
+        (click)="filterTab = 'urgent'">
+        <i class="fa-solid fa-bolt me-1"></i>Gấp ({{ countUrgent }})
+      </button>
+      <button type="button" class="btn btn-sm py-0 px-2"
+        [ngClass]="filterTab === 'waiting_nv' ? 'btn-warning' : 'btn-outline-secondary'"
+        (click)="filterTab = 'waiting_nv'">
+        Chờ NV ({{ countWaitingNv }})
+      </button>
+    </div>
+
+    <div class="input-group input-group-sm">
+      <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass text-secondary"></i></span>
+      <input type="text" class="form-control" placeholder="Tìm mã, tiêu đề, nhân viên..." [(ngModel)]="keyword" />
+    </div>
+  </div>
+
+  <div class="card-body p-2 queue-scroll">
+    <div class="text-center text-secondary py-5" *ngIf="!loading && filteredItems.length === 0">
+      <i class="fa-regular fa-circle-check fa-2x mb-2 text-success opacity-75"></i>
+      <p class="small mb-0">Không có yêu cầu nào trong mục này.</p>
+    </div>
+
+    <div
+      *ngFor="let item of filteredItems; trackBy: trackById"
+      class="queue-card border rounded-3 p-2.5 mb-2 bg-white shadow-xs"
+      [class.border-danger]="item.mucKhan === 3"
+      [class.border-warning]="item.mucKhan === 2"
+      [class.border-start-urgent]="item.mucKhan >= 2"
+      draggable="true"
+      (dragstart)="onDragStart($event, item)"
+    >
+      <!-- Hàng 1: mã + mức khẩn (NV) + trạng thái -->
+      <div class="d-flex justify-content-between align-items-center gap-1 mb-1">
+        <div class="d-flex flex-wrap align-items-center gap-1">
+          <span class="drag-handle text-muted me-1" title="Kéo thả vào khung giờ bên phải">
+            <i class="fa-solid fa-grip-vertical"></i>
+          </span>
+          <span class="fw-semibold text-secondary" style="font-size: 0.75rem">{{ item.maYeuCau }}</span>
+          <span class="badge text-bg-danger" *ngIf="item.mucKhan === 3" title="Mức khẩn do nhân viên đặt">
+            <i class="fa-solid fa-fire me-1"></i>Rất gấp (NV)
+          </span>
+          <span class="badge text-bg-warning" *ngIf="item.mucKhan === 2" title="Mức khẩn do nhân viên đặt">
+            <i class="fa-solid fa-bolt me-1"></i>Gấp (NV)
+          </span>
+          <span class="badge bg-dark-subtle text-dark" *ngIf="item.laBaoMat" title="Nội dung bảo mật">
+            <i class="fa-solid fa-lock"></i>
+          </span>
+        </div>
+        <span class="badge border" style="font-size: 0.7rem" [ngClass]="statusBadge(item.trangThai).css">
+          {{ statusBadge(item.trangThai).label }}
+        </span>
+      </div>
+
+      <!-- Tiêu đề -->
+      <div class="fw-semibold text-dark small mb-1 queue-title" (click)="xemChiTiet.emit(item.yeuCauId)">
+        {{ item.tieuDe }}
+      </div>
+
+      <!-- Người trình + hạn chót + thời lượng -->
+      <div class="d-flex flex-wrap gap-2 text-secondary mb-1" style="font-size: 0.76rem">
+        <span><i class="fa-solid fa-user me-1"></i><b>{{ item.tenNguoiTrinh }}</b> ({{ item.phongBanNguoiTrinh || '—' }})</span>
+        <span><i class="fa-regular fa-clock me-1"></i>{{ item.thoiLuongPhut }}p</span>
+        <span [class.text-danger]="isNearDeadline(item.hanChot)" [class.fw-semibold]="isNearDeadline(item.hanChot)">
+          <i class="fa-regular fa-calendar-xmark me-1"></i>Hạn: {{ item.hanChot ? (item.hanChot | date:'dd/MM') : '—' }}
+        </span>
+      </div>
+
+      <!-- Lý do khẩn của nhân viên -->
+      <div class="small text-danger bg-danger-subtle bg-opacity-25 rounded px-2 py-1 mb-2" *ngIf="item.mucKhan > 1 && item.lyDoKhan" style="font-size: 0.75rem">
+        <b>Lý do khẩn:</b> {{ item.lyDoKhan }}
+      </div>
+
+      <!-- Mức ưu tiên cuối (quyết định của Trợ lý) + Hành động -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-1 border-top">
+        <div class="d-flex align-items-center gap-1">
+          <span class="text-muted" style="font-size: 0.72rem">Ưu tiên (Trợ lý):</span>
+          <select
+            class="form-select form-select-sm py-0 priority-select"
+            [ngModel]="item.mucUuTienId || ''"
+            (ngModelChange)="onPriorityChange(item, $event)"
+            [style.border-color]="item.mauMucUuTien || '#ced4da'"
+          >
+            <option value="">-- Chưa chốt --</option>
+            <option *ngFor="let m of mucUuTiens" [value]="m.id">{{ m.code }} - {{ m.ten }}</option>
+          </select>
+        </div>
+
+        <div class="d-flex flex-wrap gap-1">
+          <button
+            type="button"
+            class="btn btn-outline-info btn-xs"
+            *ngIf="item.trangThai === 1"
+            title="Tiếp nhận xem xét"
+            (click)="tiepNhan.emit(item)"
+          >
+            <i class="fa-solid fa-check"></i> Tiếp nhận
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-xs"
+            title="Chọn ngày giờ xếp lịch"
+            (click)="moXepLich.emit(item)"
+          >
+            <i class="fa-regular fa-calendar-plus"></i> Xếp lịch
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-warning btn-xs"
+            title="Yêu cầu nhân viên bổ sung thông tin"
+            (click)="moBoSung.emit(item)"
+          >
+            <i class="fa-solid fa-circle-question"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-danger btn-xs"
+            title="Từ chối yêu cầu"
+            (click)="moTuChoi.emit(item)"
+          >
+            <i class="fa-solid fa-ban"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-xs"
+            title="Xem chi tiết yêu cầu"
+            (click)="xemChiTiet.emit(item.yeuCauId)"
+          >
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

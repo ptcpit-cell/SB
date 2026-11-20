@@ -1,0 +1,5 @@
+{
+  "name": "SB - Hệ Thống Quản Lý Yêu Cầu & Lịch Trình Lãnh Đạo",
+  "description": "Ứng dụng quản lý yêu cầu trình lãnh đạo, lịch trình làm việc, phân quyền người dùng, phòng ban và chức vụ.",
+  "requestFramePermissions": []
+}

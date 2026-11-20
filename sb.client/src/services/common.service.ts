@@ -42,4 +42,13 @@ export class CommonService {
       ids
     );
   }
+  getThongBaoLichTrinh(): Observable<any[]> {
+    return this.http.get<any[]>(this.baseUrl + 'api/Common/GetThongBaoLichTrinh');
+  }
+  markThongBaoLichTrinhRead(id: number): Observable<any> {
+    return this.http.post(this.baseUrl + `api/Common/MarkThongBaoLichTrinhRead/${id}`, {});
+  }
+  markAllThongBaoLichTrinhRead(): Observable<any> {
+    return this.http.post(this.baseUrl + 'api/Common/MarkAllThongBaoLichTrinhRead', {});
+  }
 }

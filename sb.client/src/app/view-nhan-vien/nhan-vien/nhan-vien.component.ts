@@ -22,6 +22,8 @@ interface YeuCauView extends YeuCauItem {
   needAction: boolean;
   actionLabel: string;
   huyCanLyDo: boolean;
+  hanChotStatus: 'overdue' | 'soon' | 'normal' | null;
+  hanChotHint: string;
 }
 const STEP_LABELS = [
   'Đã gửi',
@@ -53,7 +55,7 @@ const STATUS_INFO: Record<number, { label: string; css: string }> = {
   2: { label: 'Đang xem xét', css: 'info' },
   3: { label: 'Đề xuất đổi lịch', css: 'warning' },
   4: { label: 'Cần bổ sung', css: 'warning' },
-  5: { label: 'Đã duyệt', css: 'success' },
+  5: { label: 'Đã duyệt lịch', css: 'success' },
   6: { label: 'Đã trình', css: 'success' },
   7: { label: 'Hoàn thành', css: 'success' },
   8: { label: 'Từ chối', css: 'danger' },
@@ -85,9 +87,11 @@ export class NhanVienComponent implements OnInit, OnDestroy {
 
   tab = 1; // 0 tất cả, 1 đang xử lý, 2 lịch sử
   trangThaiLoc: number | null = null;
-  tabCount = { all: 0, dangXuLy: 0, lichSu: 0 };
+  chiCanHanhDong = false;
+  tabCount = { all: 0, dangXuLy: 0, lichSu: 0, daDuyetLich: 0 };
   canHanhDong = 0;
 
+  readonly skeletonRows = [1, 2, 3];
   readonly statusOptions = Object.entries(STATUS_INFO).map(([k, v]) => ({
     value: +k,
     label: v.label,
@@ -104,7 +108,7 @@ export class NhanVienComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.search$
-      .pipe(debounceTime(600), distinctUntilChanged(), takeUntil(this.destroy$))
+      .pipe(debounceTime(450), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe(() => {
         this.pageIndex = 0;
         this.loadDanhSach();
@@ -119,22 +123,38 @@ export class NhanVienComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  get hasActiveFilter(): boolean {
+    return (
+      this.chiCanHanhDong ||
+      this.trangThaiLoc !== null ||
+      this.keyword.trim().length > 0
+    );
+  }
+
   // ---------- Tải dữ liệu ----------
   loadDanhSach(): void {
     this.loading = true;
+    const isActionOnly = this.chiCanHanhDong;
     this.requestService
       .getDanhSach({
-        nhomTrangThai: this.tab,
-        trangThai: this.trangThaiLoc,
+        nhomTrangThai: isActionOnly ? 1 : this.tab,
+        trangThai: isActionOnly ? null : this.trangThaiLoc,
         tuKhoa: this.keyword,
-        page: this.pageIndex + 1,
-        pageSize: this.pageSize,
+        page: isActionOnly ? 1 : this.pageIndex + 1,
+        pageSize: isActionOnly ? 50 : this.pageSize,
       })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (rows) => {
-          this.items = rows.map((r) => this.toView(r));
-          this.total = rows[0]?.tongSo ?? 0;
+          const mapped = rows.map((r) => this.toView(r));
+          if (isActionOnly) {
+            const filtered = mapped.filter((x) => x.needAction);
+            this.items = filtered;
+            this.total = filtered.length;
+          } else {
+            this.items = mapped;
+            this.total = rows[0]?.tongSo ?? 0;
+          }
           this.loading = false;
         },
         error: (err) => {
@@ -158,6 +178,7 @@ export class NhanVienComponent implements OnInit, OnDestroy {
             all: sum(),
             dangXuLy: sum(DANG_XU_LY),
             lichSu: sum(LICH_SU),
+            daDuyetLich: sum([5]),
           };
           this.canHanhDong = tk.canHanhDong;
         },
@@ -170,15 +191,52 @@ export class NhanVienComponent implements OnInit, OnDestroy {
     this.search$.next(this.keyword);
   }
 
+  clearSearch(): void {
+    if (!this.keyword) return;
+    this.keyword = '';
+    this.pageIndex = 0;
+    this.loadDanhSach();
+  }
+
   chonTab(tab: number): void {
-    if (this.tab === tab) return;
+    if (this.tab === tab && !this.chiCanHanhDong && this.trangThaiLoc === null) {
+      return;
+    }
     this.tab = tab;
+    this.chiCanHanhDong = false;
     this.trangThaiLoc = null;
     this.pageIndex = 0;
     this.loadDanhSach();
   }
 
+  locCanHanhDong(): void {
+    this.chiCanHanhDong = !this.chiCanHanhDong;
+    if (this.chiCanHanhDong) {
+      this.tab = 1;
+      this.trangThaiLoc = null;
+    }
+    this.pageIndex = 0;
+    this.loadDanhSach();
+  }
+
+  locDaDuyetLich(): void {
+    this.chiCanHanhDong = false;
+    this.tab = 1;
+    this.trangThaiLoc = this.trangThaiLoc === 5 ? null : 5;
+    this.pageIndex = 0;
+    this.loadDanhSach();
+  }
+
   onLocTrangThai(): void {
+    this.chiCanHanhDong = false;
+    this.pageIndex = 0;
+    this.loadDanhSach();
+  }
+
+  datLaiBoLoc(): void {
+    this.chiCanHanhDong = false;
+    this.trangThaiLoc = null;
+    this.keyword = '';
     this.pageIndex = 0;
     this.loadDanhSach();
   }
@@ -259,8 +317,37 @@ export class NhanVienComponent implements OnInit, OnDestroy {
     this.loadDanhSach();
   }
 
+  private getDeadlineMeta(
+    hanChot: string | undefined,
+    trangThai: number
+  ): { status: 'overdue' | 'soon' | 'normal' | null; hint: string } {
+    if (!hanChot) return { status: null, hint: '' };
+    if (!DANG_XU_LY.includes(trangThai)) return { status: 'normal', hint: '' };
+
+    const due = new Date(hanChot);
+    if (isNaN(due.getTime())) return { status: null, hint: '' };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    due.setHours(0, 0, 0, 0);
+    const diffDays = Math.round(
+      (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays < 0) {
+      return { status: 'overdue', hint: `Quá hạn ${Math.abs(diffDays)} ngày` };
+    }
+    if (diffDays === 0) {
+      return { status: 'soon', hint: 'Hạn hôm nay' };
+    }
+    if (diffDays <= 2) {
+      return { status: 'soon', hint: `Còn ${diffDays} ngày` };
+    }
+    return { status: 'normal', hint: '' };
+  }
+
   private toView(r: YeuCauItem): YeuCauView {
-    const info = STATUS_INFO[r.trangThai] ?? { label: '—', css: 'muted' };
+    const info = STATUS_INFO[r.trangThai] ?? { label: '—', css: 'secondary' };
     const cfg = STEP_CFG[r.trangThai] ?? { done: 0, mode: 'todo' as StepState };
 
     let done = cfg.done;
@@ -275,6 +362,7 @@ export class NhanVienComponent implements OnInit, OnDestroy {
     }));
 
     const needAction = r.trangThai === 3 || r.trangThai === 4;
+    const deadline = this.getDeadlineMeta(r.hanChot, r.trangThai);
     return {
       ...r,
       statusLabel: info.label,
@@ -287,6 +375,8 @@ export class NhanVienComponent implements OnInit, OnDestroy {
       actionLabel: r.trangThai === 3 ? 'Phản hồi đề xuất' : 'Bổ sung thông tin',
       huyCanLyDo:
         !!r.lichBatDau && (r.trangThaiLich === 1 || r.trangThaiLich === 4),
+      hanChotStatus: deadline.status,
+      hanChotHint: deadline.hint,
     };
   }
 

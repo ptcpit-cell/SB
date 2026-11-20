@@ -28,7 +28,7 @@ const routes: Routes = [
         path : 'nhan-vien', component: NhanVienComponent, data: { permission: 'View nhân viên' }
       },
       {
-        path: 'nhan-vien/create-request', component: CreateRequestComponent, data: { permission: 'Thêm yêu cầu' }
+        path: 'nhan-vien/create-request', component: CreateRequestComponent, data: { permission: 'Tạo yêu cầu' }
       },
       {
         path: 'nhan-vien/edit-request/:id', component: EditRequestComponent, data: { permission: 'Sửa yêu cầu' }

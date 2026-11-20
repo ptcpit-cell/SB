@@ -60,6 +60,7 @@ readonly quickDays = [1, 3, 5, 7];
 
   readonly today = this.toYmd(new Date());
 
+  private initialSnapshot = '';
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -70,49 +71,60 @@ readonly quickDays = [1, 3, 5, 7];
   ) {}
 
   ngOnInit(): void {
-  this.loadNguoiTao();
-  this.id = +this.route.snapshot.paramMap.get('id')!;
+    this.loadNguoiTao();
+    this.id = +this.route.snapshot.paramMap.get('id')!;
 
-  forkJoin({ loai: this.requestService.getLoaiYeuCau(), ct: this.requestService.getChiTiet(this.id) })
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: ({ loai, ct }) => {
-        const c = ct.chung;
-        if (c.trangThai !== 0) {
-          this.toastrService.warning('Chỉ sửa được yêu cầu ở trạng thái Nháp.');
+    forkJoin({
+      loai: this.requestService.getLoaiYeuCau(),
+      ct: this.requestService.getChiTiet(this.id),
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ loai, ct }) => {
+          const c = ct.chung;
+          if (c.trangThai !== 0) {
+            this.toastrService.warning('Chỉ sửa được yêu cầu ở trạng thái Nháp.');
+            this.router.navigate(['/nhan-vien']);
+            return;
+          }
+          this.loaiList = loai;
+          this.maYeuCau = c.maYeuCau;
+          this.lanhDaoId = c.lanhDaoId;
+          this.tenLanhDao = c.tenLanhDao;
+
+          this.loaiId = c.loaiYeuCauId;
+          this.tieuDe = c.tieuDe;
+          this.tomTat = c.tomTat ?? '';
+          this.mucKhan = c.mucKhan;
+          this.lyDoKhan = c.lyDoKhan ?? '';
+          this.thoiLuongPhut = c.thoiLuongPhut;
+          this.hanChot = c.hanChot ? c.hanChot.slice(0, 10) : '';
+          this.laBaoMat = c.laBaoMat;
+
+          this.thamDus = ct.nguoiThamDus.map((p) => ({
+            hoTenNgoai: p.hoTen ?? '',
+            donViNgoai: p.donViNgoai ?? '',
+            vaiTro: p.vaiTro ?? '',
+          }));
+          this.teps = ct.teps
+            .filter((t) => t.yeuCauId === this.id && !t.ketQuaTrinhId)
+            .map((t) => ({
+              tenFile: t.tenFile,
+              duongDan: t.duongDan,
+              contentType: t.contentType,
+              kichThuoc: t.kichThuoc,
+            }));
+
+          this.initialSnapshot = this.buildSnapshot();
+          this.loadingInit = false;
+        },
+        error: (err) => {
+          this.loadingInit = false;
+          this.toastrService.error(this.errMsg(err));
           this.router.navigate(['/nhan-vien']);
-          return;
-        }
-        this.loaiList = loai;
-        this.maYeuCau = c.maYeuCau;
-        this.tenLanhDao = c.tenLanhDao;
-        this.lanhDaoId = c.lanhDaoId;
-        this.tenLanhDao = c.tenLanhDao;
-
-        this.loaiId = c.loaiYeuCauId;
-        this.tieuDe = c.tieuDe;
-        this.tomTat = c.tomTat ?? '';
-        this.mucKhan = c.mucKhan;
-        this.lyDoKhan = c.lyDoKhan ?? '';
-        this.thoiLuongPhut = c.thoiLuongPhut;
-        this.hanChot = c.hanChot ? c.hanChot.slice(0, 10) : '';
-        this.laBaoMat = c.laBaoMat;
-
-        this.thamDus = ct.nguoiThamDus.map((p) => ({
-          hoTenNgoai: p.hoTen ?? '', donViNgoai: p.donViNgoai ?? '', vaiTro: p.vaiTro ?? '' }));
-        this.teps = ct.teps
-          .filter((t) => t.yeuCauId === this.id && !t.ketQuaTrinhId)
-          .map((t) => ({ tenFile: t.tenFile, duongDan: t.duongDan, contentType: t.contentType, kichThuoc: t.kichThuoc }));
-
-        this.loadingInit = false;
-      },
-      error: (err) => {
-        this.loadingInit = false;
-        this.toastrService.error(this.errMsg(err));
-        this.router.navigate(['/nhan-vien']);
-      },
-    });
-}
+        },
+      });
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -273,11 +285,8 @@ get selectedLanhDao(): LanhDaoChon | undefined {
 
   // ---------- Thoát ----------
   get hasData(): boolean {
-    return !!(
-      this.tieuDe.trim() ||
-      this.tomTat.trim() ||
-      this.teps.length
-    );
+    if (!this.initialSnapshot) return false;
+    return this.buildSnapshot() !== this.initialSnapshot;
   }
 
   quayLai(): void {
@@ -294,9 +303,18 @@ get selectedLanhDao(): LanhDaoChon | undefined {
   // ---------- Tiện ích ----------
   trackByIdx = (i: number) => i;
 
-  private toMin(t: string): number {
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + m;
+  private buildSnapshot(): string {
+    return JSON.stringify({
+      loaiId: this.loaiId,
+      tomTat: this.tomTat,
+      mucKhan: this.mucKhan,
+      lyDoKhan: this.lyDoKhan,
+      thoiLuongPhut: this.thoiLuongPhut,
+      hanChot: this.hanChot,
+      laBaoMat: this.laBaoMat,
+      thamDus: this.thamDus,
+      teps: this.teps.map((t) => t.duongDan),
+    });
   }
 
   private pad(n: number): string {

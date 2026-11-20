@@ -1,17 +1,348 @@
 /* nhan-vien.component.css */
+:host {
+  display: block;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.nv-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #0f172a;
+}
+
+/* ---------- Thanh chỉ số tổng quan ---------- */
+.nv-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.nv-stat-cell {
+  appearance: none;
+  border: 0;
+  border-right: 1px solid #e2e8f0;
+  background: transparent;
+  padding: 14px 16px;
+  text-align: left;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+}
+
+.nv-stat-cell:last-child {
+  border-right: 0;
+}
+
+.nv-stat-cell:hover {
+  background: #f8fafc;
+}
+
+.nv-stat-cell.is-active {
+  background: #f1f5f9;
+  box-shadow: inset 0 -2px 0 #0d6efd;
+}
+
+.nv-stat-cell.is-attention {
+  background: #fffbeb;
+}
+
+.nv-stat-cell.is-attention:hover {
+  background: #fef3c7;
+}
+
+.nv-stat-cell.is-attention.is-active {
+  box-shadow: inset 0 -2px 0 #d97706;
+}
+
+.nv-stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.nv-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.nv-stat-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* ---------- Callout nhắc việc ---------- */
+.nv-callout-warn {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #78350f;
+}
+
+/* ---------- Thanh lọc ---------- */
+.nv-toolbar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.nv-segmented {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.nv-seg-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.nv-seg-btn:hover {
+  color: #0f172a;
+}
+
+.nv-seg-btn.is-active {
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.nv-seg-count {
+  font-size: 0.75rem;
+  color: #64748b;
+  background: #e2e8f0;
+  border-radius: 4px;
+  padding: 0 5px;
+  line-height: 1.45;
+}
+
+.nv-seg-btn.is-active .nv-seg-count {
+  background: #e0ecff;
+  color: #0d6efd;
+}
+
+.nv-status-select {
+  width: auto;
+  min-width: 158px;
+  border-color: #cbd5e1;
+}
+
+.nv-search-wrap {
+  position: relative;
+  width: 240px;
+}
+
+.nv-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.78rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.nv-search-input {
+  padding-left: 30px;
+  padding-right: 26px;
+  border-color: #cbd5e1;
+}
+
+.nv-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  padding: 2px 4px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nv-search-clear:hover {
+  color: #0f172a;
+}
+
+/* ---------- Thẻ yêu cầu ---------- */
 .req-click {
   cursor: pointer;
 }
 
+.req-click:hover .nv-card-title {
+  color: #0d6efd;
+}
+
 .list-loading {
-  opacity: .55;
+  opacity: 0.55;
   pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.nv-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.nv-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.nv-card.is-need-action {
+  border-color: #fbbf24;
+  background: linear-gradient(180deg, #fffdf5 0%, #ffffff 72px);
+}
+
+.nv-card.is-need-action:hover {
+  border-color: #f59e0b;
+}
+
+.nv-card-main {
+  padding: 16px 18px 14px;
+}
+
+.nv-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+  transition: color 150ms ease;
+}
+
+.nv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 7px;
+  font-size: 0.8125rem;
+  color: #475569;
+  margin-top: 4px;
+}
+
+.nv-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.nv-sep {
+  color: #cbd5e1;
+  user-select: none;
+}
+
+.nv-urgency {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+.nv-urgency.is-urgent {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.nv-urgency.is-critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Nhãn trạng thái sắc nét, không dùng pill dày */
+.nv-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.nv-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.st-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.st-primary {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.st-info {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #a5f3fc;
+}
+
+.st-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.st-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.st-danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
 }
 
 /* ---------- Khung giai đoạn ---------- */
 .stepper {
   display: flex;
-  margin: 18px 0 6px;
+  margin: 16px 0 4px;
 }
 
 .step {
@@ -23,92 +354,187 @@
   text-align: center;
 }
 
-/* đường nối sang bước kế tiếp */
 .step:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 14px;
+  top: 12px;
   left: 50%;
   width: 100%;
-  height: 3px;
-  background: var(--bs-border-color);
+  height: 2px;
+  background: #e2e8f0;
   z-index: 0;
 }
 
 .step.done:not(:last-child)::after {
-  background: var(--bs-success);
+  background: #16a34a;
 }
 
 .step .dot {
   z-index: 1;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  background: var(--bs-body-bg);
-  border: 2px solid var(--bs-border-color);
-  color: var(--bs-secondary-color);
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  color: #64748b;
 }
 
 .step .dot i {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .step-label {
   margin-top: 6px;
-  font-size: 12px;
-  color: var(--bs-secondary-color);
+  font-size: 11.5px;
+  color: #64748b;
 }
 
 .step.done .dot {
-  background: var(--bs-success);
-  border-color: var(--bs-success);
-  color: #fff;
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
 }
 
 .step.done .step-label {
-  color: var(--bs-body-color);
+  color: #334155;
+  font-weight: 500;
 }
 
 .step.current .dot {
-  border-color: var(--bs-primary);
-  color: var(--bs-primary);
-  box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb), .15);
+  border-color: #0d6efd;
+  color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.14);
 }
 
 .step.current .step-label {
-  color: var(--bs-primary);
+  color: #0d6efd;
   font-weight: 600;
 }
 
 .step.warn .dot {
-  background: var(--bs-warning);
-  border-color: var(--bs-warning);
-  color: #000;
-  box-shadow: 0 0 0 4px rgba(var(--bs-warning-rgb), .25);
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22);
 }
 
 .step.warn .step-label {
-  color: var(--bs-warning-text-emphasis);
+  color: #b45309;
   font-weight: 600;
 }
 
 .step.error .dot {
-  background: var(--bs-danger);
-  border-color: var(--bs-danger);
-  color: #fff;
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
 }
 
 .step.error .step-label {
-  color: var(--bs-danger);
+  color: #dc2626;
   font-weight: 600;
 }
 
+/* ---------- Dải thông tin theo trạng thái ---------- */
+.nv-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.825rem;
+  border: 1px solid transparent;
+}
+
+.nv-notice.is-schedule {
+  background: #eff6ff;
+  border-color: #dbeafe;
+  color: #1e40af;
+}
+
+.nv-notice.is-warn {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.nv-notice.is-danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+/* ---------- Chân thẻ ---------- */
+.nv-card-footer {
+  padding: 10px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ---------- Trạng thái rỗng & Skeleton ---------- */
+.nv-empty {
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+}
+
+.nv-empty-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.nv-skel-bar {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: nvShimmer 1.4s infinite linear;
+}
+
+@keyframes nvShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.nv-paginator-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+@media (max-width: 992px) {
+  .nv-stat-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nv-stat-cell:nth-child(2) {
+    border-right: 0;
+  }
+
+  .nv-stat-cell:nth-child(1),
+  .nv-stat-cell:nth-child(2) {
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
 @media (max-width: 640px) {
+  .nv-search-wrap {
+    width: 100%;
+  }
+
   .step-label {
     font-size: 10.5px;
   }

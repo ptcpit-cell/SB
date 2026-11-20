@@ -1,0 +1,99 @@
+<div class="card shadow-sm h-100 border-0">
+  <div class="card-header bg-white py-2.5 border-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="fw-bold text-dark">
+        <i class="fa-solid fa-list-check text-primary me-2"></i>Nhiệm vụ trình ngày {{ ngay | date:'dd/MM/yyyy' }}
+      </div>
+      <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis">{{ lichTrinhs.length }} buổi</span>
+    </div>
+
+    <div class="btn-group btn-group-sm w-100">
+      <button type="button" class="btn" [ngClass]="filterStatus === 'all' ? 'btn-primary' : 'btn-outline-secondary'" (click)="filterStatus = 'all'">
+        Tất cả ({{ lichTrinhs.length }})
+      </button>
+      <button type="button" class="btn" [ngClass]="filterStatus === 'pending' ? 'btn-primary' : 'btn-outline-secondary'" (click)="filterStatus = 'pending'">
+        Chờ trình
+      </button>
+      <button type="button" class="btn" [ngClass]="filterStatus === 'done' ? 'btn-success' : 'btn-outline-secondary'" (click)="filterStatus = 'done'">
+        Đã trình
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body p-2.5 tasks-scroll">
+    <div class="text-center text-secondary py-5" *ngIf="!loading && filteredList.length === 0">
+      <i class="fa-regular fa-calendar-check fa-2x mb-2 opacity-50"></i>
+      <p class="small mb-0">Không có lịch trình nào trong danh sách này.</p>
+    </div>
+
+    <div
+      *ngFor="let item of filteredList"
+      class="task-card border rounded-3 p-3 mb-2.5 bg-white shadow-xs"
+      [style.border-left]="'4px solid ' + (item.mauMucUuTien || '#0d6efd')"
+      (click)="openFeedback.emit(item)"
+    >
+      <!-- Giờ + Thời lượng + Trạng thái -->
+      <div class="d-flex justify-content-between align-items-center gap-2 mb-1.5">
+        <div class="d-flex flex-wrap align-items-center gap-1.5">
+          <span class="badge bg-primary text-white">
+            <i class="fa-regular fa-clock me-1"></i>{{ item.batDau | date:'HH:mm' }} – {{ item.ketThuc | date:'HH:mm' }}
+          </span>
+          <span class="badge bg-light text-dark border">{{ item.thoiLuongPhut }} phút</span>
+          <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle" *ngIf="item.daGhiDeXungDot">
+            <i class="fa-solid fa-layer-group me-1"></i>Xếp chồng
+          </span>
+          <span
+            class="badge text-white"
+            *ngIf="item.maMucUuTien"
+            [style.background-color]="item.mauMucUuTien || '#0d6efd'"
+          >
+            {{ item.maMucUuTien }}
+          </span>
+        </div>
+        <span class="badge border" [ngClass]="lichStateBadge(item.trangThaiLich).css">
+          {{ lichStateBadge(item.trangThaiLich).label }}
+        </span>
+      </div>
+
+      <!-- Nội dung gì -->
+      <div class="fw-bold text-dark mb-1" style="font-size: 0.94rem">
+        <i class="fa-solid fa-lock text-secondary me-1" *ngIf="item.laBaoMat" title="Nội dung bảo mật"></i>
+        {{ item.tieuDe }}
+      </div>
+      <div class="small text-secondary mb-2" *ngIf="item.tomTat" style="line-height: 1.4">
+        {{ item.tomTat }}
+      </div>
+
+      <!-- Ai lên trình & địa điểm -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-2 border-top small">
+        <div class="text-dark">
+          <i class="fa-solid fa-user-tie text-primary me-1"></i>
+          <b>{{ item.tenNguoiTrinh }}</b>
+          <span class="text-secondary" *ngIf="item.chucVuNguoiTrinh || item.phongBanNguoiTrinh">
+            · {{ item.chucVuNguoiTrinh }}<span *ngIf="item.chucVuNguoiTrinh && item.phongBanNguoiTrinh"> - </span>{{ item.phongBanNguoiTrinh }}
+          </span>
+        </div>
+        <div class="text-secondary" style="font-size: 0.78rem">
+          <span class="me-2" *ngIf="item.teps.length > 0">
+            <i class="fa-solid fa-paperclip me-1"></i>{{ item.teps.length }} tệp
+          </span>
+          <span *ngIf="item.diaDiem">
+            <i class="fa-solid fa-location-dot me-1"></i>{{ item.diaDiem }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Phản hồi đã ghi (nếu có) -->
+      <div class="mt-2 p-2 rounded bg-success-subtle bg-opacity-50 small text-success-emphasis" *ngIf="item.ketQua?.chiDaoCuaLanhDao">
+        <i class="fa-solid fa-comment-dots me-1"></i><b>Đã phản hồi:</b> {{ item.ketQua?.chiDaoCuaLanhDao }}
+      </div>
+
+      <div class="d-flex justify-content-end mt-2">
+        <button type="button" class="btn btn-sm py-0.5 px-2.5" [ngClass]="item.ketQua ? 'btn-outline-success' : 'btn-outline-primary'">
+          <i class="fa-solid fa-comment-dots me-1"></i>
+          {{ item.ketQua ? 'Xem / Sửa phản hồi' : 'Chi tiết & Phản hồi (tùy chọn)' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

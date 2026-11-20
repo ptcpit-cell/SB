@@ -1,0 +1,77 @@
+<ng-container *ngIf="visible">
+  <div class="modal fade show d-block" tabindex="-1" (click)="closeModal.emit()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header py-2.5">
+          <h6 class="modal-title fw-bold">
+            <i class="fa-solid fa-calendar-minus text-secondary me-2"></i>{{ title }}
+          </h6>
+          <button type="button" class="btn-close" (click)="closeModal.emit()" [disabled]="saving"></button>
+        </div>
+
+        <div class="modal-body small">
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <label class="form-label fw-semibold mb-1">Loại sự kiện</label>
+              <select class="form-select form-select-sm" [(ngModel)]="loai">
+                <option [ngValue]="1">Họp</option>
+                <option [ngValue]="2">Công tác</option>
+                <option [ngValue]="3">Nghỉ phép</option>
+                <option [ngValue]="4">Khác</option>
+              </select>
+            </div>
+            <div class="col-8">
+              <label class="form-label fw-semibold mb-1">Tiêu đề <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="tieuDe" placeholder="VD: Họp giao ban Ban Giám đốc" />
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-5">
+              <label class="form-label fw-semibold mb-1">Ngày <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="ngay" />
+            </div>
+            <div class="col-3" *ngIf="!caNgay">
+              <label class="form-label fw-semibold mb-1">Từ</label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="gioBatDau" />
+            </div>
+            <div class="col-4" *ngIf="!caNgay">
+              <label class="form-label fw-semibold mb-1">Đến</label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="gioKetThuc" />
+            </div>
+          </div>
+
+          <div class="d-flex gap-3 mb-2">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="chkCaNgay" [(ngModel)]="caNgay" />
+              <label class="form-check-label" for="chkCaNgay">Cả ngày</label>
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="chkRiengTu" [(ngModel)]="laRiengTu" />
+              <label class="form-check-label" for="chkRiengTu">Sự kiện riêng tư</label>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold mb-1">Địa điểm</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="diaDiem" placeholder="VD: Phòng họp tầng 5" />
+          </div>
+
+          <div>
+            <label class="form-label fw-semibold mb-1">Ghi chú</label>
+            <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="ghiChu" placeholder="Ghi chú thêm..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeModal.emit()" [disabled]="saving">Đóng</button>
+          <button type="button" class="btn btn-sm btn-primary" (click)="submit()" [disabled]="saving || !tieuDe.trim()">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="saving"></span>
+            <i class="fa-solid fa-plus me-1" *ngIf="!saving"></i>Lưu sự kiện
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>

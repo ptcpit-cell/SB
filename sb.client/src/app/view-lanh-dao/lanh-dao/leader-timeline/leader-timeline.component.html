@@ -1,0 +1,90 @@
+<div class="card shadow-sm h-100 border-0">
+  <div class="card-header bg-white py-2.5 border-bottom d-flex justify-content-between align-items-center">
+    <div>
+      <div class="fw-bold text-dark">
+        <i class="fa-regular fa-clock text-primary me-2"></i>Lịch trình trực quan ngày {{ ngay | date:'dd/MM/yyyy' }}
+      </div>
+      <div class="text-secondary" style="font-size: 0.74rem" *ngIf="cauHinh">
+        Khung làm việc: <b>{{ cauHinh.gioBatDau.slice(0,5) }} - {{ cauHinh.gioKetThuc.slice(0,5) }}</b>
+        <span *ngIf="cauHinh.nghiTruaTu && cauHinh.nghiTruaDen">
+          · Nghỉ trưa {{ cauHinh.nghiTruaTu.slice(0,5) }} - {{ cauHinh.nghiTruaDen.slice(0,5) }}
+        </span>
+      </div>
+    </div>
+    <span class="text-muted" style="font-size: 0.74rem">Nhấp vào buổi trình để xem &amp; phản hồi</span>
+  </div>
+
+  <div class="card-body p-2 timeline-scroll">
+    <div class="timeline-canvas position-relative" [style.height.px]="totalHeightPx">
+      <div
+        *ngFor="let slot of slots"
+        class="time-slot-row d-flex"
+        [style.height.px]="slotHeightPx"
+        [class.slot-hour]="slot.isHour"
+        [class.slot-half]="!slot.isHour"
+        [class.slot-lunch]="slot.isLunch"
+      >
+        <div class="time-axis text-end pe-2 text-secondary">
+          <span *ngIf="slot.isHour">{{ slot.label }}</span>
+          <span *ngIf="!slot.isHour" class="opacity-50" style="font-size: 0.68rem">{{ slot.label }}</span>
+        </div>
+        <div class="flex-grow-1 position-relative">
+          <span class="lunch-tag" *ngIf="slot.isLunch && slot.isHour">
+            <i class="fa-solid fa-mug-hot me-1"></i>Nghỉ trưa
+          </span>
+        </div>
+      </div>
+
+      <div class="events-overlay">
+        <!-- Sự kiện cá nhân / họp -->
+        <div
+          *ngFor="let sk of positionedSuKiens"
+          class="busy-event-block rounded-2 px-2 py-1 d-flex justify-content-between align-items-start"
+          [ngStyle]="getSuKienStyle(sk)"
+        >
+          <div class="min-w-0">
+            <div class="fw-semibold small text-truncate">
+              <i class="fa-solid fa-calendar-minus me-1"></i>[{{ suKienLoaiLabel(sk.item.loai) }}] {{ sk.item.tieuDe }}
+            </div>
+            <div style="font-size: 0.7rem" class="opacity-75 text-truncate">
+              {{ sk.item.batDau | date:'HH:mm' }} - {{ sk.item.ketThuc | date:'HH:mm' }}
+              <span *ngIf="sk.item.diaDiem"> · {{ sk.item.diaDiem }}</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-link btn-sm text-secondary p-0 ms-1" title="Xóa lịch bận" (click)="onDeleteSuKien($event, sk.item)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Buổi trình của nhân viên -->
+        <div
+          *ngFor="let p of positionedLichs"
+          class="appt-block rounded-2 px-2 py-1 shadow-sm"
+          [ngClass]="lichStateClass(p.item.trangThaiLich)"
+          [ngStyle]="getBlockStyle(p)"
+          (click)="selectLich.emit(p.item)"
+        >
+          <div class="d-flex justify-content-between align-items-center gap-1">
+            <span class="fw-bold text-primary text-nowrap" style="font-size: 0.72rem">
+              {{ p.item.batDau | date:'HH:mm' }}–{{ p.item.ketThuc | date:'HH:mm' }}
+              <span class="text-muted fw-normal">({{ p.item.thoiLuongPhut }}p)</span>
+            </span>
+            <div class="d-flex align-items-center gap-1">
+              <span *ngIf="p.hasOverlap" class="badge bg-info text-white px-1 py-0" style="font-size: 0.62rem">Chồng giờ</span>
+              <span *ngIf="p.item.ketQua" class="badge bg-success text-white px-1 py-0" style="font-size: 0.62rem">
+                <i class="fa-solid fa-check"></i> Đã phản hồi
+              </span>
+            </div>
+          </div>
+          <div class="fw-semibold text-dark text-truncate" style="font-size: 0.78rem; line-height: 1.25">
+            <i class="fa-solid fa-lock text-secondary me-1" *ngIf="p.item.laBaoMat"></i>{{ p.item.tieuDe }}
+          </div>
+          <div class="text-secondary text-truncate" style="font-size: 0.71rem" *ngIf="p.heightPx >= 52">
+            <i class="fa-solid fa-user me-1"></i>{{ p.item.tenNguoiTrinh }}
+            <span *ngIf="p.item.phongBanNguoiTrinh"> · {{ p.item.phongBanNguoiTrinh }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

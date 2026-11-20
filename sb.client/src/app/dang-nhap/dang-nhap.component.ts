@@ -42,7 +42,7 @@ export class DangNhapComponent implements OnInit {
       next:() => {
         this.toastrService.success('Đăng nhập thành công');
         const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-        this.router.navigateByUrl(returnUrl || this.authService.getDefaultRouteByPermission());
+        this.router.navigateByUrl(returnUrl || this.authService.getDefaultRouteByPermission(returnUrl));
       },
       error:() => {
         this.error = 'Tên đăng nhập hoặc mật khẩu không chính xác';

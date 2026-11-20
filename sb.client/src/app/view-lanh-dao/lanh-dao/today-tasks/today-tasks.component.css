@@ -1,0 +1,15 @@
+.tasks-scroll {
+  max-height: 760px;
+  overflow-y: auto;
+  background-color: #f8fafc;
+}
+
+.task-card {
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}

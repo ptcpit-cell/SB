@@ -1,0 +1,93 @@
+<ng-container *ngIf="visible && context">
+  <div class="modal fade show d-block" tabindex="-1" (click)="closeModal.emit()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header py-2.5">
+          <h6 class="modal-title fw-bold">
+            <i class="fa-regular fa-calendar-check text-primary me-2"></i>
+            {{ context.isReschedule ? 'Điều chỉnh khung giờ trình' : 'Xếp lịch trình cho yêu cầu' }}
+          </h6>
+          <button type="button" class="btn-close" (click)="closeModal.emit()" [disabled]="saving"></button>
+        </div>
+
+        <div class="modal-body small">
+          <div class="p-2.5 rounded-3 bg-light border mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="badge bg-white text-dark border">{{ context.maYeuCau }}</span>
+              <span class="text-secondary">Thời lượng dự kiến: <b>{{ context.thoiLuongPhut }} phút</b></span>
+            </div>
+            <div class="fw-bold text-dark">{{ context.tieuDe }}</div>
+            <div class="text-secondary mt-1">
+              Người trình: <b>{{ context.tenNguoiTrinh }}</b>
+              <span *ngIf="context.hanChot"> · Hạn chót: <b class="text-danger">{{ context.hanChot | date:'dd/MM/yyyy' }}</b></span>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-5">
+              <label class="form-label fw-semibold mb-1">Ngày trình <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="ngay" />
+            </div>
+            <div class="col-3">
+              <label class="form-label fw-semibold mb-1">Bắt đầu <span class="text-danger">*</span></label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="gioBatDau" (ngModelChange)="onStartTimeChange()" />
+            </div>
+            <div class="col-4">
+              <label class="form-label fw-semibold mb-1">Kết thúc <span class="text-danger">*</span></label>
+              <input type="time" class="form-control form-control-sm" [(ngModel)]="gioKetThuc" />
+            </div>
+          </div>
+
+          <!-- Thông báo xếp chồng (KHÔNG CHẶN — cho phép xếp chồng theo nghiệp vụ) -->
+          <div class="alert alert-info py-2 mb-2 small" *ngIf="overlappingItems.length > 0">
+            <div class="fw-semibold mb-1">
+              <i class="fa-solid fa-layer-group me-1"></i>
+              Khung giờ này có {{ overlappingItems.length }} lịch trình cùng khoảng thời gian (được phép xếp chồng):
+            </div>
+            <ul class="mb-0 ps-3">
+              <li *ngFor="let ov of overlappingItems">
+                {{ ov.batDau | date:'HH:mm' }}-{{ ov.ketThuc | date:'HH:mm' }} · {{ ov.tenNguoiTrinh }} ({{ ov.tieuDe }})
+              </li>
+            </ul>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label fw-semibold mb-1">Địa điểm</label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="diaDiem" placeholder="VD: Phòng Tổng Giám đốc" />
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold mb-1">Mức ưu tiên (Trợ lý quyết định)</label>
+              <select class="form-select form-select-sm" [(ngModel)]="mucUuTienId">
+                <option [ngValue]="null">-- Chọn mức ưu tiên --</option>
+                <option *ngFor="let m of mucUuTiens" [ngValue]="m.id">{{ m.code }} - {{ m.ten }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold mb-1">Ghi chú (tùy chọn)</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="ghiChu" placeholder="Ghi chú sắp xếp hoặc lưu ý cho nhân viên..." />
+          </div>
+
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" id="chkDeXuatNV" [(ngModel)]="yeuCauXacNhanNV" />
+            <label class="form-check-label" for="chkDeXuatNV">
+              Gửi đề xuất chờ nhân viên xác nhận trước (thay vì chốt lịch ngay)
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeModal.emit()" [disabled]="saving">Đóng</button>
+          <button type="button" class="btn btn-sm btn-primary" (click)="submit()" [disabled]="saving">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="saving"></span>
+            <i class="fa-solid fa-check me-1" *ngIf="!saving"></i>
+            {{ yeuCauXacNhanNV ? 'Gửi đề xuất khung giờ' : 'Chốt lịch trình' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>

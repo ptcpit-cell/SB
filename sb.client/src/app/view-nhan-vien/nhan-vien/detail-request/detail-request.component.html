@@ -1,1 +1,410 @@
-<p>detail-request works!</p>
+<div class="container-xl py-3">
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div class="d-flex align-items-start gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm mt-1" (click)="quayLai()">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-1" *ngIf="data">
+          <span class="badge bg-light text-dark border fw-semibold">{{ data.chung.maYeuCau }}</span>
+          <span
+            class="badge rounded-pill border px-3 py-1"
+            [ngClass]="'bg-' + statusMeta.css + '-subtle text-' + statusMeta.css + '-emphasis border-' + statusMeta.css + '-subtle'"
+          >
+            {{ statusMeta.label }}
+          </span>
+          <span class="badge text-bg-warning" *ngIf="data.chung.mucKhan === 2">
+            <i class="fa-solid fa-bolt me-1"></i>Gấp
+          </span>
+          <span class="badge text-bg-danger" *ngIf="data.chung.mucKhan === 3">
+            <i class="fa-solid fa-fire me-1"></i>Rất gấp
+          </span>
+          <span
+            class="badge text-white"
+            *ngIf="data.chung.tenMucUuTien"
+            [style.background-color]="data.chung.mauMucUuTien || '#0d6efd'"
+          >
+            Ưu tiên: {{ data.chung.tenMucUuTien }}
+          </span>
+          <span class="badge bg-dark-subtle text-dark-emphasis border" *ngIf="data.chung.laBaoMat">
+            <i class="fa-solid fa-lock me-1"></i>Bảo mật
+          </span>
+        </div>
+        <h4 class="mb-0 fw-bold text-dark">{{ data?.chung?.tieuDe || 'Chi tiết yêu cầu trình' }}</h4>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2" *ngIf="data">
+      <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="canEdit" (click)="suaYeuCau()">
+        <i class="fa-solid fa-pen me-1"></i>Sửa
+      </button>
+      <button type="button" class="btn btn-primary btn-sm" *ngIf="canSend" (click)="guiYeuCau()">
+        <i class="fa-solid fa-paper-plane me-1"></i>Gửi yêu cầu
+      </button>
+      <button type="button" class="btn btn-outline-danger btn-sm" *ngIf="canCancel" (click)="moHopHuy()">
+        <i class="fa-solid fa-ban me-1"></i>Hủy yêu cầu
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading / Error -->
+  <div class="text-center text-secondary py-5" *ngIf="loading">
+    <div class="spinner-border spinner-border-sm me-2"></div>Đang tải chi tiết yêu cầu...
+  </div>
+
+  <div class="alert alert-danger" *ngIf="!loading && errorMsg">
+    <i class="fa-solid fa-circle-exclamation me-2"></i>{{ errorMsg }}
+  </div>
+
+  <ng-container *ngIf="!loading && data">
+    <!-- Stepper tiến trình -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body py-3">
+        <div class="stepper">
+          <div class="step" *ngFor="let s of steps; let i = index" [ngClass]="s.state">
+            <div class="dot">
+              <i class="fa-solid fa-check" *ngIf="s.state === 'done'"></i>
+              <i class="fa-solid fa-exclamation" *ngIf="s.state === 'warn'"></i>
+              <i class="fa-solid fa-xmark" *ngIf="s.state === 'error'"></i>
+              <span *ngIf="s.state === 'current' || s.state === 'todo'">{{ i + 1 }}</span>
+            </div>
+            <div class="step-label">{{ s.label }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cảnh báo lý do từ chối / hủy -->
+    <div class="alert alert-danger d-flex align-items-start gap-2 mb-3" *ngIf="(data.chung.trangThai === 8 || data.chung.trangThai === 9) && data.chung.lyDoTuChoiHuy">
+      <i class="fa-solid fa-circle-info mt-1"></i>
+      <div>
+        <div class="fw-semibold">{{ data.chung.trangThai === 8 ? 'Lý do từ chối' : 'Lý do hủy' }}</div>
+        <div class="small">{{ data.chung.lyDoTuChoiHuy }}</div>
+      </div>
+    </div>
+
+    <!-- KẾT QUẢ & PHẢN HỒI CỦA LÃNH ĐẠO (nổi bật khi có phản hồi) -->
+    <div class="card shadow-sm border-success border-2 mb-3" *ngIf="data.ketQuas && data.ketQuas.length > 0">
+      <div class="card-header bg-success-subtle text-success-emphasis fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-comment-dots me-2"></i>Phản hồi &amp; Chỉ đạo của Lãnh đạo</span>
+        <span class="small fw-normal">{{ data.chung.tenLanhDao }}</span>
+      </div>
+      <div class="card-body">
+        <div *ngFor="let kq of data.ketQuas; let last = last" [class.mb-3]="!last" [class.pb-3]="!last" [class.border-bottom]="!last">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <span class="badge border px-2 py-1" [ngClass]="ketQuaLabel(kq.ketQua).css">
+              {{ ketQuaLabel(kq.ketQua).text }}
+            </span>
+            <span class="small text-secondary">
+              <i class="fa-regular fa-clock me-1"></i>Cập nhật lúc {{ (kq.thoiGianThucTe || kq.createdAt) | date:'dd/MM/yyyy HH:mm' }}
+              bởi <b>{{ kq.nguoiGhiNhan }}</b>
+            </span>
+          </div>
+
+          <div class="p-3 rounded-3 bg-light border mb-2" *ngIf="kq.chiDaoCuaLanhDao">
+            <div class="small text-secondary fw-semibold mb-1">Nội dung phản hồi / Chỉ đạo:</div>
+            <div class="text-dark" style="white-space: pre-line">{{ kq.chiDaoCuaLanhDao }}</div>
+          </div>
+
+          <div class="small text-secondary" *ngIf="kq.ghiChu">
+            <b>Ghi chú thêm:</b> {{ kq.ghiChu }}
+          </div>
+        </div>
+
+        <!-- Công việc sau buổi trình -->
+        <div class="mt-3 pt-3 border-top" *ngIf="data.congViecs && data.congViecs.length > 0">
+          <div class="small fw-bold text-dark mb-2">
+            <i class="fa-solid fa-list-check me-1 text-primary"></i>Công việc triển khai sau buổi trình ({{ data.congViecs.length }})
+          </div>
+          <ul class="list-group list-group-flush border rounded-3">
+            <li class="list-group-item d-flex justify-content-between align-items-center gap-2 py-2 small" *ngFor="let cv of data.congViecs">
+              <div>
+                <i class="fa-regular fa-circle-check text-success me-2" *ngIf="cv.trangThai === 3"></i>
+                <i class="fa-regular fa-circle text-primary me-2" *ngIf="cv.trangThai !== 3"></i>
+                <span class="fw-medium">{{ cv.noiDung }}</span>
+              </div>
+              <div class="text-nowrap text-secondary">
+                <span class="badge bg-light text-dark border me-1" *ngIf="cv.nguoiPhuTrach">{{ cv.nguoiPhuTrach }}</span>
+                <span *ngIf="cv.hanXuLy"><i class="fa-regular fa-calendar me-1"></i>Hạn: {{ cv.hanXuLy | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- HÀNH ĐỘNG CỦA NHÂN VIÊN: Cần bổ sung thông tin (TrangThai = 4) -->
+    <div class="card shadow-sm border-warning border-2 mb-3" *ngIf="isOwner && data.chung.trangThai === 4">
+      <div class="card-header bg-warning-subtle text-warning-emphasis fw-bold">
+        <i class="fa-solid fa-circle-question me-2"></i>Trợ lý yêu cầu bổ sung thông tin
+      </div>
+      <div class="card-body">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Nội dung bổ sung / Giải trình <span class="text-danger">*</span></label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="boSungNoiDung"
+                    placeholder="Nhập thông tin bổ sung theo yêu cầu của trợ lý..."></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Cập nhật tóm tắt nội dung (nếu cần)</label>
+          <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="boSungTomTat" maxlength="500"></textarea>
+        </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small fw-semibold mb-0">Đính kèm thêm tài liệu</label>
+            <label class="btn btn-outline-secondary btn-sm py-0 px-2 mb-0" [class.disabled]="uploadingBoSung">
+              <span class="spinner-border spinner-border-sm me-1" *ngIf="uploadingBoSung"></span>
+              <i class="fa-solid fa-upload me-1" *ngIf="!uploadingBoSung"></i>Chọn tệp
+              <input type="file" multiple hidden [disabled]="uploadingBoSung" (change)="onFilesBoSung($event)" />
+            </label>
+          </div>
+          <ul class="list-group" *ngIf="boSungTeps.length > 0">
+            <li class="list-group-item d-flex align-items-center justify-content-between py-1 small" *ngFor="let f of boSungTeps; let i = index">
+              <span class="text-truncate"><i class="fa-regular fa-file me-1"></i>{{ f.tenFile }} ({{ formatSize(f.kichThuoc) }})</span>
+              <button type="button" class="btn btn-link btn-sm text-danger p-0" (click)="removeBoSungTep(i)">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="text-end">
+          <button type="button" class="btn btn-warning btn-sm fw-semibold" [disabled]="submittingBoSung || uploadingBoSung" (click)="guiBoSung()">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="submittingBoSung"></span>
+            <i class="fa-solid fa-paper-plane me-1" *ngIf="!submittingBoSung"></i>Gửi bổ sung cho trợ lý
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HÀNH ĐỘNG CỦA NHÂN VIÊN: Phản hồi đề xuất đổi lịch (TrangThai = 3) -->
+    <div class="card shadow-sm border-warning border-2 mb-3" *ngIf="isOwner && data.chung.trangThai === 3 && pendingDeXuats.length > 0">
+      <div class="card-header bg-warning-subtle text-warning-emphasis fw-bold">
+        <i class="fa-regular fa-clock me-2"></i>Trợ lý đề xuất khung giờ trình — Chờ bạn xác nhận
+      </div>
+      <div class="card-body">
+        <div class="p-3 rounded-3 bg-light border mb-3" *ngFor="let g of pendingDeXuats">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div>
+              <div class="fw-bold text-primary">
+                <i class="fa-regular fa-calendar-check me-1"></i>
+                {{ g.batDau | date:'EEEE, dd/MM/yyyy' }} · {{ g.batDau | date:'HH:mm' }} - {{ g.ketThuc | date:'HH:mm' }}
+              </div>
+              <div class="small text-secondary mt-1" *ngIf="g.ghiChu">Ghi chú trợ lý: {{ g.ghiChu }}</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-success btn-sm" [disabled]="submittingPhanHoi" (click)="phanHoiDeXuat(g.id, true)">
+                <i class="fa-solid fa-check me-1"></i>Đồng ý khung giờ này
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm" [disabled]="submittingPhanHoi" (click)="phanHoiDeXuat(g.id, false)">
+                <i class="fa-solid fa-xmark me-1"></i>Đề nghị giờ khác
+              </button>
+            </div>
+          </div>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="phanHoiGhiChu"
+                 placeholder="Ghi chú phản hồi (bắt buộc nếu chọn đề nghị giờ khác)..." />
+        </div>
+      </div>
+    </div>
+
+    <!-- NỘI DUNG 2 CỘT -->
+    <div class="row g-3">
+      <!-- CỘT TRÁI: Thông tin chung + Tài liệu + Bình luận -->
+      <div class="col-lg-7">
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-white fw-semibold py-2">
+            <i class="fa-solid fa-file-lines text-primary me-2"></i>Thông tin yêu cầu
+          </div>
+          <div class="card-body">
+            <div class="row g-2 small mb-3">
+              <div class="col-sm-6">
+                <span class="text-secondary">Người trình:</span>
+                <div class="fw-semibold text-dark">{{ data.chung.tenNguoiTao || '—' }}</div>
+                <div class="text-muted" style="font-size: 0.78rem">{{ data.chung.chucVuNguoiTao }} · {{ data.chung.phongBanNguoiTao }}</div>
+              </div>
+              <div class="col-sm-6">
+                <span class="text-secondary">Lãnh đạo duyệt trình:</span>
+                <div class="fw-semibold text-dark">{{ data.chung.tenLanhDao || '—' }}</div>
+                <div class="text-muted" style="font-size: 0.78rem" *ngIf="data.chung.tenTroLy">Trợ lý phụ trách: {{ data.chung.tenTroLy }}</div>
+              </div>
+              <div class="col-sm-4">
+                <span class="text-secondary">Loại yêu cầu:</span>
+                <div class="fw-medium">{{ data.chung.tenLoai || '—' }}</div>
+              </div>
+              <div class="col-sm-4">
+                <span class="text-secondary">Thời lượng dự kiến:</span>
+                <div class="fw-medium">{{ data.chung.thoiLuongPhut }} phút</div>
+              </div>
+              <div class="col-sm-4">
+                <span class="text-secondary">Hạn chót:</span>
+                <div class="fw-medium text-danger" *ngIf="data.chung.hanChot">{{ data.chung.hanChot | date:'dd/MM/yyyy' }}</div>
+                <div class="text-muted" *ngIf="!data.chung.hanChot">Không đặt</div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-3 bg-light border mb-2">
+              <div class="small text-secondary fw-semibold mb-1">Tóm tắt nội dung</div>
+              <div class="small text-dark" style="white-space: pre-line">{{ data.chung.tomTat || 'Không có tóm tắt.' }}</div>
+            </div>
+
+            <div class="alert alert-warning py-2 mb-0 small" *ngIf="data.chung.mucKhan > 1 && data.chung.lyDoKhan">
+              <i class="fa-solid fa-bolt me-1"></i><b>Lý do khẩn:</b> {{ data.chung.lyDoKhan }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Người tham dự & Tệp đính kèm -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-white fw-semibold py-2 small">
+                <i class="fa-solid fa-users text-primary me-2"></i>Người cùng tham dự ({{ data.nguoiThamDus.length }})
+              </div>
+              <div class="card-body py-2">
+                <div class="text-muted small py-2" *ngIf="data.nguoiThamDus.length === 0">Không có người tham dự kèm.</div>
+                <ul class="list-group list-group-flush" *ngIf="data.nguoiThamDus.length > 0">
+                  <li class="list-group-item px-0 py-2 small" *ngFor="let p of data.nguoiThamDus">
+                    <div class="fw-semibold">{{ p.hoTen }}</div>
+                    <div class="text-secondary" style="font-size: 0.78rem">
+                      <span *ngIf="p.vaiTro">{{ p.vaiTro }}</span>
+                      <span *ngIf="p.vaiTro && p.donViNgoai"> · </span>
+                      <span *ngIf="p.donViNgoai">{{ p.donViNgoai }}</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-white fw-semibold py-2 small">
+                <i class="fa-solid fa-paperclip text-primary me-2"></i>Tệp đính kèm ({{ data.teps.length }})
+              </div>
+              <div class="card-body py-2">
+                <div class="text-muted small py-2" *ngIf="data.teps.length === 0">Chưa có tệp đính kèm.</div>
+                <ul class="list-group list-group-flush" *ngIf="data.teps.length > 0">
+                  <li class="list-group-item px-0 py-2 small d-flex align-items-center justify-content-between gap-2" *ngFor="let t of data.teps">
+                    <a [href]="fileUrl(t.duongDan)" target="_blank" class="text-decoration-none text-truncate">
+                      <i class="fa-regular fa-file-lines me-1 text-primary"></i>{{ t.tenFile }}
+                    </a>
+                    <span class="text-muted text-nowrap" style="font-size: 0.75rem">{{ formatSize(t.kichThuoc) }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bình luận / Trao đổi -->
+        <div class="card shadow-sm" *ngIf="data.binhLuans && data.binhLuans.length > 0">
+          <div class="card-header bg-white fw-semibold py-2 small">
+            <i class="fa-regular fa-comments text-primary me-2"></i>Trao đổi / Ghi chú bổ sung ({{ data.binhLuans.length }})
+          </div>
+          <div class="card-body py-2">
+            <div class="border-bottom py-2 small" *ngFor="let bl of data.binhLuans">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-semibold text-dark">{{ bl.tenNguoiDung }}</span>
+                <span class="text-muted" style="font-size: 0.75rem">{{ bl.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <div class="text-secondary mt-1" style="white-space: pre-line">{{ bl.noiDung }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI: Lịch trình đã xếp + Timeline trạng thái -->
+      <div class="col-lg-5">
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-white fw-semibold py-2">
+            <i class="fa-regular fa-calendar-check text-primary me-2"></i>Lịch trình trình lãnh đạo
+          </div>
+          <div class="card-body">
+            <div class="text-muted small py-2" *ngIf="!data.lichTrinhs || data.lichTrinhs.length === 0">
+              <i class="fa-regular fa-clock me-1"></i>Chưa có lịch trình chính thức. Trợ lý sẽ sắp xếp khung giờ phù hợp trước hạn chót.
+            </div>
+
+            <div class="p-3 rounded-3 border bg-primary-subtle bg-opacity-25 mb-2" *ngFor="let lt of data.lichTrinhs">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-primary">
+                  {{ lt.batDau | date:'HH:mm' }} - {{ lt.ketThuc | date:'HH:mm' }}
+                </span>
+                <span class="badge" [ngClass]="lichStatusLabel(lt.trangThai).css">
+                  {{ lichStatusLabel(lt.trangThai).text }}
+                </span>
+              </div>
+              <div class="small text-dark fw-medium mb-1">
+                <i class="fa-regular fa-calendar me-1 text-secondary"></i>{{ lt.batDau | date:'EEEE, dd/MM/yyyy' }}
+              </div>
+              <div class="small text-secondary" *ngIf="lt.diaDiem">
+                <i class="fa-solid fa-location-dot me-1"></i>{{ lt.diaDiem }}
+              </div>
+              <div class="small text-info-emphasis mt-1" *ngIf="lt.daGhiDeXungDot">
+                <i class="fa-solid fa-layer-group me-1"></i>Lịch xếp linh hoạt trong khung giờ
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline xử lý -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-white fw-semibold py-2">
+            <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Lịch sử xử lý
+          </div>
+          <div class="card-body py-3">
+            <div class="timeline-list" *ngIf="data.timeline && data.timeline.length > 0">
+              <div class="timeline-item pb-3" *ngFor="let h of data.timeline">
+                <div class="timeline-dot"></div>
+                <div class="small">
+                  <div class="d-flex justify-content-between gap-2">
+                    <span class="fw-semibold text-dark">{{ statusLabel(h.denTrangThai) }}</span>
+                    <span class="text-muted" style="font-size: 0.75rem">{{ h.createdAt | date:'dd/MM HH:mm' }}</span>
+                  </div>
+                  <div class="text-secondary" style="font-size: 0.8rem">
+                    {{ h.nguoiThucHien }} ({{ vaiTroLabel(h.vaiTroThucHien) }})
+                  </div>
+                  <div class="text-dark mt-1" *ngIf="h.lyDo">{{ h.lyDo }}</div>
+                  <div class="text-muted fst-italic" *ngIf="h.ghiChu">{{ h.ghiChu }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="text-muted small" *ngIf="!data.timeline || data.timeline.length === 0">
+              Chưa có lịch sử cập nhật.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Modal hủy yêu cầu -->
+<ng-container *ngIf="showHuyModal && data">
+  <div class="modal fade show d-block" tabindex="-1" (click)="showHuyModal = false">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Hủy yêu cầu {{ data.chung.maYeuCau }}?</h5>
+          <button type="button" class="btn-close" (click)="showHuyModal = false" [disabled]="dangHuy"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-secondary small mb-2">{{ data.chung.tieuDe }}</p>
+          <div class="alert alert-warning py-2 small" *ngIf="huyCanLyDo">
+            <i class="fa-solid fa-calendar-xmark me-1"></i>Yêu cầu đã được xếp lịch, lịch trình sẽ bị hủy theo.
+          </div>
+          <label class="form-label small fw-medium">
+            Lý do hủy <span class="text-danger" *ngIf="huyCanLyDo">*</span>
+          </label>
+          <textarea class="form-control" rows="3" maxlength="500" [(ngModel)]="lyDoHuy" placeholder="Nhập lý do..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="showHuyModal = false" [disabled]="dangHuy">Đóng</button>
+          <button type="button" class="btn btn-danger" (click)="xacNhanHuy()" [disabled]="dangHuy">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="dangHuy"></span>
+            {{ dangHuy ? 'Đang hủy...' : 'Xác nhận hủy' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>

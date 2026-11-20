@@ -11,6 +11,7 @@ export class SignalRService {
 
   // Dùng Subject để các component khác có thể "lắng nghe" luồng dữ liệu thông báo mới đổ về
   public notificationReceived$ = new Subject<any>();
+  public scheduleNotificationReceived$ = new Subject<any>();
 
   constructor(@Inject('BASE_URL') private baseUrl: string) {}
 
@@ -39,9 +40,13 @@ export class SignalRService {
       .catch((err) =>
         console.error('LỖI SIGNALR CHI TIẾT:', JSON.stringify(err, null, 2))
       );
-    // Lắng nghe sự kiện "ReceiveNewNotification" từ Server bắn xuống
+    // Lắng nghe sự kiện "ReceiveNewNotification" từ Server bắn xuống (ThongBao cơ bản)
     this.hubConnection.on('ReceiveNewNotification', (data) => {
       this.notificationReceived$.next(data); // Đẩy dữ liệu vào Luồng (Subject)
+    });
+    // Lắng nghe sự kiện "ReceiveScheduleNotification" từ Server bắn xuống (ThongBaoLichTrinh)
+    this.hubConnection.on('ReceiveScheduleNotification', (data) => {
+      this.scheduleNotificationReceived$.next(data);
     });
   }
 
