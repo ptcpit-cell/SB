@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SB_Services.EF;
 using SB_Services.Services.Common;
 
@@ -17,11 +17,11 @@ namespace SB.Server.Controllers
             return Ok(result);
         }
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetMyNotifications(int userId)
+        public async Task<IActionResult> GetMyNotifications()
         {
             try
             {
-                var result = await _commonServices.GetDanhSachThongBaoAsync(CurrentChiNhanhId, userId);
+                var result = await _commonServices.GetDanhSachThongBaoAsync(CurrentChiNhanhId, CurrentUserId);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -30,17 +30,38 @@ namespace SB.Server.Controllers
             }
         }
         [HttpPost("[action]")]
-        public async Task<IActionResult> MarkAsReadBulk([FromBody] List<int> thongBaoIds, int userId)
+        public async Task<IActionResult> MarkAsReadBulk([FromBody] List<int> thongBaoIds)
         {
             try
             {
-                await _commonServices.MarkReadAsync(userId, thongBaoIds);
+                await _commonServices.MarkReadAsync(CurrentUserId, thongBaoIds);
                 return Ok(new { message = "Đã cập nhật trạng thái đọc thành công." });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Lỗi hệ thống khi cập nhật trạng thái đọc: {ex.Message}");
             }
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetThongBaoLichTrinh()
+        {
+            var result = await _commonServices.GetThongBaoLichTrinhAsync(CurrentUserId);
+            return Ok(result);
+        }
+
+        [HttpPost("[action]/{id}")]
+        public async Task<IActionResult> MarkThongBaoLichTrinhRead(int id)
+        {
+            await _commonServices.MarkThongBaoLichTrinhReadAsync(CurrentUserId, id);
+            return Ok(new { message = "Đã đánh dấu đã đọc." });
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> MarkAllThongBaoLichTrinhRead()
+        {
+            await _commonServices.MarkAllThongBaoLichTrinhReadAsync(CurrentUserId);
+            return Ok(new { message = "Đã đánh dấu tất cả là đã đọc." });
         }
 
         [HttpGet("[action]")]

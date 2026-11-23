@@ -1,0 +1,124 @@
+.adm-page {
+  background: #f8fafc;
+  min-height: calc(100vh - 58px);
+}
+
+.adm-tabs {
+  display: inline-flex;
+  background: #e2e8f0;
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.adm-tab-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.adm-tab-btn:hover {
+  color: #0f172a;
+}
+
+.adm-tab-btn.is-active {
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.adm-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.adm-kpi-cell {
+  padding: 16px 18px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.adm-kpi-cell:last-child {
+  border-right: 0;
+}
+
+.adm-kpi-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.adm-kpi-val {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.adm-kpi-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.adm-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.adm-card-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.adm-card-body {
+  padding: 14px 16px;
+}
+
+.status-bar-track {
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.status-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 240ms ease;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 992px) {
+  .adm-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .adm-kpi-cell:nth-child(2) {
+    border-right: 0;
+  }
+  .adm-kpi-cell:nth-child(1),
+  .adm-kpi-cell:nth-child(2) {
+    border-bottom: 1px solid #e2e8f0;
+  }
+}

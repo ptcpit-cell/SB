@@ -1,0 +1,53 @@
+.profile-page {
+  background: #f8fafc;
+  min-height: calc(100vh - 58px);
+}
+
+.profile-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.role-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.summary-label {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.summary-value {
+  text-align: right;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

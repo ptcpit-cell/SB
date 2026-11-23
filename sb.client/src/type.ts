@@ -515,3 +515,150 @@ export interface PhanHoiLanhDaoRequest {
   }[];
 }
 
+export interface WeekScheduleResponse {
+  tuNgay: string;
+  denNgay: string;
+  lanhDao: LanhDaoInfo;
+  cauHinh: LanhDaoCauHinh;
+  lichTrinhs: LichTrinhView[];
+  suKiens: SuKienLanhDaoView[];
+}
+
+export interface UserProfile {
+  userId: number;
+  userName: string;
+  tenNguoiDung: string;
+  email: string;
+  phone: string;
+  zaloId: string;
+  chiNhanhId: number;
+  tenChiNhanh: string;
+  phongBanId: number | null;
+  tenPhongBan: string;
+  chucVuId: number | null;
+  tenChucVu: string;
+  roles: { roleId: number; tenRole: string }[];
+  permissions: string[];
+}
+
+export interface AdminDashboardData {
+  tongQuan: {
+    tongYeuCau: number;
+    choXuLy: number;
+    daDuyetLich: number;
+    daHoanThanh: number;
+    tuChoiHuy: number;
+    tongLanhDao: number;
+    buoiTrinhHomNay: number;
+    tongNguoiDung: number;
+  };
+  theoTrangThai: {
+    trangThai: number;
+    tenTrangThai: string;
+    soLuong: number;
+  }[];
+  theoChiNhanh: {
+    chiNhanhId: number;
+    maChiNhanh: string;
+    tenChiNhanh: string;
+    tongYeuCau: number;
+    dangXuLy: number;
+    hoanThanh: number;
+    tuChoiHuy: number;
+  }[];
+  lichHomNay: {
+    lichTrinhId: number;
+    yeuCauId: number;
+    maYeuCau: string;
+    tieuDe: string;
+    tenLanhDao: string;
+    tenNguoiTrinh: string;
+    batDau: string;
+    ketThuc: string;
+    trangThaiLich: number;
+  }[];
+}
+
+export interface AdminLanhDaoRow {
+  id: number;
+  chiNhanhId: number;
+  tenChiNhanh: string;
+  userId: number;
+  hoTen: string;
+  userName: string;
+  tenChucVu: string;
+  tenPhongBan: string;
+  capDo: number;
+  thuTuHienThi: number;
+  isActived: boolean;
+  troLyUserId: number | null;
+  tenTroLy: string;
+  userNameTroLy: string;
+}
+
+export interface AdminUserOption {
+  userId: number;
+  userName: string;
+  tenNguoiDung: string;
+  chiNhanhId: number;
+  tenChiNhanh: string;
+  tenChucVu: string;
+  tenPhongBan: string;
+  roleNames: string[];
+}
+
+export interface AdminLoaiYeuCauRow {
+  id: number;
+  chiNhanhId: number;
+  maLoai: string;
+  tenLoai: string;
+  thoiLuongMacDinhPhut: number;
+  isActived: boolean;
+}
+
+export interface AdminMucUuTienRow {
+  id: number;
+  chiNhanhId: number;
+  code: string;
+  ten: string;
+  trongSo: number;
+  mauHienThi: string;
+  isActived: boolean;
+}
+
+export interface BaoCaoYeuCauRow {
+  refDate: string;
+  yeuCauId: number;
+  maYeuCau: string;
+  tieuDe: string;
+  tomTat: string;
+  chiNhanhId: number;
+  tenChiNhanh: string;
+  tenNguoiTrinh: string;
+  tenPhongBan: string;
+  tenChucVu: string;
+  tenLanhDao: string;
+  tenLoai: string;
+  mucKhan: string;
+  mucUuTien: string;
+  thoiLuongPhut: number;
+  hanChot: string | null;
+  ngayGui: string | null;
+  createdAt: string;
+  lichBatDau: string | null;
+  lichKetThuc: string | null;
+  trangThai: number;
+  tenTrangThai: string;
+  phanHoiLanhDao: string;
+  lyDoTuChoiHuy: string;
+}
+
+export interface BaoCaoYeuCauResponse {
+  tuNgay: string;
+  denNgay: string;
+  chiNhanhId: number;
+  tenChiNhanh: string;
+  tongSo: number;
+  rows: BaoCaoYeuCauRow[];
+}
+

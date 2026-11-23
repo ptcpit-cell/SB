@@ -13,6 +13,8 @@ import { WebSocketServer } from 'ws';
 import { db, nextId, getChiNhanhVaCha, getUserPermissions, enrichUser } from './store.mjs';
 import { registerTroLyRoutes } from './routes/tro-ly.routes.mjs';
 import { registerLanhDaoRoutes } from './routes/lanh-dao.routes.mjs';
+import { registerAdminRoutes } from './routes/admin.routes.mjs';
+import { registerProfileRoutes } from './routes/profile.routes.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -135,9 +137,13 @@ function emitThongBaoLichTrinh({
   return item;
 }
 
-app.post('/hubs/thongbao/negotiate', (req, res) => {
+app.all(/^\/hubs\/thongbao\/negotiate\/?$/i, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
   const connectionId = crypto.randomUUID();
-  res.json({
+  return res.status(200).json({
     negotiateVersion: 1,
     connectionId,
     connectionToken: connectionId,
@@ -148,6 +154,11 @@ app.post('/hubs/thongbao/negotiate', (req, res) => {
       }
     ]
   });
+});
+
+app.use('/hubs', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(404).json({ message: 'SignalR hub endpoint not found.' });
 });
 
 // =========================================================================
@@ -1847,6 +1858,7 @@ const routeDeps = {
   formatTimeShort,
   formatDateVi,
   enrichUser,
+  getUserPermissions,
   getLanhDaoOfTroLy,
   getLanhDaoOfUser,
   getOrCreateCauHinh,
@@ -1856,6 +1868,8 @@ const routeDeps = {
 };
 registerTroLyRoutes(app, routeDeps);
 registerLanhDaoRoutes(app, routeDeps);
+registerAdminRoutes(app, routeDeps);
+registerProfileRoutes(app, routeDeps);
 
 // =========================================================================
 // Serve built Angular SPA from sb.client/dist/sb.client/browser
@@ -1934,8 +1948,9 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });
 
 server.on('upgrade', (request, socket, head) => {
-  const url = new URL(request.url || '/', `http://${request.headers.host}`);
-  if (url.pathname === '/hubs/thongbao') {
+  const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`);
+  const normalizedPath = url.pathname.replace(/\/+$/, '').toLowerCase();
+  if (normalizedPath === '/hubs/thongbao') {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request);
     });
@@ -1946,8 +1961,55 @@ server.on('upgrade', (request, socket, head) => {
 
 wss.on('connection', (ws) => {
   let handshaked = false;
+  let isAlive = true;
+
+  const safeSend = (payload) => {
+    if (ws.readyState === 1) {
+      try {
+        ws.send(payload);
+      } catch {
+        // Ignore send errors on closing sockets
+      }
+    }
+  };
+
+  ws.on('pong', () => {
+    isAlive = true;
+  });
+
+  // Periodic WebSocket + SignalR keep-alive to prevent reverse proxies (Cloud Run) from closing idle sockets with 1006
+  const heartbeat = setInterval(() => {
+    if (ws.readyState !== 1) {
+      clearInterval(heartbeat);
+      return;
+    }
+    if (!isAlive) {
+      clearInterval(heartbeat);
+      try {
+        ws.terminate();
+      } catch {
+        // Ignore
+      }
+      return;
+    }
+    isAlive = false;
+    try {
+      ws.ping();
+    } catch {
+      // Ignore
+    }
+    if (handshaked) {
+      safeSend(JSON.stringify({ type: 6 }) + RECORD_SEP);
+    }
+  }, 25000);
+
+  const cleanup = () => {
+    clearInterval(heartbeat);
+    removeFromAllGroups(ws);
+  };
 
   ws.on('message', (raw) => {
+    isAlive = true;
     const text = raw.toString('utf8');
     const frames = text.split(RECORD_SEP).filter((f) => f.length > 0);
     for (const frame of frames) {
@@ -1960,24 +2022,24 @@ wss.on('connection', (ws) => {
 
       if (!handshaked && msg.protocol) {
         handshaked = true;
-        ws.send(`{}${RECORD_SEP}`);
+        safeSend(`{}${RECORD_SEP}`);
         continue;
       }
 
       if (msg.type === 6) {
-        ws.send(JSON.stringify({ type: 6 }) + RECORD_SEP);
+        safeSend(JSON.stringify({ type: 6 }) + RECORD_SEP);
       } else if (msg.type === 1 && msg.target === 'JoinBranchGroup') {
         const branchId = String(msg.arguments?.[0] ?? '');
         if (branchId) addToBranchGroup(branchId, ws);
         if (msg.invocationId) {
-          ws.send(JSON.stringify({ type: 3, invocationId: msg.invocationId }) + RECORD_SEP);
+          safeSend(JSON.stringify({ type: 3, invocationId: msg.invocationId }) + RECORD_SEP);
         }
       }
     }
   });
 
-  ws.on('close', () => removeFromAllGroups(ws));
-  ws.on('error', () => removeFromAllGroups(ws));
+  ws.on('close', cleanup);
+  ws.on('error', cleanup);
 });
 
 server.listen(PORT, '0.0.0.0', () => {

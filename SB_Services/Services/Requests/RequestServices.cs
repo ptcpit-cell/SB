@@ -1,6 +1,8 @@
-﻿using Dapper;
+using Dapper;
+using Microsoft.AspNetCore.SignalR;
 using SB_DAL.DapperContext;
 using SB_Services.DTO;
+using SB_Services.Helpers;
 using System.Data;
 
 namespace SB_Services.Services.Requests
@@ -234,12 +236,103 @@ namespace SB_Services.Services.Requests
             return dt;
         }
     }
-    public class ThongBaoNotifier : IThongBaoNotifier
+    public class ThongBaoNotifier(
+        IDapperContext dapperContext,
+        IHubContext<ThongBao> hubContext) : IThongBaoNotifier
     {
-        public Task GuiAsync(IEnumerable<int> nguoiNhanIds, string noiDung, int chiNhanhId, int nguoiTaoId)
+        private readonly IDapperContext _dapperContext = dapperContext;
+        private readonly IHubContext<ThongBao> _hubContext = hubContext;
+
+        public async Task GuiAsync(IEnumerable<int> nguoiNhanIds, string noiDung, int chiNhanhId, int nguoiTaoId)
         {
-            // Implementation for sending notifications
-            throw new NotImplementedException();
+            var receivers = nguoiNhanIds.Where(x => x > 0).Distinct().ToList();
+            if (receivers.Count == 0 || string.IsNullOrWhiteSpace(noiDung)) return;
+
+            var now = DateTime.Now;
+            const string sqlInsert = @"
+                INSERT INTO dbo.ThongBao (NoiDung, CreatedAt, CreatedBy, ChiNhanhId)
+                OUTPUT INSERTED.Id
+                VALUES (@NoiDung, @CreatedAt, @CreatedBy, @ChiNhanhId)";
+
+            int thongBaoId = await _dapperContext.ExecuteScalarAsync<int>(sqlInsert, new
+            {
+                NoiDung = noiDung.Trim(),
+                CreatedAt = now,
+                CreatedBy = nguoiTaoId,
+                ChiNhanhId = chiNhanhId
+            });
+
+            var payload = new
+            {
+                id = thongBaoId,
+                thongBaoId,
+                noiDung = noiDung.Trim(),
+                noiDungTB = noiDung.Trim(),
+                createdAt = now,
+                chiNhanhId,
+                nguoiNhanIds = receivers,
+                isRead = false
+            };
+
+            await _hubContext.Clients
+                .Group(chiNhanhId.ToString())
+                .SendAsync("ReceiveNewNotification", payload);
+        }
+
+        public async Task<ThongBaoLichTrinhDto?> GuiLichTrinhAsync(ThongBaoLichTrinhCreateInput input)
+        {
+            if (input.NguoiNhanId <= 0 || string.IsNullOrWhiteSpace(input.NoiDung)) return null;
+
+            var now = DateTime.Now;
+            const string sqlInsert = @"
+                INSERT INTO dbo.ThongBaoLichTrinh (
+                    ChiNhanhId, NguoiNhanId, TieuDe, NoiDung, Kenh, LoaiSuKien,
+                    YeuCauId, LichTrinhId, DaDoc, NgayDoc, NgayGuiDuKien, NgayGuiThucTe,
+                    TrangThaiGui, SoLanThu, LoiGui, IsActived, IsDeleted, CreatedAt, CreatedBy
+                )
+                OUTPUT INSERTED.Id
+                VALUES (
+                    @ChiNhanhId, @NguoiNhanId, @TieuDe, @NoiDung, 1, @LoaiSuKien,
+                    @YeuCauId, @LichTrinhId, 0, NULL, @Now, @Now,
+                    1, 1, NULL, 1, 0, @Now, @CreatedBy
+                )";
+
+            int newId = await _dapperContext.ExecuteScalarAsync<int>(sqlInsert, new
+            {
+                input.ChiNhanhId,
+                input.NguoiNhanId,
+                TieuDe = string.IsNullOrWhiteSpace(input.TieuDe) ? "Thông báo lịch trình" : input.TieuDe.Trim(),
+                NoiDung = input.NoiDung.Trim(),
+                input.LoaiSuKien,
+                input.YeuCauId,
+                input.LichTrinhId,
+                Now = now,
+                input.CreatedBy
+            });
+
+            var dto = new ThongBaoLichTrinhDto
+            {
+                Id = newId,
+                ChiNhanhId = input.ChiNhanhId,
+                NguoiNhanId = input.NguoiNhanId,
+                TieuDe = string.IsNullOrWhiteSpace(input.TieuDe) ? "Thông báo lịch trình" : input.TieuDe.Trim(),
+                NoiDung = input.NoiDung.Trim(),
+                LoaiSuKien = input.LoaiSuKien,
+                YeuCauId = input.YeuCauId,
+                LichTrinhId = input.LichTrinhId,
+                RouteUrl = !string.IsNullOrWhiteSpace(input.RouteUrl)
+                    ? input.RouteUrl
+                    : (input.YeuCauId.HasValue ? $"/nhan-vien/chi-tiet/{input.YeuCauId.Value}" : "/nhan-vien"),
+                DaDoc = false,
+                NgayDoc = null,
+                CreatedAt = now
+            };
+
+            await _hubContext.Clients
+                .Group(input.ChiNhanhId.ToString())
+                .SendAsync("ReceiveScheduleNotification", dto);
+
+            return dto;
         }
     }
 }

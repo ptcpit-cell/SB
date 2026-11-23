@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SB_DAL.DapperContext;
 using SB_Services.DTO;
@@ -153,6 +153,82 @@ namespace SB_Services.Services.Account
             string sql = "UPDATE Users SET RefreshToken = NULL, ExpiryToken = NULL WHERE RefreshToken = @refreshToken";
             await _dapper.ExecuteSQLAsync(sql, new { refreshToken });
         }
+
+        public async Task<UserProfileDto?> GetProfileAsync(int userId)
+        {
+            const string sqlUser = @"
+                SELECT u.UserId,
+                       ISNULL(u.UserName, N'') AS UserName,
+                       ISNULL(u.TenNguoiDung, N'') AS TenNguoiDung,
+                       ISNULL(u.Email, N'') AS Email,
+                       ISNULL(u.Phone, N'') AS Phone,
+                       ISNULL(u.ZaloId, N'') AS ZaloId,
+                       ISNULL(u.ChiNhanhId, 0) AS ChiNhanhId,
+                       ISNULL(cn.TenChiNhanh, N'') AS TenChiNhanh,
+                       u.PhongBanId,
+                       ISNULL(pb.TenPhongBan, N'') AS TenPhongBan,
+                       u.ChucVuId,
+                       ISNULL(cv.TenChucVu, N'') AS TenChucVu
+                FROM dbo.Users u
+                LEFT JOIN dbo.ChiNhanh cn ON cn.ChiNhanhId = u.ChiNhanhId
+                LEFT JOIN dbo.PhongBan pb ON pb.Id = u.PhongBanId AND pb.IsDeleted = 0
+                LEFT JOIN dbo.ChucVu cv ON cv.Id = u.ChucVuId
+                WHERE u.UserId = @UserId AND ISNULL(u.IsDeleted, 0) = 0";
+
+            var profile = (await _dapper.GetSQLAsync<UserProfileDto>(sqlUser, new { UserId = userId })).FirstOrDefault();
+            if (profile == null) return null;
+
+            const string sqlRoles = @"
+                SELECT r.RoleId, ISNULL(r.TenRole, N'') AS TenRole
+                FROM dbo.UserRoles ur
+                INNER JOIN dbo.Roles r ON r.RoleId = ur.RoleId
+                WHERE ur.UserId = @UserId AND ISNULL(r.IsDeleted, 0) = 0 AND ISNULL(r.IsActived, 1) = 1";
+
+            const string sqlPerms = @"
+                SELECT DISTINCT p.PermissionName
+                FROM dbo.Permissions p
+                INNER JOIN dbo.RolePermissions rp ON rp.PermissionId = p.PermissionId
+                INNER JOIN dbo.UserRoles ur ON ur.RoleId = rp.RoleId
+                WHERE ur.UserId = @UserId AND ISNULL(p.IsActived, 1) = 1";
+
+            profile.Roles = (await _dapper.GetSQLAsync<UserRoleSimpleDto>(sqlRoles, new { UserId = userId })).ToList();
+            profile.Permissions = (await _dapper.GetSQLAsync<PermissionMappingDto>(sqlPerms, new { UserId = userId }))
+                .Select(x => x.PermissionName)
+                .ToList();
+
+            return profile;
+        }
+
+        public async Task<UserProfileDto?> UpdateProfileAsync(int userId, UpdateProfileRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.TenNguoiDung))
+                throw new ArgumentException("Họ và tên không được để trống.");
+
+            const string sqlUpdate = @"
+                UPDATE dbo.Users
+                SET TenNguoiDung = @TenNguoiDung,
+                    Email = @Email,
+                    Phone = @Phone,
+                    ZaloId = @ZaloId,
+                    PhongBanId = @PhongBanId,
+                    ChucVuId = @ChucVuId
+                WHERE UserId = @UserId AND ISNULL(IsDeleted, 0) = 0";
+
+            int affected = await _dapper.ExecuteSQLAsync(sqlUpdate, new
+            {
+                UserId = userId,
+                TenNguoiDung = request.TenNguoiDung.Trim(),
+                Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+                Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim(),
+                ZaloId = string.IsNullOrWhiteSpace(request.ZaloId) ? null : request.ZaloId.Trim(),
+                request.PhongBanId,
+                request.ChucVuId
+            });
+
+            if (affected <= 0) return null;
+            return await GetProfileAsync(userId);
+        }
+
         public async Task MigratePasswordsToHashAsync()
         {
             string sqlSelect = "SELECT UserId, Password FROM Users WHERE Password NOT LIKE '$2a$%'";

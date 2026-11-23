@@ -1,0 +1,99 @@
+<div class="card shadow-sm border-0 h-100">
+  <div class="card-header bg-white py-2.5 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <div class="fw-bold text-dark">
+        <i class="fa-solid fa-calendar-week text-primary me-2"></i>Lịch trình theo tuần
+        <span class="text-secondary fw-normal small ms-1" *ngIf="days.length === 7">
+          ({{ days[0].shortDate }} – {{ days[6].shortDate }})
+        </span>
+      </div>
+      <div class="text-secondary" style="font-size: 0.74rem">
+        <ng-container *ngIf="allowDrop">
+          Kéo yêu cầu từ hàng chờ thả vào ngày bất kỳ để xếp lịch, hoặc bấm tên ngày để xem chi tiết khung giờ.
+        </ng-container>
+        <ng-container *ngIf="!allowDrop">
+          Tổng quan lịch trình trong tuần. Nhấp vào buổi trình để xem &amp; phản hồi, hoặc bấm tên ngày để xem chi tiết.
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="small text-secondary" *ngIf="cauHinh">
+      Giới hạn/ngày: <b class="text-dark">{{ cauHinh.gioiHanPhutMoiNgay }} phút</b>
+    </div>
+  </div>
+
+  <div class="card-body p-2 week-scroll" [class.opacity-50]="loading">
+    <div class="week-grid">
+      <div
+        *ngFor="let col of days"
+        class="week-col"
+        [class.is-today]="col.isToday"
+        [class.is-selected]="col.isSelected"
+        [class.is-drop-over]="hoveredYmd === col.ymd"
+        (dragover)="onDragOverDay($event, col.ymd)"
+        (dragleave)="onDragLeaveDay(col.ymd)"
+        (drop)="onDropDay($event, col.ymd)"
+      >
+        <!-- Đầu cột ngày -->
+        <button type="button" class="week-col-header" (click)="selectDay.emit(col.ymd)" title="Mở lịch chi tiết ngày này">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold" [class.text-primary]="col.isToday">{{ col.dayName }}</span>
+            <span class="week-date tabular-nums">{{ col.shortDate }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.7rem">
+            <span class="text-secondary tabular-nums">{{ col.lichTrinhs.length }} buổi</span>
+            <span class="tabular-nums fw-semibold" [ngClass]="col.isOverCapacity ? 'text-danger' : 'text-secondary'">
+              {{ col.totalMinutes }}p
+            </span>
+          </div>
+          <div class="week-cap-track mt-1">
+            <div class="week-cap-fill"
+                 [class.is-over]="col.isOverCapacity"
+                 [style.width.%]="col.capacityPct"></div>
+          </div>
+        </button>
+
+        <!-- Nội dung ngày -->
+        <div class="week-col-body">
+          <div class="week-drop-hint" *ngIf="hoveredYmd === col.ymd">
+            <i class="fa-solid fa-plus me-1"></i>Thả vào {{ col.dayName }} ({{ col.shortDate }})
+          </div>
+
+          <!-- Sự kiện bận -->
+          <div class="week-busy-chip" *ngFor="let sk of col.suKiens">
+            <div class="fw-semibold text-truncate">{{ sk.tieuDe }}</div>
+            <div class="tabular-nums opacity-75" style="font-size: 0.67rem">
+              {{ sk.batDau | date:'HH:mm' }}–{{ sk.ketThuc | date:'HH:mm' }}
+            </div>
+          </div>
+
+          <!-- Buổi trình -->
+          <div
+            *ngFor="let lt of col.lichTrinhs"
+            class="week-appt"
+            [style.border-left-color]="lt.mauMucUuTien || '#0d6efd'"
+            [attr.draggable]="allowDrop ? 'true' : null"
+            (dragstart)="onDragStartItem($event, lt)"
+            (click)="selectLich.emit(lt)"
+          >
+            <div class="d-flex justify-content-between align-items-center gap-1 mb-0.5">
+              <span class="fw-bold text-primary tabular-nums" style="font-size: 0.7rem">
+                {{ lt.batDau | date:'HH:mm' }}–{{ lt.ketThuc | date:'HH:mm' }}
+              </span>
+              <span class="week-dot" [ngClass]="lichStatusDot(lt.trangThaiLich)"></span>
+            </div>
+            <div class="fw-semibold text-dark week-appt-title">{{ lt.tieuDe }}</div>
+            <div class="text-secondary text-truncate" style="font-size: 0.69rem">
+              {{ lt.tenNguoiTrinh }}
+            </div>
+          </div>
+
+          <div class="text-center text-muted py-3" style="font-size: 0.72rem"
+               *ngIf="col.lichTrinhs.length === 0 && col.suKiens.length === 0 && hoveredYmd !== col.ymd">
+            Trống
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -26,7 +26,7 @@
           <div class="row g-2 mb-2">
             <div class="col-5">
               <label class="form-label fw-semibold mb-1">Ngày trình <span class="text-danger">*</span></label>
-              <input type="date" class="form-control form-control-sm" [(ngModel)]="ngay" />
+              <app-vn-date-input [(ngModel)]="ngay"></app-vn-date-input>
             </div>
             <div class="col-3">
               <label class="form-label fw-semibold mb-1">Bắt đầu <span class="text-danger">*</span></label>
@@ -51,18 +51,12 @@
             </ul>
           </div>
 
-          <div class="row g-2 mb-2">
-            <div class="col-6">
-              <label class="form-label fw-semibold mb-1">Địa điểm</label>
-              <input type="text" class="form-control form-control-sm" [(ngModel)]="diaDiem" placeholder="VD: Phòng Tổng Giám đốc" />
-            </div>
-            <div class="col-6">
-              <label class="form-label fw-semibold mb-1">Mức ưu tiên (Trợ lý quyết định)</label>
-              <select class="form-select form-select-sm" [(ngModel)]="mucUuTienId">
-                <option [ngValue]="null">-- Chọn mức ưu tiên --</option>
-                <option *ngFor="let m of mucUuTiens" [ngValue]="m.id">{{ m.code }} - {{ m.ten }}</option>
-              </select>
-            </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold mb-1">Mức ưu tiên (Trợ lý quyết định)</label>
+            <select class="form-select form-select-sm" [(ngModel)]="mucUuTienId">
+              <option [ngValue]="null">-- Chọn mức ưu tiên --</option>
+              <option *ngFor="let m of mucUuTiens" [ngValue]="m.id">{{ m.code }} - {{ m.ten }}</option>
+            </select>
           </div>
 
           <div class="mb-2">

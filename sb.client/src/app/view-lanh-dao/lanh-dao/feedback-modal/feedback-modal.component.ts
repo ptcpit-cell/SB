@@ -22,7 +22,6 @@ export class FeedbackModalComponent implements OnChanges {
   @Output() openFullDetail = new EventEmitter<number>();
 
   ketQua = 1; // 1 Đã trình, 2 Vắng/Không trình được, 3 Hoãn
-  hoanThanh = false;
   chiDaoCuaLanhDao = '';
   ghiChuLanhDao = '';
   congViecs: FollowUpDraft[] = [];
@@ -32,7 +31,6 @@ export class FeedbackModalComponent implements OnChanges {
   ngOnChanges(): void {
     if (this.visible && this.item) {
       this.ketQua = this.item.ketQua?.ketQua ?? 1;
-      this.hoanThanh = this.item.trangThaiYeuCau === 7;
       this.chiDaoCuaLanhDao = this.item.ketQua?.chiDaoCuaLanhDao || '';
       this.ghiChuLanhDao = this.item.ghiChuLanhDao || '';
       this.congViecs = (this.item.congViecs || []).map(cv => ({
@@ -67,15 +65,16 @@ export class FeedbackModalComponent implements OnChanges {
       .filter(t => t.noiDung.trim().length > 0)
       .map(t => ({
         noiDung: t.noiDung.trim(),
-        hanXuLy: t.hanXuLy ? `${t.hanXuLy}T17:00:00` : null,
+        hanXuLy: /^\d{4}-\d{2}-\d{2}$/.test(t.hanXuLy) ? `${t.hanXuLy}T17:00:00` : null,
         trangThai: 1
       }));
 
+    const ketQuaNum = Number(this.ketQua);
     this.submitFeedback.emit({
       lichTrinhId: this.item.lichTrinhId,
       payload: {
-        ketQua: Number(this.ketQua),
-        hoanThanh: this.ketQua === 1 ? this.hoanThanh : false,
+        ketQua: ketQuaNum,
+        hoanThanh: ketQuaNum === 1,
         chiDaoCuaLanhDao: this.chiDaoCuaLanhDao.trim() || null,
         ghiChuLanhDao: this.ghiChuLanhDao.trim() || null,
         congViecs: tasks

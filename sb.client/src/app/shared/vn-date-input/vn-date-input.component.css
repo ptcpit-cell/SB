@@ -1,0 +1,93 @@
+:host {
+  display: block;
+}
+
+.vn-date-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.vn-date-wrapper.vn-date-compact {
+  width: 146px;
+}
+
+.vn-date-text {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.vn-date-btn {
+  border-color: #dee2e6;
+  background-color: #ffffff;
+  color: #475569;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.vn-date-btn:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #0d6efd;
+  border-color: #cbd5e1;
+}
+
+.vn-calendar-popover {
+  position: fixed;
+  z-index: 2050;
+  width: 264px;
+  user-select: none;
+}
+
+.vn-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.vn-weekday-cell {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 2px 0;
+}
+
+.vn-day-cell {
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  height: 30px;
+  font-size: 0.8rem;
+  color: #1e293b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.vn-day-cell:hover:not(:disabled):not(.is-selected) {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.vn-day-cell.other-month {
+  color: #94a3b8;
+}
+
+.vn-day-cell.is-today:not(.is-selected) {
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.vn-day-cell.is-selected {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vn-day-cell:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

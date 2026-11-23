@@ -1,0 +1,192 @@
+<div class="profile-page container-fluid py-3 px-3 px-lg-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="goBack()">
+        <i class="fa-solid fa-arrow-left me-1"></i>Quay lại
+      </button>
+      <div>
+        <h5 class="fw-bold text-dark mb-0">Hồ sơ cá nhân</h5>
+        <div class="text-secondary small">Xem, bổ sung và cập nhật thông tin tài khoản của bạn</div>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline-primary" (click)="showChangePasswordModal = true">
+      <i class="fa-solid fa-key me-1"></i>Thay đổi mật khẩu
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-5 text-secondary">
+    <div class="spinner-border text-primary mb-2"></div>
+    <div class="small">Đang tải thông tin hồ sơ...</div>
+  </div>
+
+  <div class="row g-3" *ngIf="!loading && profile">
+    <!-- Cột trái: Tóm tắt tài khoản -->
+    <div class="col-lg-4">
+      <div class="profile-card p-4 h-100">
+        <div class="d-flex align-items-center gap-3 pb-3 mb-3 border-bottom">
+          <div class="profile-avatar d-flex align-items-center justify-content-center fw-bold text-primary">
+            {{ initials }}
+          </div>
+          <div class="min-w-0">
+            <h6 class="fw-bold text-dark mb-0 text-truncate">{{ profile.tenNguoiDung }}</h6>
+            <div class="text-secondary small">@{{ profile.userName }}</div>
+            <div class="mt-1 d-flex flex-wrap gap-1" *ngIf="profile.roles.length > 0">
+              <span class="role-tag" *ngFor="let r of profile.roles">{{ r.tenRole }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-list small">
+          <div class="summary-row">
+            <span class="summary-label">Chi nhánh</span>
+            <span class="summary-value fw-semibold text-dark">{{ profile.tenChiNhanh || 'Chưa cập nhật' }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Phòng ban</span>
+            <span class="summary-value" [ngClass]="profile.tenPhongBan ? 'text-dark fw-medium' : 'text-muted fst-italic'">
+              {{ profile.tenPhongBan || 'Chưa cập nhật' }}
+            </span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Chức vụ</span>
+            <span class="summary-value" [ngClass]="profile.tenChucVu ? 'text-dark fw-medium' : 'text-muted fst-italic'">
+              {{ profile.tenChucVu || 'Chưa cập nhật' }}
+            </span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Email</span>
+            <span class="summary-value text-break" [ngClass]="profile.email ? 'text-dark' : 'text-muted fst-italic'">
+              {{ profile.email || 'Chưa bổ sung' }}
+            </span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Số điện thoại</span>
+            <span class="summary-value tabular-nums" [ngClass]="profile.phone ? 'text-dark' : 'text-muted fst-italic'">
+              {{ profile.phone || 'Chưa bổ sung' }}
+            </span>
+          </div>
+          <div class="summary-row border-bottom-0 pb-0">
+            <span class="summary-label">Zalo ID</span>
+            <span class="summary-value tabular-nums" [ngClass]="profile.zaloId ? 'text-dark' : 'text-muted fst-italic'">
+              {{ profile.zaloId || 'Chưa bổ sung' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-3 border-top small" *ngIf="missingFieldsCount > 0">
+          <div class="text-warning-emphasis bg-warning-subtle rounded-2 px-3 py-2">
+            <i class="fa-solid fa-circle-info me-1"></i>
+            Bạn còn <b>{{ missingFieldsCount }}</b> mục thông tin chưa bổ sung. Hãy cập nhật ở biểu mẫu bên cạnh.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải: Chỉnh sửa / Bổ sung thông tin -->
+    <div class="col-lg-8">
+      <div class="profile-card p-4">
+        <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+          <div>
+            <h6 class="fw-bold text-dark mb-0">Thông tin cơ bản &amp; Liên hệ</h6>
+            <div class="text-secondary small">Bạn có thể chỉnh sửa hoặc bổ sung thêm các thông tin còn thiếu</div>
+          </div>
+          <span class="text-secondary small">Tên đăng nhập: <b class="text-dark">{{ profile.userName }}</b></span>
+        </div>
+
+        <form (ngSubmit)="saveProfile()">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-dark mb-1">
+                Họ và tên <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                name="tenNguoiDung"
+                [(ngModel)]="form.tenNguoiDung"
+                placeholder="Nhập họ và tên hiển thị..."
+                required
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-dark mb-1">Chi nhánh trực thuộc</label>
+              <input
+                type="text"
+                class="form-control form-control-sm bg-light"
+                [value]="profile.tenChiNhanh || 'Chưa phân chi nhánh'"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-dark mb-1">Phòng ban</label>
+              <select class="form-select form-select-sm" name="phongBanId" [(ngModel)]="form.phongBanId">
+                <option [ngValue]="null">-- Chọn phòng ban --</option>
+                <option *ngFor="let pb of filteredPhongBans" [ngValue]="pb.id">{{ pb.tenPhongBan }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-dark mb-1">Chức vụ</label>
+              <select class="form-select form-select-sm" name="chucVuId" [(ngModel)]="form.chucVuId">
+                <option [ngValue]="null">-- Chọn chức vụ --</option>
+                <option *ngFor="let cv of chucVus" [ngValue]="cv.id">{{ cv.tenChucVu }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-dark mb-1">Email</label>
+              <input
+                type="email"
+                class="form-control form-control-sm"
+                name="email"
+                [(ngModel)]="form.email"
+                placeholder="VD: ten.ban@congty.vn"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-dark mb-1">Số điện thoại</label>
+              <input
+                type="tel"
+                class="form-control form-control-sm"
+                name="phone"
+                [(ngModel)]="form.phone"
+                placeholder="VD: 0901234567"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-dark mb-1">Zalo ID</label>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                name="zaloId"
+                [(ngModel)]="form.zaloId"
+                placeholder="Nhập Zalo ID hoặc SĐT Zalo nhận thông báo..."
+              />
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
+              Khôi phục
+            </button>
+            <button type="submit" class="btn btn-sm btn-primary px-3" [disabled]="saving">
+              <span class="spinner-border spinner-border-sm me-1" *ngIf="saving"></span>
+              <i class="fa-solid fa-floppy-disk me-1" *ngIf="!saving"></i>
+              Lưu thông tin cá nhân
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-change-password-modal
+  [visible]="showChangePasswordModal"
+  (closeModal)="showChangePasswordModal = false"
+></app-change-password-modal>

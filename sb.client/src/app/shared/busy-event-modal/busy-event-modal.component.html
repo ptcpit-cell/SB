@@ -29,7 +29,7 @@
           <div class="row g-2 mb-2">
             <div class="col-5">
               <label class="form-label fw-semibold mb-1">Ngày <span class="text-danger">*</span></label>
-              <input type="date" class="form-control form-control-sm" [(ngModel)]="ngay" />
+              <app-vn-date-input [(ngModel)]="ngay"></app-vn-date-input>
             </div>
             <div class="col-3" *ngIf="!caNgay">
               <label class="form-label fw-semibold mb-1">Từ</label>
@@ -52,10 +52,6 @@
             </div>
           </div>
 
-          <div class="mb-2">
-            <label class="form-label fw-semibold mb-1">Địa điểm</label>
-            <input type="text" class="form-control form-control-sm" [(ngModel)]="diaDiem" placeholder="VD: Phòng họp tầng 5" />
-          </div>
 
           <div>
             <label class="form-label fw-semibold mb-1">Ghi chú</label>

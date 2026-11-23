@@ -5,8 +5,12 @@ using Microsoft.IdentityModel.Tokens;
 using SB_DAL.DapperContext;
 using SB_Services.Helpers;
 using SB_Services.Services.Account;
+using SB_Services.Services.Admin;
 using SB_Services.Services.Common;
+using SB_Services.Services.LanhDao;
+using SB_Services.Services.Report;
 using SB_Services.Services.Requests;
+using SB_Services.Services.TroLy;
 using SB_Services.Services.Users;
 using System.Text;
 using static SB_DAL.DapperContext.DapperContext;
@@ -24,6 +28,10 @@ builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<ICommonServices, CommonServices>();
 builder.Services.AddScoped<IRequestServices, RequestServices>();
 builder.Services.AddScoped<IThongBaoNotifier, ThongBaoNotifier>();
+builder.Services.AddScoped<ITroLyServices, TroLyServices>();
+builder.Services.AddScoped<ILanhDaoServices, LanhDaoServices>();
+builder.Services.AddScoped<IAdminServices, AdminServices>();
+builder.Services.AddScoped<IReportServices, ReportServices>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddControllers();
 builder.Services.AddControllers(options =>

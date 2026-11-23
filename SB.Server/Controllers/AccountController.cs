@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SB_Services.DTO;
 using SB_Services.Services.Account;
+using System.Security.Claims;
 
 namespace SB.Server.Controllers
 {
@@ -88,6 +89,47 @@ namespace SB.Server.Controllers
             Response.Cookies.Delete(RefreshCookie, new CookieOptions { Path = RefreshCookiePath });
             return NoContent();
         }
+        [Authorize]
+        [HttpGet("Profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var profile = await _accountServices.GetProfileAsync(userId);
+            if (profile == null)
+                return NotFound(new { message = "Không tìm thấy hồ sơ người dùng." });
+
+            return Ok(profile);
+        }
+
+        [Authorize]
+        [HttpPut("Profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            try
+            {
+                var updated = await _accountServices.UpdateProfileAsync(userId, request);
+                if (updated == null)
+                    return NotFound(new { message = "Không tìm thấy hồ sơ người dùng." });
+
+                return Ok(new UpdateProfileResponseDto
+                {
+                    Message = "Cập nhật thông tin cá nhân thành công!",
+                    Profile = updated
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         private void SetRefreshCookie(AuthResponse auth)
         {
             if (string.IsNullOrEmpty(auth.RefreshToken)) return;

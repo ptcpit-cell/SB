@@ -1,4 +1,4 @@
-﻿using SB_Services.DTO;
+using SB_Services.DTO;
 
 namespace SB_Services.Services.Requests
 {
@@ -24,7 +24,10 @@ namespace SB_Services.Services.Requests
     }
     public interface IThongBaoNotifier
     {
-        // Ghi dòng vào ThongBao/DocThongBao và đẩy SignalR đến từng người nhận
+        // Ghi dòng vào ThongBao và đẩy SignalR sự kiện ReceiveNewNotification
         Task GuiAsync(IEnumerable<int> nguoiNhanIds, string noiDung, int chiNhanhId, int nguoiTaoId);
+
+        // Ghi dòng vào ThongBaoLichTrinh và đẩy SignalR sự kiện ReceiveScheduleNotification
+        Task<ThongBaoLichTrinhDto?> GuiLichTrinhAsync(ThongBaoLichTrinhCreateInput input);
     }
 }

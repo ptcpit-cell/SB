@@ -86,11 +86,21 @@
           title="Nhấp để xem chi tiết / đổi giờ, hoặc kéo sang khung giờ khác"
         >
           <div class="d-flex justify-content-between align-items-center gap-1">
-            <span class="fw-bold text-primary text-nowrap" style="font-size: 0.72rem">
-              {{ p.item.batDau | date:'HH:mm' }}–{{ p.item.ketThuc | date:'HH:mm' }}
-              <span class="text-muted fw-normal">({{ p.item.thoiLuongPhut }}p)</span>
-            </span>
-            <div class="d-flex align-items-center gap-1">
+            <div class="d-flex align-items-center gap-1 min-w-0">
+              <span class="fw-bold text-primary text-nowrap flex-shrink-0" style="font-size: 0.72rem">
+                {{ p.item.batDau | date:'HH:mm' }}–{{ p.item.ketThuc | date:'HH:mm' }}
+                <span class="text-muted fw-normal">({{ p.item.thoiLuongPhut }}p)</span>
+              </span>
+              <span
+                *ngIf="p.item.tenNguoiTrinh"
+                class="text-dark fw-medium text-truncate"
+                style="font-size: 0.72rem"
+                [title]="p.item.tenNguoiTrinh"
+              >
+                · {{ p.item.tenNguoiTrinh }}
+              </span>
+            </div>
+            <div class="d-flex align-items-center gap-1 flex-shrink-0">
               <span *ngIf="p.hasOverlap" class="badge bg-info text-white px-1 py-0" style="font-size: 0.62rem" title="Xếp chồng khung giờ">
                 Chồng giờ
               </span>
@@ -116,7 +126,6 @@
           <div class="text-secondary text-truncate" style="font-size: 0.71rem" *ngIf="p.heightPx >= 52">
             <i class="fa-solid fa-user me-1"></i>{{ p.item.tenNguoiTrinh }}
             <span *ngIf="p.item.phongBanNguoiTrinh"> · {{ p.item.phongBanNguoiTrinh }}</span>
-            <span *ngIf="p.item.diaDiem"> · <i class="fa-solid fa-location-dot"></i> {{ p.item.diaDiem }}</span>
           </div>
         </div>
       </div>

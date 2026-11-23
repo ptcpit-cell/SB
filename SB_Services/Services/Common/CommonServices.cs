@@ -1,4 +1,5 @@
-﻿using SB_DAL.DapperContext;
+using SB_DAL.DapperContext;
+using SB_Services.DTO;
 using SB_Services.EF;
 
 namespace SB_Services.Services.Common
@@ -55,6 +56,68 @@ namespace SB_Services.Services.Common
 
             return rowsAffected > 0;
         }
+
+        public async Task<IEnumerable<ThongBaoLichTrinhDto>> GetThongBaoLichTrinhAsync(int userId)
+        {
+            const string sql = @"
+                SELECT TOP 50
+                    tb.Id,
+                    tb.ChiNhanhId,
+                    tb.NguoiNhanId,
+                    tb.TieuDe,
+                    tb.NoiDung,
+                    ISNULL(tb.LoaiSuKien, N'') AS LoaiSuKien,
+                    tb.YeuCauId,
+                    tb.LichTrinhId,
+                    CASE
+                        WHEN tb.LoaiSuKien IN (N'LICH_SAP_TRINH_LANH_DAO', N'LICH_MOI_LANH_DAO', N'NHAC_LICH_LANH_DAO')
+                            THEN N'/lanh-dao'
+                        WHEN tb.LoaiSuKien IN (N'YEU_CAU_MOI_TRO_LY', N'BO_SUNG_TRO_LY', N'PHAN_HOI_DE_XUAT', N'GHI_CHU_TRO_LY')
+                            THEN N'/tro-ly'
+                        WHEN tb.YeuCauId IS NOT NULL
+                            THEN CONCAT(N'/nhan-vien/chi-tiet/', tb.YeuCauId)
+                        ELSE N'/nhan-vien'
+                    END AS RouteUrl,
+                    tb.DaDoc,
+                    tb.NgayDoc,
+                    tb.CreatedAt
+                FROM dbo.ThongBaoLichTrinh tb
+                WHERE tb.NguoiNhanId = @UserId
+                  AND tb.IsDeleted = 0
+                  AND tb.IsActived = 1
+                ORDER BY tb.CreatedAt DESC, tb.Id DESC";
+
+            return await _dapperContext.GetSQLAsync<ThongBaoLichTrinhDto>(sql, new { UserId = userId });
+        }
+
+        public async Task<bool> MarkThongBaoLichTrinhReadAsync(int userId, int id)
+        {
+            const string sql = @"
+                UPDATE dbo.ThongBaoLichTrinh
+                SET DaDoc = 1,
+                    NgayDoc = ISNULL(NgayDoc, GETDATE()),
+                    UpdatedAt = GETDATE(),
+                    UpdatedBy = @UserId
+                WHERE Id = @Id AND NguoiNhanId = @UserId AND IsDeleted = 0";
+
+            await _dapperContext.ExecuteSQLAsync(sql, new { Id = id, UserId = userId });
+            return true;
+        }
+
+        public async Task<bool> MarkAllThongBaoLichTrinhReadAsync(int userId)
+        {
+            const string sql = @"
+                UPDATE dbo.ThongBaoLichTrinh
+                SET DaDoc = 1,
+                    NgayDoc = ISNULL(NgayDoc, GETDATE()),
+                    UpdatedAt = GETDATE(),
+                    UpdatedBy = @UserId
+                WHERE NguoiNhanId = @UserId AND DaDoc = 0 AND IsDeleted = 0";
+
+            await _dapperContext.ExecuteSQLAsync(sql, new { UserId = userId });
+            return true;
+        }
+
         public async Task<IEnumerable<PhongBan>> GetPhongBansAsync()
         {
             string sql = @"SELECT * FROM PhongBan WHERE IsDeleted = 0 ORDER BY Id DESC";

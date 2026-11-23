@@ -15,6 +15,7 @@ import {
   TaoYeuCauRequest,
   TepDinhKemInput,
   TroLyDashboard,
+  WeekScheduleResponse,
   XepLichRequest,
   YeuCauChiTiet,
   YeuCauItem,
@@ -95,6 +96,11 @@ export class RequestService {
     return this.http.get<TroLyDashboard>(this.baseUrl + 'api/TroLy/GetDashboard', { params });
   }
 
+  getTroLyLichTuan(tuNgay: string, denNgay: string): Observable<WeekScheduleResponse> {
+    const params = new HttpParams().set('tuNgay', tuNgay).set('denNgay', denNgay);
+    return this.http.get<WeekScheduleResponse>(this.baseUrl + 'api/TroLy/GetLichTuan', { params });
+  }
+
   tiepNhanYeuCau(id: number, mucUuTienId?: number | null): Observable<any> {
     return this.http.post(this.baseUrl + `api/TroLy/TiepNhan/${id}`, { mucUuTienId });
   }
@@ -138,6 +144,11 @@ export class RequestService {
   getLanhDaoLichNgay(ngay: string): Observable<LanhDaoDashboard> {
     const params = new HttpParams().set('ngay', ngay);
     return this.http.get<LanhDaoDashboard>(this.baseUrl + 'api/LanhDao/GetLichNgay', { params });
+  }
+
+  getLanhDaoLichTuan(tuNgay: string, denNgay: string): Observable<WeekScheduleResponse> {
+    const params = new HttpParams().set('tuNgay', tuNgay).set('denNgay', denNgay);
+    return this.http.get<WeekScheduleResponse>(this.baseUrl + 'api/LanhDao/GetLichTuan', { params });
   }
 
   capNhatPhanHoiLanhDao(lichTrinhId: number, body: PhanHoiLanhDaoRequest): Observable<any> {

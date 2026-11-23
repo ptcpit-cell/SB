@@ -1,1 +1,177 @@
-view admin
+<div class="adm-page container-fluid py-3 px-3 px-lg-4">
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h4 class="fw-bold text-dark mb-0">Trung tâm quản trị hệ thống</h4>
+      <div class="text-secondary small">Tổng quan điều phối lịch trình, phân công Lãnh đạo – Trợ lý và cấu hình danh mục</div>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary bg-white" (click)="loadDashboard()" *ngIf="activeTab === 'overview'">
+        <i class="fa-solid fa-rotate me-1"></i>Làm mới
+      </button>
+      <button type="button" class="btn btn-sm btn-success" (click)="showExportModal = true">
+        <i class="fa-solid fa-file-excel me-1"></i>Xuất báo cáo Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Thanh chuyển tab -->
+  <div class="adm-tabs mb-3">
+    <button type="button" class="adm-tab-btn" [class.is-active]="activeTab === 'overview'" (click)="switchTab('overview')">
+      <i class="fa-solid fa-chart-pie me-1"></i>Tổng quan
+    </button>
+    <button type="button" class="adm-tab-btn" [class.is-active]="activeTab === 'leaders'" (click)="switchTab('leaders')">
+      <i class="fa-solid fa-user-tie me-1"></i>Lãnh đạo &amp; Trợ lý (1-1)
+    </button>
+    <button type="button" class="adm-tab-btn" [class.is-active]="activeTab === 'catalog'" (click)="switchTab('catalog')">
+      <i class="fa-solid fa-sliders me-1"></i>Loại yêu cầu &amp; Mức ưu tiên
+    </button>
+  </div>
+
+  <!-- TAB 1: TỔNG QUAN -->
+  <ng-container *ngIf="activeTab === 'overview'">
+    <div *ngIf="loading && !data" class="text-center py-5 text-secondary small">
+      <span class="spinner-border spinner-border-sm me-2"></span>Đang tổng hợp số liệu hệ thống...
+    </div>
+
+    <ng-container *ngIf="data">
+      <!-- Dải KPI chính -->
+      <div class="adm-kpi-strip mb-3">
+        <div class="adm-kpi-cell">
+          <div class="adm-kpi-label">Tổng yêu cầu trình</div>
+          <div class="adm-kpi-val tabular-nums text-dark">{{ data.tongQuan.tongYeuCau }}</div>
+          <div class="adm-kpi-sub">Toàn hệ thống</div>
+        </div>
+        <div class="adm-kpi-cell">
+          <div class="adm-kpi-label">Đang chờ xử lý</div>
+          <div class="adm-kpi-val tabular-nums text-primary">{{ data.tongQuan.choXuLy }}</div>
+          <div class="adm-kpi-sub">Chờ tiếp nhận / xem xét / bổ sung</div>
+        </div>
+        <div class="adm-kpi-cell">
+          <div class="adm-kpi-label">Đã duyệt &amp; Hoàn thành</div>
+          <div class="adm-kpi-val tabular-nums text-success">{{ data.tongQuan.daDuyetLich + data.tongQuan.daHoanThanh }}</div>
+          <div class="adm-kpi-sub">{{ data.tongQuan.daDuyetLich }} đã chốt · {{ data.tongQuan.daHoanThanh }} hoàn tất</div>
+        </div>
+        <div class="adm-kpi-cell">
+          <div class="adm-kpi-label">Buổi trình hôm nay</div>
+          <div class="adm-kpi-val tabular-nums text-warning-emphasis">{{ data.tongQuan.buoiTrinhHomNay }}</div>
+          <div class="adm-kpi-sub">{{ data.tongQuan.tongLanhDao }} lãnh đạo · {{ data.tongQuan.tongNguoiDung }} người dùng</div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <!-- Phân bổ theo trạng thái -->
+        <div class="col-lg-5">
+          <div class="adm-card h-100">
+            <div class="adm-card-head">
+              <h6 class="fw-bold text-dark mb-0">Phân bổ theo trạng thái</h6>
+            </div>
+            <div class="adm-card-body">
+              <div *ngIf="data.theoTrangThai.length === 0" class="text-muted small py-3 text-center">Chưa có dữ liệu yêu cầu.</div>
+              <div class="mb-2.5" *ngFor="let st of data.theoTrangThai">
+                <div class="d-flex justify-content-between align-items-baseline small mb-1">
+                  <span class="text-dark fw-medium">{{ st.tenTrangThai }}</span>
+                  <span class="tabular-nums text-secondary">
+                    <b class="text-dark">{{ st.soLuong }}</b> ({{ getStatusPct(st.soLuong) }}%)
+                  </span>
+                </div>
+                <div class="status-bar-track">
+                  <div
+                    class="status-bar-fill"
+                    [style.width.%]="getStatusPct(st.soLuong)"
+                    [style.background-color]="getStatusColor(st.trangThai)"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lịch trình hôm nay toàn hệ thống -->
+        <div class="col-lg-7">
+          <div class="adm-card h-100">
+            <div class="adm-card-head d-flex justify-content-between align-items-center">
+              <h6 class="fw-bold text-dark mb-0">Lịch trình diễn ra hôm nay</h6>
+              <span class="text-secondary small tabular-nums">{{ data.lichHomNay.length }} buổi</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light text-secondary">
+                  <tr>
+                    <th class="ps-3">Khung giờ</th>
+                    <th>Nội dung trình</th>
+                    <th>Người trình</th>
+                    <th class="pe-3">Lãnh đạo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="data.lichHomNay.length === 0">
+                    <td colspan="4" class="text-center py-4 text-muted">Chưa có buổi trình nào được xếp trong ngày hôm nay.</td>
+                  </tr>
+                  <tr *ngFor="let lt of data.lichHomNay" class="cursor-pointer" (click)="openDetail(lt.yeuCauId)">
+                    <td class="ps-3 text-nowrap fw-semibold text-primary tabular-nums">
+                      {{ lt.batDau | date:'HH:mm' }} – {{ lt.ketThuc | date:'HH:mm' }}
+                    </td>
+                    <td>
+                      <div class="fw-semibold text-dark text-truncate" style="max-width: 240px">{{ lt.tieuDe }}</div>
+                      <div class="text-secondary font-monospace" style="font-size: 0.72rem">{{ lt.maYeuCau }}</div>
+                    </td>
+                    <td>{{ lt.tenNguoiTrinh }}</td>
+                    <td class="pe-3 fw-medium">{{ lt.tenLanhDao }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thống kê theo chi nhánh -->
+        <div class="col-12">
+          <div class="adm-card">
+            <div class="adm-card-head">
+              <h6 class="fw-bold text-dark mb-0">Tổng hợp theo Chi nhánh</h6>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light text-secondary">
+                  <tr>
+                    <th class="ps-3">Chi nhánh</th>
+                    <th class="text-end">Tổng yêu cầu</th>
+                    <th class="text-end">Đang xử lý</th>
+                    <th class="text-end">Đã trình / Hoàn thành</th>
+                    <th class="text-end pe-3">Từ chối / Hủy</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cn of data.theoChiNhanh">
+                    <td class="ps-3">
+                      <span class="fw-semibold text-dark">{{ cn.tenChiNhanh }}</span>
+                      <span class="text-secondary font-monospace ms-2" style="font-size: 0.75rem">{{ cn.maChiNhanh }}</span>
+                    </td>
+                    <td class="text-end tabular-nums fw-bold text-dark">{{ cn.tongYeuCau }}</td>
+                    <td class="text-end tabular-nums text-primary">{{ cn.dangXuLy }}</td>
+                    <td class="text-end tabular-nums text-success">{{ cn.hoanThanh }}</td>
+                    <td class="text-end pe-3 tabular-nums text-danger">{{ cn.tuChoiHuy }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <!-- TAB 2: LÃNH ĐẠO & TRỢ LÝ (1-1) -->
+  <app-admin-leaders *ngIf="activeTab === 'leaders'"></app-admin-leaders>
+
+  <!-- TAB 3: LOẠI YÊU CẦU & MỨC ƯU TIÊN -->
+  <app-admin-catalog *ngIf="activeTab === 'catalog'"></app-admin-catalog>
+</div>
+
+<!-- Modal xuất báo cáo Excel -->
+<app-excel-export-modal
+  [visible]="showExportModal"
+  (closeModal)="showExportModal = false"
+></app-excel-export-modal>

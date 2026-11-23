@@ -42,7 +42,7 @@ export class BusyEventModalComponent implements OnChanges {
   }
 
   submit(): void {
-    if (!this.tieuDe.trim() || !this.ngay) return;
+    if (!this.tieuDe.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(this.ngay)) return;
     this.submitEvent.emit({
       loai: Number(this.loai),
       tieuDe: this.tieuDe.trim(),

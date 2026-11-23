@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SB_Services.Helpers;
 using System.Security.Claims;
@@ -13,5 +13,10 @@ namespace SB.Server.Controllers
         // Tên claim phụ thuộc cách bạn tạo token: NameIdentifier, "sub" hoặc "UserId"
         protected int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)
                       ?? throw new UnauthorizedAccessException());
+
+        protected bool HasPermission(string permissionName) =>
+            User.Claims.Any(c =>
+                c.Type == "permissions" &&
+                string.Equals(c.Value, permissionName, StringComparison.OrdinalIgnoreCase));
     }
 }

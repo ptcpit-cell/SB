@@ -38,13 +38,13 @@ export class DangNhapComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.authService.login(this.loginData).subscribe({
-      next:() => {
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    this.authService.login(this.loginData, { returnUrl }).subscribe({
+      next: () => {
+        this.loading = false;
         this.toastrService.success('Đăng nhập thành công');
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-        this.router.navigateByUrl(returnUrl || this.authService.getDefaultRouteByPermission(returnUrl));
       },
-      error:() => {
+      error: () => {
         this.error = 'Tên đăng nhập hoặc mật khẩu không chính xác';
         this.loading = false;
       }

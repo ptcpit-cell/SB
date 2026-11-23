@@ -1,0 +1,134 @@
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.week-scroll {
+  overflow-x: auto;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(135px, 1fr));
+  gap: 8px;
+  min-height: 460px;
+}
+
+.week-col {
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.week-col.is-today {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+.week-col.is-drop-over {
+  border-color: #0d6efd;
+  background: #eff6ff;
+  box-shadow: inset 0 0 0 1px #0d6efd;
+}
+
+.week-col-header {
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 8px 9px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 150ms ease;
+}
+
+.week-col-header:hover {
+  background: #f1f5f9;
+}
+
+.week-date {
+  font-size: 0.75rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.week-cap-track {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.week-cap-fill {
+  height: 100%;
+  background: #0d6efd;
+  border-radius: 99px;
+  transition: width 200ms ease;
+}
+
+.week-cap-fill.is-over {
+  background: #dc2626;
+}
+
+.week-col-body {
+  flex: 1;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.week-drop-hint {
+  border: 1px dashed #0d6efd;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 6px;
+  padding: 6px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.week-busy-chip {
+  background: #f1f5f9;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  padding: 5px 6px;
+  font-size: 0.72rem;
+  color: #475569;
+}
+
+.week-appt {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #0d6efd;
+  border-radius: 6px;
+  padding: 6px 7px;
+  cursor: pointer;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.week-appt:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.week-appt-title {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.week-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

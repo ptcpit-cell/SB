@@ -69,7 +69,7 @@ export function registerTroLyRoutes(app, deps) {
 
     const lichNgay = db.lichTrinhs
       .filter((lt) => lt.lanhDaoId === lanhDaoId && !lt.isDeleted && lt.isActived && lt.trangThai !== 3 && getYmd(lt.batDau) === ngay)
-      .map((lt) => buildLichTrinhView(lt, false))
+      .map((lt) => buildLichTrinhView(lt, true))
       .filter(Boolean)
       .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
 
@@ -94,6 +94,44 @@ export function registerTroLyRoutes(app, deps) {
       lichNgay,
       suKienNgay,
       thongKe
+    });
+  });
+
+  app.get('/api/TroLy/GetLichTuan', requireAuth, (req, res) => {
+    const ctx = getLanhDaoOfTroLy(req.currentUserId);
+    if (!ctx) {
+      return res.status(400).json({ message: 'Tài khoản của bạn chưa được phân công hỗ trợ lãnh đạo nào.' });
+    }
+    const tuNgay = String(req.query.tuNgay || getYmd(new Date().toISOString())).slice(0, 10);
+    const denNgay = String(req.query.denNgay || tuNgay).slice(0, 10);
+    const lanhDaoId = ctx.lanhDao.id;
+    const cauHinh = getOrCreateCauHinh(lanhDaoId, ctx.lanhDao.chiNhanhId);
+
+    const lichTuan = db.lichTrinhs
+      .filter((lt) => {
+        if (lt.lanhDaoId !== lanhDaoId || lt.isDeleted || !lt.isActived || lt.trangThai === 3) return false;
+        const d = getYmd(lt.batDau);
+        return d >= tuNgay && d <= denNgay;
+      })
+      .map((lt) => buildLichTrinhView(lt, true))
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
+
+    const suKienTuan = db.suKienLanhDaos
+      .filter((sk) => {
+        if (sk.lanhDaoId !== lanhDaoId || sk.isDeleted || !sk.isActived) return false;
+        const d = getYmd(sk.batDau);
+        return d >= tuNgay && d <= denNgay;
+      })
+      .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
+
+    res.json({
+      tuNgay,
+      denNgay,
+      lanhDao: ctx.info,
+      cauHinh,
+      lichTrinhs: lichTuan,
+      suKiens: suKienTuan
     });
   });
 
@@ -170,7 +208,7 @@ export function registerTroLyRoutes(app, deps) {
     }
 
     const yeuCauXacNhanNV = Boolean(body.yeuCauXacNhanNV);
-    const diaDiem = body.diaDiem ?? ctx.lanhDao.phongLamViec ?? 'Phòng Lãnh đạo';
+    const diaDiem = null;
     const ghiChu = body.ghiChu ?? null;
 
     if (yeuCauXacNhanNV) {
@@ -326,7 +364,7 @@ export function registerTroLyRoutes(app, deps) {
       chiNhanhId: yc.chiNhanhId,
       nguoiNhanId: yc.nguoiTaoId,
       tieuDe: 'Yêu cầu đã được xếp lịch trình',
-      noiDung: `Yêu cầu "${yc.tieuDe}" được xếp lịch lúc ${formatTimeShort(batDau)} - ${formatTimeShort(ketThuc)} ngày ${formatDateVi(batDau)} tại ${diaDiem}.`,
+      noiDung: `Yêu cầu "${yc.tieuDe}" được xếp lịch lúc ${formatTimeShort(batDau)} - ${formatTimeShort(ketThuc)} ngày ${formatDateVi(batDau)}.`,
       loaiSuKien: 'DA_DUYET',
       yeuCauId: yc.id,
       lichTrinhId: lich.id,

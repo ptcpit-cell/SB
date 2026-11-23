@@ -3,7 +3,7 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
       <h4 class="mb-1 fw-bold text-dark">
-        <i class="fa-solid fa-calendar-day text-primary me-2"></i>Lịch trình &amp; Nhiệm vụ hôm nay
+        <i class="fa-solid fa-calendar-day text-primary me-2"></i>Lịch trình &amp; Nhiệm vụ {{ viewMode === 'week' ? 'tuần' : 'hôm nay' }}
       </h4>
       <div class="text-secondary small" *ngIf="dashboard">
         Lãnh đạo: <b class="text-dark">{{ dashboard.lanhDao.hoTen }}</b>
@@ -13,19 +13,44 @@
     </div>
 
     <div class="d-flex flex-wrap align-items-center gap-2">
+      <!-- Chuyển Ngày / Tuần -->
+      <div class="btn-group btn-group-sm" role="group">
+        <button
+          type="button"
+          class="btn"
+          [ngClass]="viewMode === 'day' ? 'btn-primary' : 'btn-outline-secondary bg-white'"
+          (click)="switchViewMode('day')"
+        >
+          <i class="fa-regular fa-calendar-days me-1"></i>Ngày
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [ngClass]="viewMode === 'week' ? 'btn-primary' : 'btn-outline-secondary bg-white'"
+          (click)="switchViewMode('week')"
+        >
+          <i class="fa-solid fa-table-columns me-1"></i>Tuần
+        </button>
+      </div>
+
       <div class="btn-group btn-group-sm shadow-xs">
-        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(-1)" title="Ngày trước">
+        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(-1)" [title]="viewMode === 'week' ? 'Tuần trước' : 'Ngày trước'">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <button type="button" class="btn btn-outline-primary bg-white fw-semibold" (click)="chonHomNay()">Hôm nay</button>
-        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(1)" title="Ngày sau">
+        <button type="button" class="btn btn-outline-primary bg-white fw-semibold" (click)="chonHomNay()">
+          {{ viewMode === 'week' ? 'Tuần này' : 'Hôm nay' }}
+        </button>
+        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(1)" [title]="viewMode === 'week' ? 'Tuần sau' : 'Ngày sau'">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
-      <input type="date" class="form-control form-control-sm w-auto" [(ngModel)]="ngay" (ngModelChange)="onDateInputChange()" />
+      <app-vn-date-input [compact]="true" [(ngModel)]="ngay" (ngModelChange)="onDateInputChange()"></app-vn-date-input>
 
       <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="dashboard" (click)="showBusyEventModal = true">
         <i class="fa-solid fa-calendar-minus me-1"></i>Thêm lịch bận cá nhân
+      </button>
+      <button type="button" class="btn btn-outline-success btn-sm" (click)="showExportModal = true">
+        <i class="fa-solid fa-file-excel me-1"></i>Xuất Excel
       </button>
     </div>
   </div>
@@ -67,8 +92,8 @@
       </div>
     </div>
 
-    <!-- Layout 2 cột: Nhiệm vụ hôm nay (trái) + Lịch trực quan (phải) -->
-    <div class="row g-3">
+    <!-- Chế độ Ngày: 2 cột -->
+    <div class="row g-3" *ngIf="viewMode === 'day'">
       <div class="col-lg-6">
         <app-lanh-dao-today-tasks
           [ngay]="dashboard.ngay"
@@ -88,6 +113,21 @@
           (deleteSuKien)="onDeleteSuKien($event)"
         ></app-lanh-dao-timeline>
       </div>
+    </div>
+
+    <!-- Chế độ Tuần: 7 cột tổng quan -->
+    <div *ngIf="viewMode === 'week'">
+      <app-week-schedule
+        [tuNgay]="weekStart"
+        [selectedNgay]="ngay"
+        [cauHinh]="weekData?.cauHinh || dashboard.cauHinh"
+        [lichTrinhs]="weekData?.lichTrinhs || []"
+        [suKiens]="weekData?.suKiens || []"
+        [allowDrop]="false"
+        [loading]="loadingWeek"
+        (selectDay)="onSelectDayFromWeek($event)"
+        (selectLich)="onOpenFeedback($event)"
+      ></app-week-schedule>
     </div>
   </ng-container>
 </div>
@@ -111,3 +151,9 @@
   (closeModal)="showBusyEventModal = false"
   (submitEvent)="onSaveBusyEvent($event)"
 ></app-busy-event-modal>
+
+<!-- Modal xuất báo cáo Excel -->
+<app-excel-export-modal
+  [visible]="showExportModal"
+  (closeModal)="showExportModal = false"
+></app-excel-export-modal>

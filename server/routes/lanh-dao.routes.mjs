@@ -51,6 +51,44 @@ export function registerLanhDaoRoutes(app, deps) {
     });
   });
 
+  app.get('/api/LanhDao/GetLichTuan', requireAuth, (req, res) => {
+    const ctx = getLanhDaoOfUser(req.currentUserId);
+    if (!ctx) {
+      return res.status(400).json({ message: 'Tài khoản của bạn chưa được cấu hình vai trò Lãnh đạo.' });
+    }
+    const tuNgay = String(req.query.tuNgay || getYmd(new Date().toISOString())).slice(0, 10);
+    const denNgay = String(req.query.denNgay || tuNgay).slice(0, 10);
+    const lanhDaoId = ctx.lanhDao.id;
+    const cauHinh = getOrCreateCauHinh(lanhDaoId, ctx.lanhDao.chiNhanhId);
+
+    const lichTrinhs = db.lichTrinhs
+      .filter((lt) => {
+        if (lt.lanhDaoId !== lanhDaoId || lt.isDeleted || !lt.isActived || lt.trangThai === 3) return false;
+        const d = getYmd(lt.batDau);
+        return d >= tuNgay && d <= denNgay;
+      })
+      .map((lt) => buildLichTrinhView(lt, true))
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
+
+    const suKiens = db.suKienLanhDaos
+      .filter((sk) => {
+        if (sk.lanhDaoId !== lanhDaoId || sk.isDeleted || !sk.isActived) return false;
+        const d = getYmd(sk.batDau);
+        return d >= tuNgay && d <= denNgay;
+      })
+      .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
+
+    res.json({
+      tuNgay,
+      denNgay,
+      lanhDao: ctx.info,
+      cauHinh,
+      lichTrinhs,
+      suKiens
+    });
+  });
+
   app.post('/api/LanhDao/CapNhatPhanHoi/:lichTrinhId', requireAuth, (req, res) => {
     const ctx = getLanhDaoOfUser(req.currentUserId);
     if (!ctx) return res.status(403).json({ message: 'Không có quyền lãnh đạo.' });

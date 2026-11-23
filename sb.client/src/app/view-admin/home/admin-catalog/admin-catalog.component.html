@@ -1,0 +1,226 @@
+<div class="row g-3">
+  <!-- Cột trái: Loại yêu cầu -->
+  <div class="col-lg-6">
+    <div class="cat-panel h-100">
+      <div class="cat-panel-head d-flex justify-content-between align-items-center gap-2">
+        <div>
+          <h6 class="fw-bold text-dark mb-0">Danh mục Loại yêu cầu</h6>
+          <div class="text-secondary small">Thiết lập thời lượng trình mặc định theo loại hồ sơ</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary text-nowrap" (click)="openLoaiModal()">
+          <i class="fa-solid fa-plus me-1"></i>Thêm loại
+        </button>
+      </div>
+
+      <div *ngIf="loadingLoai" class="text-center py-4 text-secondary small">
+        <span class="spinner-border spinner-border-sm me-2"></span>Đang tải...
+      </div>
+
+      <div class="table-responsive" *ngIf="!loadingLoai">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary">
+            <tr>
+              <th class="ps-3">Mã</th>
+              <th>Tên loại yêu cầu</th>
+              <th class="text-center">Thời lượng</th>
+              <th class="text-end pe-3">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loaiList.length === 0">
+              <td colspan="4" class="text-center py-4 text-muted">Chưa có loại yêu cầu nào.</td>
+            </tr>
+            <tr *ngFor="let item of loaiList">
+              <td class="ps-3 font-monospace fw-semibold text-dark">{{ item.maLoai }}</td>
+              <td>
+                <span class="fw-medium text-dark">{{ item.tenLoai }}</span>
+                <span *ngIf="!item.isActived" class="text-muted ms-1">(Ẩn)</span>
+              </td>
+              <td class="text-center tabular-nums">{{ item.thoiLuongMacDinhPhut }} phút</td>
+              <td class="text-end pe-3 text-nowrap">
+                <button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="openLoaiModal(item)">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="askDelete('loai', item.id, item.tenLoai)">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cột phải: Mức ưu tiên -->
+  <div class="col-lg-6">
+    <div class="cat-panel h-100">
+      <div class="cat-panel-head d-flex justify-content-between align-items-center gap-2">
+        <div>
+          <h6 class="fw-bold text-dark mb-0">Danh mục Mức ưu tiên</h6>
+          <div class="text-secondary small">Trọng số và màu hiển thị để Trợ lý sắp thứ tự hàng chờ</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary text-nowrap" (click)="openMucModal()">
+          <i class="fa-solid fa-plus me-1"></i>Thêm mức
+        </button>
+      </div>
+
+      <div *ngIf="loadingMuc" class="text-center py-4 text-secondary small">
+        <span class="spinner-border spinner-border-sm me-2"></span>Đang tải...
+      </div>
+
+      <div class="table-responsive" *ngIf="!loadingMuc">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary">
+            <tr>
+              <th class="ps-3">Mã / Màu</th>
+              <th>Tên mức ưu tiên</th>
+              <th class="text-center">Trọng số</th>
+              <th class="text-end pe-3">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="mucList.length === 0">
+              <td colspan="4" class="text-center py-4 text-muted">Chưa có mức ưu tiên nào.</td>
+            </tr>
+            <tr *ngFor="let m of mucList">
+              <td class="ps-3">
+                <span class="color-swatch me-2" [style.background-color]="m.mauHienThi || '#0d6efd'"></span>
+                <span class="font-monospace fw-semibold text-dark">{{ m.code }}</span>
+              </td>
+              <td>
+                <span class="fw-medium text-dark">{{ m.ten }}</span>
+                <span *ngIf="!m.isActived" class="text-muted ms-1">(Ẩn)</span>
+              </td>
+              <td class="text-center tabular-nums fw-semibold">{{ m.trongSo }}</td>
+              <td class="text-end pe-3 text-nowrap">
+                <button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="openMucModal(m)">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="askDelete('muc', m.id, m.ten)">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Loại yêu cầu -->
+<ng-container *ngIf="showLoaiModal">
+  <div class="modal fade show d-block" tabindex="-1" (click)="!savingLoai && (showLoaiModal = false)">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header py-2.5 border-bottom">
+          <h6 class="modal-title fw-bold mb-0">{{ loaiForm.id ? 'Sửa loại yêu cầu' : 'Thêm loại yêu cầu' }}</h6>
+          <button type="button" class="btn-close" (click)="showLoaiModal = false" [disabled]="savingLoai"></button>
+        </div>
+        <div class="modal-body small p-4">
+          <div class="row g-3">
+            <div class="col-5">
+              <label class="form-label fw-semibold mb-1">Mã loại <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="loaiForm.maLoai" placeholder="VD: BAO_CAO" />
+            </div>
+            <div class="col-7">
+              <label class="form-label fw-semibold mb-1">Thời lượng mặc định (phút)</label>
+              <select class="form-select form-select-sm" [(ngModel)]="loaiForm.thoiLuongMacDinhPhut">
+                <option *ngFor="let m of [15, 30, 45, 60, 90, 120]" [ngValue]="m">{{ m }} phút</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold mb-1">Tên loại yêu cầu <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="loaiForm.tenLoai" placeholder="VD: Trình duyệt chủ trương đầu tư" />
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="chkLoaiAct" [(ngModel)]="loaiForm.isActived" />
+                <label class="form-check-label" for="chkLoaiAct">Hiển thị khi nhân viên tạo yêu cầu</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2 bg-light border-top">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showLoaiModal = false" [disabled]="savingLoai">Đóng</button>
+          <button type="button" class="btn btn-sm btn-primary px-3" (click)="saveLoai()" [disabled]="savingLoai">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="savingLoai"></span>Lưu loại
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>
+
+<!-- Modal Mức ưu tiên -->
+<ng-container *ngIf="showMucModal">
+  <div class="modal fade show d-block" tabindex="-1" (click)="!savingMuc && (showMucModal = false)">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header py-2.5 border-bottom">
+          <h6 class="modal-title fw-bold mb-0">{{ mucForm.id ? 'Sửa mức ưu tiên' : 'Thêm mức ưu tiên' }}</h6>
+          <button type="button" class="btn-close" (click)="showMucModal = false" [disabled]="savingMuc"></button>
+        </div>
+        <div class="modal-body small p-4">
+          <div class="row g-3">
+            <div class="col-4">
+              <label class="form-label fw-semibold mb-1">Mã mức <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="mucForm.code" placeholder="VD: P1" />
+            </div>
+            <div class="col-4">
+              <label class="form-label fw-semibold mb-1">Trọng số</label>
+              <input type="number" min="1" max="100" class="form-control form-control-sm" [(ngModel)]="mucForm.trongSo" />
+            </div>
+            <div class="col-4">
+              <label class="form-label fw-semibold mb-1">Màu hiển thị</label>
+              <input type="color" class="form-control form-control-sm form-control-color w-100" [(ngModel)]="mucForm.mauHienThi" />
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold mb-1">Tên mức ưu tiên <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="mucForm.ten" placeholder="VD: Khẩn cấp - Xử lý ngay" />
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="chkMucAct" [(ngModel)]="mucForm.isActived" />
+                <label class="form-check-label" for="chkMucAct">Đang sử dụng</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2 bg-light border-top">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showMucModal = false" [disabled]="savingMuc">Đóng</button>
+          <button type="button" class="btn btn-sm btn-primary px-3" (click)="saveMuc()" [disabled]="savingMuc">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="savingMuc"></span>Lưu mức ưu tiên
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>
+
+<!-- Modal xác nhận xóa -->
+<ng-container *ngIf="deleteTarget">
+  <div class="modal fade show d-block" tabindex="-1" (click)="!deleting && (deleteTarget = null)">
+    <div class="modal-dialog modal-dialog-centered modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header py-2">
+          <h6 class="modal-title fw-bold mb-0">Xác nhận xóa</h6>
+          <button type="button" class="btn-close" (click)="deleteTarget = null" [disabled]="deleting"></button>
+        </div>
+        <div class="modal-body small">
+          Bạn có chắc muốn xóa <b>{{ deleteTarget.name }}</b>?
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="deleteTarget = null" [disabled]="deleting">Hủy</button>
+          <button type="button" class="btn btn-sm btn-danger" (click)="confirmDelete()" [disabled]="deleting">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="deleting"></span>Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>

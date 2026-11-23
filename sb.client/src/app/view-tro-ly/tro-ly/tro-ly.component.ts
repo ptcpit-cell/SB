@@ -8,11 +8,13 @@ import {
   SuKienLanhDaoView,
   TroLyDashboard,
   TroLyYeuCauItem,
+  WeekScheduleResponse,
   XepLichRequest
 } from '../../../type';
 import { getTodayYmd, shiftYmd } from '../../shared/schedule-layout.util';
 import { ScheduleDropPayload } from './schedule-grid/schedule-grid.component';
 import { XepLichModalContext } from './schedule-action-modal/schedule-action-modal.component';
+import { WeekDropPayload } from '../../shared/week-schedule/week-schedule.component';
 
 @Component({
   selector: 'app-tro-ly',
@@ -22,6 +24,11 @@ import { XepLichModalContext } from './schedule-action-modal/schedule-action-mod
 })
 export class TroLyComponent implements OnInit {
   ngay = getTodayYmd();
+  viewMode: 'day' | 'week' = 'day';
+  weekStart = this.getMondayOf(getTodayYmd());
+  weekData: WeekScheduleResponse | null = null;
+  loadingWeek = false;
+
   loading = true;
   errorMsg = '';
   dashboard: TroLyDashboard | null = null;
@@ -37,6 +44,8 @@ export class TroLyComponent implements OnInit {
 
   showBusyEventModal = false;
   savingBusyEvent = false;
+
+  showExportModal = false;
 
   // Modal yêu cầu bổ sung
   showBoSungModal = false;
@@ -66,6 +75,18 @@ export class TroLyComponent implements OnInit {
     this.loadDashboard();
   }
 
+  get weekEnd(): string {
+    return shiftYmd(this.weekStart, 6);
+  }
+
+  private getMondayOf(ymd: string): string {
+    const [y, m, d] = ymd.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const dow = dt.getDay();
+    const offset = dow === 0 ? -6 : 1 - dow;
+    return shiftYmd(ymd, offset);
+  }
+
   loadDashboard(): void {
     this.loading = true;
     this.errorMsg = '';
@@ -73,6 +94,9 @@ export class TroLyComponent implements OnInit {
       next: (res) => {
         this.dashboard = res;
         this.loading = false;
+        if (this.viewMode === 'week') {
+          this.loadWeekData();
+        }
       },
       error: (err) => {
         this.errorMsg = err?.error?.message || 'Không tải được dữ liệu điều phối của Trợ lý.';
@@ -81,18 +105,63 @@ export class TroLyComponent implements OnInit {
     });
   }
 
+  loadWeekData(): void {
+    this.loadingWeek = true;
+    this.requestService.getTroLyLichTuan(this.weekStart, this.weekEnd).subscribe({
+      next: (res) => {
+        this.weekData = res;
+        this.loadingWeek = false;
+      },
+      error: () => {
+        this.loadingWeek = false;
+      }
+    });
+  }
+
+  switchViewMode(mode: 'day' | 'week'): void {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+    if (mode === 'week') {
+      this.weekStart = this.getMondayOf(this.ngay);
+      this.loadWeekData();
+    } else {
+      this.loadDashboard();
+    }
+  }
+
   chonHomNay(): void {
     this.ngay = getTodayYmd();
+    this.weekStart = this.getMondayOf(this.ngay);
     this.loadDashboard();
   }
 
   doiNgay(delta: number): void {
-    this.ngay = shiftYmd(this.ngay, delta);
-    this.loadDashboard();
+    if (this.viewMode === 'week') {
+      this.ngay = shiftYmd(this.ngay, delta * 7);
+      this.weekStart = this.getMondayOf(this.ngay);
+      this.loadWeekData();
+    } else {
+      this.ngay = shiftYmd(this.ngay, delta);
+      this.weekStart = this.getMondayOf(this.ngay);
+      this.loadDashboard();
+    }
   }
 
   onDateInputChange(): void {
-    if (this.ngay) this.loadDashboard();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.ngay)) return;
+    this.weekStart = this.getMondayOf(this.ngay);
+    if (this.viewMode === 'week') {
+      this.loadWeekData();
+    } else {
+      this.loadDashboard();
+    }
+  }
+
+  onSelectDayFromWeek(ymd: string): void {
+    this.ngay = ymd;
+    this.weekStart = this.getMondayOf(ymd);
+    this.viewMode = 'day';
+    this.loadDashboard();
   }
 
   // ===== Queue actions =====
@@ -116,7 +185,7 @@ export class TroLyComponent implements OnInit {
     });
   }
 
-  onMoXepLich(item: TroLyYeuCauItem, defaultHm = '09:00'): void {
+  onMoXepLich(item: TroLyYeuCauItem, defaultHm = '09:00', defaultNgay?: string): void {
     this.scheduleModalCtx = {
       yeuCauId: item.yeuCauId,
       maYeuCau: item.maYeuCau,
@@ -126,15 +195,14 @@ export class TroLyComponent implements OnInit {
       mucKhan: item.mucKhan,
       mucUuTienId: item.mucUuTienId ?? null,
       hanChot: item.hanChot ?? null,
-      defaultNgay: this.ngay,
+      defaultNgay: defaultNgay || this.ngay,
       defaultGioBatDau: defaultHm,
-      defaultDiaDiem: this.dashboard?.lanhDao?.phongLamViec || 'Phòng Lãnh đạo',
       isReschedule: false
     };
     this.showScheduleModal = true;
   }
 
-  // ===== Drag & Drop handler =====
+  // ===== Drag & Drop handler (Day Grid) =====
   onSlotDropped(payload: ScheduleDropPayload): void {
     this.draggingYeuCauId = null;
     if (!this.dashboard) return;
@@ -160,7 +228,41 @@ export class TroLyComponent implements OnInit {
         hanChot: scheduled.hanChot ?? null,
         defaultNgay: this.ngay,
         defaultGioBatDau: payload.dropStartHm,
-        defaultDiaDiem: scheduled.diaDiem || this.dashboard.lanhDao.phongLamViec || 'Phòng Lãnh đạo',
+        isReschedule: true
+      };
+      this.showScheduleModal = true;
+    }
+  }
+
+  // ===== Drag & Drop handler (Week Grid) =====
+  onWeekDayDropped(payload: WeekDropPayload): void {
+    this.draggingYeuCauId = null;
+    if (!this.dashboard) return;
+
+    if (payload.source === 'queue') {
+      const qItem = this.dashboard.hangCho.find(x => x.yeuCauId === payload.yeuCauId);
+      if (qItem) {
+        this.onMoXepLich(qItem, '09:00', payload.targetDate);
+      }
+      return;
+    }
+
+    const pool = this.weekData?.lichTrinhs || this.dashboard.lichNgay || [];
+    const scheduled = pool.find(x => x.yeuCauId === payload.yeuCauId);
+    if (scheduled) {
+      const d = new Date(scheduled.batDau);
+      const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      this.scheduleModalCtx = {
+        yeuCauId: scheduled.yeuCauId,
+        maYeuCau: scheduled.maYeuCau,
+        tieuDe: scheduled.tieuDe,
+        tenNguoiTrinh: scheduled.tenNguoiTrinh,
+        thoiLuongPhut: scheduled.thoiLuongPhut,
+        mucKhan: scheduled.mucKhan,
+        mucUuTienId: scheduled.mucUuTienId ?? null,
+        hanChot: scheduled.hanChot ?? null,
+        defaultNgay: payload.targetDate,
+        defaultGioBatDau: hm,
         isReschedule: true
       };
       this.showScheduleModal = true;
@@ -248,6 +350,7 @@ export class TroLyComponent implements OnInit {
     const lt = this.selectedLich;
     const d = new Date(lt.batDau);
     const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const lichDate = lt.batDau ? lt.batDau.slice(0, 10) : this.ngay;
     this.showLichDetailModal = false;
     this.scheduleModalCtx = {
       yeuCauId: lt.yeuCauId,
@@ -258,9 +361,8 @@ export class TroLyComponent implements OnInit {
       mucKhan: lt.mucKhan,
       mucUuTienId: lt.mucUuTienId ?? null,
       hanChot: lt.hanChot ?? null,
-      defaultNgay: this.ngay,
+      defaultNgay: lichDate,
       defaultGioBatDau: hm,
-      defaultDiaDiem: lt.diaDiem || this.dashboard.lanhDao.phongLamViec || 'Phòng Lãnh đạo',
       isReschedule: true
     };
     this.showScheduleModal = true;

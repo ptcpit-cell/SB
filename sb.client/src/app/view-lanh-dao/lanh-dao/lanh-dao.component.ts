@@ -6,7 +6,8 @@ import {
   LanhDaoDashboard,
   LichTrinhView,
   PhanHoiLanhDaoRequest,
-  SuKienLanhDaoView
+  SuKienLanhDaoView,
+  WeekScheduleResponse
 } from '../../../type';
 import { getTodayYmd, shiftYmd } from '../../shared/schedule-layout.util';
 
@@ -18,6 +19,11 @@ import { getTodayYmd, shiftYmd } from '../../shared/schedule-layout.util';
 })
 export class LanhDaoComponent implements OnInit {
   ngay = getTodayYmd();
+  viewMode: 'day' | 'week' = 'day';
+  weekStart = this.getMondayOf(getTodayYmd());
+  weekData: WeekScheduleResponse | null = null;
+  loadingWeek = false;
+
   loading = true;
   errorMsg = '';
   dashboard: LanhDaoDashboard | null = null;
@@ -30,6 +36,8 @@ export class LanhDaoComponent implements OnInit {
   showBusyEventModal = false;
   savingBusyEvent = false;
 
+  showExportModal = false;
+
   constructor(
     private requestService: RequestService,
     private toastr: ToastrService,
@@ -40,6 +48,18 @@ export class LanhDaoComponent implements OnInit {
     this.loadLichNgay();
   }
 
+  get weekEnd(): string {
+    return shiftYmd(this.weekStart, 6);
+  }
+
+  private getMondayOf(ymd: string): string {
+    const [y, m, d] = ymd.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const dow = dt.getDay();
+    const offset = dow === 0 ? -6 : 1 - dow;
+    return shiftYmd(ymd, offset);
+  }
+
   loadLichNgay(): void {
     this.loading = true;
     this.errorMsg = '';
@@ -47,6 +67,9 @@ export class LanhDaoComponent implements OnInit {
       next: (res) => {
         this.dashboard = res;
         this.loading = false;
+        if (this.viewMode === 'week') {
+          this.loadWeekData();
+        }
       },
       error: (err) => {
         this.errorMsg = err?.error?.message || 'Không tải được lịch trình của Lãnh đạo.';
@@ -55,18 +78,63 @@ export class LanhDaoComponent implements OnInit {
     });
   }
 
+  loadWeekData(): void {
+    this.loadingWeek = true;
+    this.requestService.getLanhDaoLichTuan(this.weekStart, this.weekEnd).subscribe({
+      next: (res) => {
+        this.weekData = res;
+        this.loadingWeek = false;
+      },
+      error: () => {
+        this.loadingWeek = false;
+      }
+    });
+  }
+
+  switchViewMode(mode: 'day' | 'week'): void {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+    if (mode === 'week') {
+      this.weekStart = this.getMondayOf(this.ngay);
+      this.loadWeekData();
+    } else {
+      this.loadLichNgay();
+    }
+  }
+
   chonHomNay(): void {
     this.ngay = getTodayYmd();
+    this.weekStart = this.getMondayOf(this.ngay);
     this.loadLichNgay();
   }
 
   doiNgay(delta: number): void {
-    this.ngay = shiftYmd(this.ngay, delta);
-    this.loadLichNgay();
+    if (this.viewMode === 'week') {
+      this.ngay = shiftYmd(this.ngay, delta * 7);
+      this.weekStart = this.getMondayOf(this.ngay);
+      this.loadWeekData();
+    } else {
+      this.ngay = shiftYmd(this.ngay, delta);
+      this.weekStart = this.getMondayOf(this.ngay);
+      this.loadLichNgay();
+    }
   }
 
   onDateInputChange(): void {
-    if (this.ngay) this.loadLichNgay();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.ngay)) return;
+    this.weekStart = this.getMondayOf(this.ngay);
+    if (this.viewMode === 'week') {
+      this.loadWeekData();
+    } else {
+      this.loadLichNgay();
+    }
+  }
+
+  onSelectDayFromWeek(ymd: string): void {
+    this.ngay = ymd;
+    this.weekStart = this.getMondayOf(ymd);
+    this.viewMode = 'day';
+    this.loadLichNgay();
   }
 
   onOpenFeedback(item: LichTrinhView): void {

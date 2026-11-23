@@ -13,7 +13,6 @@ export interface XepLichModalContext {
   hanChot?: string | null;
   defaultNgay: string;
   defaultGioBatDau: string; // HH:mm
-  defaultDiaDiem: string;
   isReschedule?: boolean;
 }
 
@@ -36,7 +35,6 @@ export class ScheduleActionModalComponent implements OnChanges {
   ngay = '';
   gioBatDau = '09:00';
   gioKetThuc = '09:30';
-  diaDiem = '';
   mucUuTienId: number | null = null;
   ghiChu = '';
   yeuCauXacNhanNV = false;
@@ -48,7 +46,6 @@ export class ScheduleActionModalComponent implements OnChanges {
       const [h, m] = this.gioBatDau.split(':').map(Number);
       const startMin = (h || 9) * 60 + (m || 0);
       this.gioKetThuc = minutesToHm(startMin + (this.context.thoiLuongPhut || 30));
-      this.diaDiem = this.context.defaultDiaDiem || 'Phòng Lãnh đạo';
       this.mucUuTienId = this.context.mucUuTienId ?? null;
       this.ghiChu = '';
       this.yeuCauXacNhanNV = false;
@@ -81,12 +78,13 @@ export class ScheduleActionModalComponent implements OnChanges {
 
   submit(): void {
     if (!this.context) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.ngay) || !this.gioBatDau || !this.gioKetThuc) return;
     this.confirmSchedule.emit({
       yeuCauId: this.context.yeuCauId,
       payload: {
         batDau: buildLocalIso(this.ngay, this.gioBatDau),
         ketThuc: buildLocalIso(this.ngay, this.gioKetThuc),
-        diaDiem: this.diaDiem.trim() || null,
+        diaDiem: null,
         mucUuTienId: this.mucUuTienId,
         ghiChu: this.ghiChu.trim() || null,
         yeuCauXacNhanNV: this.yeuCauXacNhanNV

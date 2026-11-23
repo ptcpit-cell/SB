@@ -1,306 +1,318 @@
-<!-- nhan-vien.component.html -->
-<div class="nv-page container-xl py-3">
-
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-start align-items-md-center flex-wrap gap-3 mb-3">
-    <div>
-      <h4 class="nv-title mb-1">Yêu cầu trình của tôi</h4>
-      <p class="text-secondary small mb-0">
-        Theo dõi tiến độ phê duyệt, khung giờ trình và phản hồi từ trợ lý, lãnh đạo
-      </p>
-    </div>
-    <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 fw-medium" (click)="taoMoi()">
-      <i class="fa-solid fa-plus"></i>
-      <span>Tạo yêu cầu mới</span>
-    </button>
-  </div>
-
-  <!-- Thanh chỉ số tổng quan (dữ liệu thực từ thống kê) -->
-  <div class="nv-stat-strip mb-3">
-    <button type="button" class="nv-stat-cell"
-            [class.is-active]="tab === 1 && !chiCanHanhDong && trangThaiLoc === null"
-            (click)="chonTab(1)">
-      <div class="nv-stat-label">Đang xử lý</div>
-      <div class="nv-stat-value tabular-nums text-primary">{{ tabCount.dangXuLy }}</div>
-      <div class="nv-stat-sub">Nháp, chờ duyệt &amp; chờ trình</div>
-    </button>
-
-    <button type="button" class="nv-stat-cell"
-            [class.is-active]="chiCanHanhDong"
-            [class.is-attention]="canHanhDong > 0"
-            (click)="locCanHanhDong()">
-      <div class="nv-stat-label">Cần bạn xử lý</div>
-      <div class="nv-stat-value tabular-nums" [class.text-warning-emphasis]="canHanhDong > 0">
-        {{ canHanhDong }}
+<!-- nhan-vien.component.html — Giao diện chia cột trực quan, giữ timeline 5 bước -->
+<div class="nv-shell">
+  <div class="container-xl py-3">
+    <!-- Header gọn gàng -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <div>
+        <h4 class="nv-heading mb-0">Yêu cầu trình của tôi</h4>
+        <div class="text-secondary small">Theo dõi tiến trình 5 bước, lịch trình đã duyệt và phản hồi từ Trợ lý / Lãnh đạo</div>
       </div>
-      <div class="nv-stat-sub">Đề xuất đổi lịch / bổ sung</div>
-    </button>
 
-    <button type="button" class="nv-stat-cell"
-            [class.is-active]="!chiCanHanhDong && trangThaiLoc === 5"
-            (click)="locDaDuyetLich()">
-      <div class="nv-stat-label">Đã chốt lịch trình</div>
-      <div class="nv-stat-value tabular-nums text-success">{{ tabCount.daDuyetLich }}</div>
-      <div class="nv-stat-sub">Sẵn sàng lên trình lãnh đạo</div>
-    </button>
-
-    <button type="button" class="nv-stat-cell"
-            [class.is-active]="tab === 2 && !chiCanHanhDong && trangThaiLoc === null"
-            (click)="chonTab(2)">
-      <div class="nv-stat-label">Lịch sử xử lý</div>
-      <div class="nv-stat-value tabular-nums text-secondary">{{ tabCount.lichSu }}</div>
-      <div class="nv-stat-sub">Đã trình, hoàn tất &amp; kết thúc</div>
-    </button>
-  </div>
-
-  <!-- Banner nhắc việc cần xử lý -->
-  <div class="nv-callout-warn d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"
-       *ngIf="canHanhDong > 0">
-    <div class="d-flex align-items-center gap-2 small">
-      <i class="fa-solid fa-bell text-warning-emphasis"></i>
-      <span>
-        Bạn có <strong class="tabular-nums">{{ canHanhDong }}</strong> yêu cầu đang chờ phản hồi đề xuất lịch hoặc bổ sung thông tin.
-      </span>
-    </div>
-    <button type="button" class="btn btn-sm py-1 px-2 fw-medium"
-            [ngClass]="chiCanHanhDong ? 'btn-outline-secondary' : 'btn-warning text-dark'"
-            (click)="locCanHanhDong()">
-      {{ chiCanHanhDong ? 'Hiện lại danh sách' : 'Lọc xem ngay' }}
-    </button>
-  </div>
-
-  <!-- Thanh lọc thống nhất -->
-  <div class="nv-toolbar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <div class="nv-segmented" role="tablist" aria-label="Nhóm trạng thái yêu cầu">
-      <button type="button" class="nv-seg-btn"
-              [class.is-active]="tab === 1 && !chiCanHanhDong"
-              (click)="chonTab(1)">
-        <span>Đang xử lý</span>
-        <span class="nv-seg-count tabular-nums">{{ tabCount.dangXuLy }}</span>
-      </button>
-      <button type="button" class="nv-seg-btn"
-              [class.is-active]="tab === 2 && !chiCanHanhDong"
-              (click)="chonTab(2)">
-        <span>Lịch sử</span>
-        <span class="nv-seg-count tabular-nums">{{ tabCount.lichSu }}</span>
-      </button>
-      <button type="button" class="nv-seg-btn"
-              [class.is-active]="tab === 0 && !chiCanHanhDong"
-              (click)="chonTab(0)">
-        <span>Tất cả</span>
-        <span class="nv-seg-count tabular-nums">{{ tabCount.all }}</span>
-      </button>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-success btn-sm bg-white d-inline-flex align-items-center gap-1.5" (click)="showExportModal = true">
+          <i class="fa-solid fa-file-excel"></i>
+          <span>Xuất Excel</span>
+        </button>
+        <button type="button" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1.5 px-3 fw-medium" (click)="taoMoi()">
+          <i class="fa-solid fa-plus"></i>
+          <span>Tạo yêu cầu mới</span>
+        </button>
+      </div>
     </div>
 
-    <div class="d-flex align-items-center flex-wrap gap-2">
-      <select class="form-select form-select-sm nv-status-select"
-              [(ngModel)]="trangThaiLoc" (ngModelChange)="onLocTrangThai()"
-              aria-label="Lọc theo trạng thái">
-        <option [ngValue]="null">Mọi trạng thái</option>
-        <option *ngFor="let s of statusOptions" [ngValue]="s.value">{{ s.label }}</option>
-      </select>
+    <!-- Dải thống kê tương tác -->
+    <div class="nv-kpi-grid mb-3">
+      <button
+        type="button"
+        class="nv-kpi-item"
+        [class.is-active]="tab === 1 && !chiCanHanhDong && trangThaiLoc === null"
+        (click)="chonTab(1)"
+      >
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="nv-kpi-label">Đang xử lý</span>
+          <i class="fa-regular fa-hourglass-half text-primary"></i>
+        </div>
+        <div class="nv-kpi-num tabular-nums text-primary">{{ tabCount.dangXuLy }}</div>
+        <div class="nv-kpi-desc">Nháp, chờ duyệt &amp; chờ trình</div>
+      </button>
 
-      <div class="nv-search-wrap">
-        <i class="fa-solid fa-magnifying-glass nv-search-icon"></i>
-        <input type="text" class="form-control form-control-sm nv-search-input"
-               placeholder="Tìm mã hoặc tiêu đề..."
-               [(ngModel)]="keyword" (ngModelChange)="onSearch()" />
-        <button type="button" class="nv-search-clear" *ngIf="keyword"
-                (click)="clearSearch()" aria-label="Xóa từ khóa">
-          <i class="fa-solid fa-xmark"></i>
+      <button
+        type="button"
+        class="nv-kpi-item"
+        [class.is-active]="chiCanHanhDong"
+        [class.is-warn]="canHanhDong > 0"
+        (click)="locCanHanhDong()"
+      >
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="nv-kpi-label">Cần bạn xử lý</span>
+          <i class="fa-solid fa-bell" [ngClass]="canHanhDong > 0 ? 'text-warning-emphasis' : 'text-secondary'"></i>
+        </div>
+        <div class="nv-kpi-num tabular-nums" [ngClass]="canHanhDong > 0 ? 'text-warning-emphasis' : 'text-dark'">
+          {{ canHanhDong }}
+        </div>
+        <div class="nv-kpi-desc">Đề xuất đổi lịch / bổ sung</div>
+      </button>
+
+      <button
+        type="button"
+        class="nv-kpi-item"
+        [class.is-active]="!chiCanHanhDong && trangThaiLoc === 5"
+        (click)="locDaDuyetLich()"
+      >
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="nv-kpi-label">Đã chốt lịch trình</span>
+          <i class="fa-regular fa-calendar-check text-success"></i>
+        </div>
+        <div class="nv-kpi-num tabular-nums text-success">{{ tabCount.daDuyetLich }}</div>
+        <div class="nv-kpi-desc">Sẵn sàng lên trình lãnh đạo</div>
+      </button>
+
+      <button
+        type="button"
+        class="nv-kpi-item"
+        [class.is-active]="tab === 2 && !chiCanHanhDong && trangThaiLoc === null"
+        (click)="chonTab(2)"
+      >
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="nv-kpi-label">Lịch sử xử lý</span>
+          <i class="fa-solid fa-clock-rotate-left text-secondary"></i>
+        </div>
+        <div class="nv-kpi-num tabular-nums text-secondary">{{ tabCount.lichSu }}</div>
+        <div class="nv-kpi-desc">Đã trình, hoàn tất &amp; kết thúc</div>
+      </button>
+    </div>
+
+    <!-- Cảnh báo nhanh khi có việc cần hành động -->
+    <div class="nv-alert-bar mb-3" *ngIf="canHanhDong > 0">
+      <div class="d-flex align-items-center gap-2 small">
+        <i class="fa-solid fa-circle-exclamation text-warning-emphasis"></i>
+        <span>
+          Bạn có <strong class="tabular-nums">{{ canHanhDong }}</strong> yêu cầu đang chờ phản hồi đề xuất đổi lịch hoặc bổ sung hồ sơ.
+        </span>
+      </div>
+      <button
+        type="button"
+        class="btn btn-sm py-0.5 px-2.5 fw-medium"
+        [ngClass]="chiCanHanhDong ? 'btn-outline-secondary bg-white' : 'btn-warning text-dark'"
+        (click)="locCanHanhDong()"
+      >
+        {{ chiCanHanhDong ? 'Xem toàn bộ' : 'Lọc ngay' }}
+      </button>
+    </div>
+
+    <!-- Khối danh sách thống nhất (Toolbar + Split-Row List + Paginator) -->
+    <div class="nv-board">
+      <!-- Toolbar lọc -->
+      <div class="nv-board-head d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="nv-tabs" role="tablist">
+          <button type="button" class="nv-tab" [class.is-active]="tab === 1 && !chiCanHanhDong" (click)="chonTab(1)">
+            Đang xử lý <span class="nv-tab-num tabular-nums">{{ tabCount.dangXuLy }}</span>
+          </button>
+          <button type="button" class="nv-tab" [class.is-active]="tab === 2 && !chiCanHanhDong" (click)="chonTab(2)">
+            Lịch sử <span class="nv-tab-num tabular-nums">{{ tabCount.lichSu }}</span>
+          </button>
+          <button type="button" class="nv-tab" [class.is-active]="tab === 0 && !chiCanHanhDong" (click)="chonTab(0)">
+            Tất cả <span class="nv-tab-num tabular-nums">{{ tabCount.all }}</span>
+          </button>
+        </div>
+
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <select
+            class="form-select form-select-sm nv-select"
+            [(ngModel)]="trangThaiLoc"
+            (ngModelChange)="onLocTrangThai()"
+            aria-label="Lọc trạng thái"
+          >
+            <option [ngValue]="null">Mọi trạng thái</option>
+            <option *ngFor="let s of statusOptions" [ngValue]="s.value">{{ s.label }}</option>
+          </select>
+
+          <div class="nv-search">
+            <i class="fa-solid fa-magnifying-glass nv-search-ic"></i>
+            <input
+              type="text"
+              class="form-control form-control-sm nv-search-in"
+              placeholder="Tìm mã hoặc tiêu đề..."
+              [(ngModel)]="keyword"
+              (ngModelChange)="onSearch()"
+            />
+            <button type="button" class="nv-search-x" *ngIf="keyword" (click)="clearSearch()" aria-label="Xóa">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-link text-secondary text-decoration-none px-1"
+            *ngIf="hasActiveFilter"
+            (click)="datLaiBoLoc()"
+          >
+            <i class="fa-solid fa-rotate-left me-1"></i>Đặt lại
+          </button>
+        </div>
+      </div>
+
+      <!-- Nhãn cột ẩn trên mobile -->
+      <div class="nv-list-header d-none d-lg-grid">
+        <div>Thông tin yêu cầu</div>
+        <div>Tiến trình 5 bước &amp; Thao tác</div>
+      </div>
+
+      <!-- Skeleton loading -->
+      <div class="p-3 d-flex flex-column gap-3" *ngIf="loading && items.length === 0">
+        <div class="nv-skel-row" *ngFor="let _ of skeletonRows">
+          <div class="nv-skel-line" style="width: 55%; height: 18px;"></div>
+          <div class="nv-skel-line mt-2" style="width: 75%; height: 13px;"></div>
+          <div class="nv-skel-line mt-3" style="width: 100%; height: 28px;"></div>
+        </div>
+      </div>
+
+      <!-- Trạng thái rỗng -->
+      <div class="text-center py-5 px-3" *ngIf="!loading && items.length === 0">
+        <div class="nv-empty-badge mb-3">
+          <i class="fa-regular" [ngClass]="hasActiveFilter ? 'fa-magnifying-glass' : 'fa-folder-open'"></i>
+        </div>
+        <h6 class="fw-semibold text-dark mb-1">
+          {{ hasActiveFilter ? 'Không tìm thấy yêu cầu phù hợp' : 'Chưa có yêu cầu nào trong mục này' }}
+        </h6>
+        <p class="small text-secondary mb-3">
+          {{ hasActiveFilter
+            ? 'Thử thay đổi từ khóa hoặc đặt lại bộ lọc trạng thái.'
+            : 'Nhấn tạo yêu cầu mới để đăng ký lịch trình làm việc với lãnh đạo.' }}
+        </p>
+        <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="hasActiveFilter" (click)="datLaiBoLoc()">
+          <i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" *ngIf="!hasActiveFilter" (click)="taoMoi()">
+          <i class="fa-solid fa-plus me-1"></i>Tạo yêu cầu đầu tiên
         </button>
       </div>
 
-      <button type="button" class="btn btn-sm btn-link text-secondary text-decoration-none px-2"
-              *ngIf="hasActiveFilter" (click)="datLaiBoLoc()">
-        <i class="fa-solid fa-rotate-left me-1"></i>Đặt lại
-      </button>
-    </div>
-  </div>
-
-  <!-- Dải thông báo bộ lọc cần hành động đang bật -->
-  <div class="d-flex align-items-center justify-content-between small text-secondary mb-2 px-1"
-       *ngIf="chiCanHanhDong">
-    <span>
-      Đang lọc <strong class="text-body">yêu cầu cần phản hồi / bổ sung</strong>
-      (<span class="tabular-nums">{{ items.length }}</span> kết quả)
-    </span>
-    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" (click)="locCanHanhDong()">
-      Bỏ lọc
-    </button>
-  </div>
-
-  <!-- Skeleton đang tải lần đầu -->
-  <div class="d-flex flex-column gap-3" *ngIf="loading && items.length === 0">
-    <div class="nv-card nv-skeleton-card p-3" *ngFor="let _ of skeletonRows">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <div class="nv-skel-bar" style="width: 48%; height: 18px;"></div>
-        <div class="nv-skel-bar" style="width: 96px; height: 24px;"></div>
-      </div>
-      <div class="nv-skel-bar mb-3" style="width: 68%; height: 13px;"></div>
-      <div class="nv-skel-bar mb-3" style="width: 100%; height: 32px;"></div>
-      <div class="d-flex justify-content-end gap-2">
-        <div class="nv-skel-bar" style="width: 86px; height: 28px;"></div>
-        <div class="nv-skel-bar" style="width: 96px; height: 28px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Trạng thái rỗng -->
-  <div class="nv-empty text-center py-5 px-3" *ngIf="!loading && items.length === 0">
-    <div class="nv-empty-icon mb-3">
-      <i class="fa-regular" [ngClass]="hasActiveFilter ? 'fa-magnifying-glass' : 'fa-folder-open'"></i>
-    </div>
-    <h6 class="fw-semibold mb-1 text-body">
-      {{ hasActiveFilter ? 'Không tìm thấy yêu cầu phù hợp' : 'Chưa có yêu cầu nào trong mục này' }}
-    </h6>
-    <p class="small text-secondary mb-3">
-      {{ hasActiveFilter
-        ? 'Thử điều chỉnh từ khóa hoặc đặt lại bộ lọc trạng thái.'
-        : 'Tạo yêu cầu trình mới để gửi hồ sơ và đăng ký lịch làm việc với lãnh đạo.' }}
-    </p>
-    <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="hasActiveFilter" (click)="datLaiBoLoc()">
-      <i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc
-    </button>
-    <button type="button" class="btn btn-primary btn-sm" *ngIf="!hasActiveFilter" (click)="taoMoi()">
-      <i class="fa-solid fa-plus me-1"></i>Tạo yêu cầu đầu tiên
-    </button>
-  </div>
-
-  <!-- Danh sách yêu cầu -->
-  <div class="d-flex flex-column gap-3" [class.list-loading]="loading && items.length > 0">
-    <article class="nv-card"
-             *ngFor="let r of items; trackBy: trackById"
-             [class.is-need-action]="r.needAction">
-
-      <div class="nv-card-main">
-        <!-- Đầu thẻ: Tiêu đề + Trạng thái -->
-        <div class="d-flex justify-content-between align-items-start gap-3">
-          <div class="flex-grow-1 min-w-0 req-click" (click)="xemChiTiet(r)">
+      <!-- Danh sách dạng dòng chia 2 cột trực quan -->
+      <div class="nv-rows" [class.is-loading]="loading && items.length > 0" *ngIf="items.length > 0">
+        <article
+          class="nv-row"
+          *ngFor="let r of items; trackBy: trackById"
+          [class.is-attention]="r.needAction"
+        >
+          <!-- Cột trái: Mã + Trạng thái + Tiêu đề + Meta + Lịch/Thông báo -->
+          <div class="nv-col-info min-w-0">
             <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
-              <h6 class="nv-card-title mb-0">{{ r.tieuDe }}</h6>
-              <span class="nv-urgency is-urgent" *ngIf="r.mucKhan === 2">
+              <span class="nv-code tabular-nums">{{ r.maYeuCau }}</span>
+              <span class="nv-badge" [ngClass]="'st-' + r.statusCss">
+                <span class="nv-badge-dot"></span>{{ r.statusLabel }}
+              </span>
+              <span class="nv-urg is-urgent" *ngIf="r.mucKhan === 2">
                 <i class="fa-solid fa-bolt"></i>Gấp
               </span>
-              <span class="nv-urgency is-critical" *ngIf="r.mucKhan === 3">
+              <span class="nv-urg is-critical" *ngIf="r.mucKhan === 3">
                 <i class="fa-solid fa-triangle-exclamation"></i>Rất gấp
               </span>
             </div>
 
-            <!-- Metadata dạng dòng thoáng, ngăn cách bằng dấu chấm giữa -->
+            <h6 class="nv-row-title mb-1" (click)="xemChiTiet(r)">{{ r.tieuDe }}</h6>
+
             <div class="nv-meta">
-              <span class="nv-code tabular-nums">{{ r.maYeuCau }}</span>
-              <span class="nv-sep" aria-hidden="true">·</span>
               <span><i class="fa-solid fa-user-tie me-1 text-secondary"></i>{{ r.tenLanhDao }}</span>
-              <span class="nv-sep" aria-hidden="true">·</span>
+              <span class="nv-dot">·</span>
               <span>{{ r.tenLoai }}</span>
-              <ng-container *ngIf="r.maNhom">
-                <span class="nv-sep" aria-hidden="true">·</span>
-                <span>Nhóm {{ r.maNhom }}</span>
-              </ng-container>
               <ng-container *ngIf="r.hanChot">
-                <span class="nv-sep" aria-hidden="true">·</span>
-                <span class="tabular-nums"
-                      [class.text-danger]="r.hanChotStatus === 'overdue'"
-                      [class.fw-semibold]="r.hanChotStatus === 'overdue' || r.hanChotStatus === 'soon'"
-                      [class.text-warning-emphasis]="r.hanChotStatus === 'soon'">
+                <span class="nv-dot">·</span>
+                <span
+                  class="tabular-nums"
+                  [class.text-danger]="r.hanChotStatus === 'overdue'"
+                  [class.text-warning-emphasis]="r.hanChotStatus === 'soon'"
+                  [class.fw-semibold]="r.hanChotStatus === 'overdue' || r.hanChotStatus === 'soon'"
+                >
                   <i class="fa-regular fa-calendar me-1"></i>Hạn {{ r.hanChot | date:'dd/MM/yyyy' }}
                   <ng-container *ngIf="r.hanChotHint"> ({{ r.hanChotHint }})</ng-container>
                 </span>
               </ng-container>
-              <span class="nv-sep" aria-hidden="true">·</span>
-              <span class="tabular-nums" *ngIf="r.ngayGui">Gửi {{ r.ngayGui | date:'dd/MM/yyyy HH:mm' }}</span>
-              <span class="tabular-nums" *ngIf="!r.ngayGui">Tạo {{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="nv-dot">·</span>
+              <span class="tabular-nums" *ngIf="r.ngayGui">Gửi {{ r.ngayGui | date:'dd/MM HH:mm' }}</span>
+              <span class="tabular-nums" *ngIf="!r.ngayGui">Tạo {{ r.createdAt | date:'dd/MM HH:mm' }}</span>
+            </div>
+
+            <!-- Dải nhắc lịch / hành động gọn gàng -->
+            <div class="nv-pill-note is-schedule mt-2" *ngIf="r.lichBatDau && (r.trangThai === 5 || r.trangThai === 10)">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>
+                Lịch trình: <strong>{{ r.lichBatDau | date:'dd/MM/yyyy' }}</strong> ·
+                <strong class="tabular-nums">{{ r.lichBatDau | date:'HH:mm' }} – {{ r.lichKetThuc | date:'HH:mm' }}</strong>
+              </span>
+            </div>
+            <div class="nv-pill-note is-warn mt-2" *ngIf="r.trangThai === 3">
+              <i class="fa-regular fa-clock"></i>
+              <span>Trợ lý đề xuất khung giờ khác — đang chờ bạn xác nhận.</span>
+            </div>
+            <div class="nv-pill-note is-warn mt-2" *ngIf="r.trangThai === 4">
+              <i class="fa-regular fa-circle-question"></i>
+              <span>Trợ lý yêu cầu bổ sung thêm thông tin hoặc tài liệu.</span>
+            </div>
+            <div class="nv-pill-note is-danger mt-2" *ngIf="(r.trangThai === 8 || r.trangThai === 9) && r.lyDoTuChoiHuy">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Lý do: {{ r.lyDoTuChoiHuy }}</span>
             </div>
           </div>
 
-          <!-- Nhãn trạng thái -->
-          <span class="nv-status flex-shrink-0" [ngClass]="'st-' + r.statusCss">
-            <span class="nv-status-dot"></span>
-            <span>{{ r.statusLabel }}</span>
-          </span>
-        </div>
-
-        <!-- Khung giai đoạn 5 bước -->
-        <div class="stepper">
-          <div class="step" *ngFor="let s of r.steps; let i = index" [ngClass]="s.state">
-            <div class="dot tabular-nums">
-              <i class="fa-solid fa-check" *ngIf="s.state === 'done'"></i>
-              <i class="fa-solid fa-exclamation" *ngIf="s.state === 'warn'"></i>
-              <i class="fa-solid fa-xmark" *ngIf="s.state === 'error'"></i>
-              <span *ngIf="s.state === 'current' || s.state === 'todo'">{{ i + 1 }}</span>
+          <!-- Cột phải: Timeline 5 bước + Nút thao tác -->
+          <div class="nv-col-progress">
+            <div class="nv-timeline-tray">
+              <div class="stepper">
+                <div class="step" *ngFor="let s of r.steps; let i = index" [ngClass]="s.state">
+                  <div class="dot tabular-nums">
+                    <i class="fa-solid fa-check" *ngIf="s.state === 'done'"></i>
+                    <i class="fa-solid fa-exclamation" *ngIf="s.state === 'warn'"></i>
+                    <i class="fa-solid fa-xmark" *ngIf="s.state === 'error'"></i>
+                    <span *ngIf="s.state === 'current' || s.state === 'todo'">{{ i + 1 }}</span>
+                  </div>
+                  <div class="step-label">{{ s.label }}</div>
+                </div>
+              </div>
             </div>
-            <div class="step-label">{{ s.label }}</div>
+
+            <div class="nv-actions mt-2.5">
+              <button
+                type="button"
+                class="btn btn-warning text-dark fw-medium btn-sm"
+                *ngIf="r.needAction"
+                (click)="xemChiTiet(r)"
+              >
+                <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>{{ r.actionLabel }}
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" *ngIf="r.canSend" (click)="gui(r)">
+                <i class="fa-solid fa-paper-plane me-1"></i>Gửi
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm bg-white" *ngIf="r.canEdit" (click)="sua(r)">
+                <i class="fa-solid fa-pen me-1"></i>Sửa
+              </button>
+              <button type="button" class="btn btn-outline-primary btn-sm bg-white" (click)="xemChiTiet(r)">
+                <i class="fa-regular fa-eye me-1"></i>Chi tiết
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm bg-white" *ngIf="r.canCancel" (click)="moHopHuy(r)">
+                <i class="fa-solid fa-ban me-1"></i>Hủy
+              </button>
+            </div>
           </div>
-        </div>
-
-        <!-- Dải thông tin theo trạng thái -->
-        <div class="nv-notice is-schedule"
-             *ngIf="r.lichBatDau && (r.trangThai === 5 || r.trangThai === 10)">
-          <i class="fa-regular fa-calendar-check"></i>
-          <span>
-            Lịch trình: <strong>{{ r.lichBatDau | date:'EEEE, dd/MM/yyyy' }}</strong>,
-            <strong class="tabular-nums">{{ r.lichBatDau | date:'HH:mm' }} – {{ r.lichKetThuc | date:'HH:mm' }}</strong>
-          </span>
-        </div>
-
-        <div class="nv-notice is-warn" *ngIf="r.trangThai === 3">
-          <i class="fa-regular fa-clock"></i>
-          <span>Trợ lý đã đề xuất khung giờ khác và đang chờ bạn xác nhận đồng ý.</span>
-        </div>
-
-        <div class="nv-notice is-warn" *ngIf="r.trangThai === 4">
-          <i class="fa-regular fa-circle-question"></i>
-          <span>Trợ lý yêu cầu bạn bổ sung thêm thông tin hoặc tài liệu trước khi xếp lịch.</span>
-        </div>
-
-        <div class="nv-notice is-danger"
-             *ngIf="(r.trangThai === 8 || r.trangThai === 9) && r.lyDoTuChoiHuy">
-          <i class="fa-solid fa-circle-info"></i>
-          <span>Lý do: {{ r.lyDoTuChoiHuy }}</span>
-        </div>
+        </article>
       </div>
 
-      <!-- Chân thẻ: Hành động -->
-      <div class="nv-card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span class="small text-secondary d-none d-sm-inline">
-          <ng-container *ngIf="r.needAction">Cần bạn thực hiện thao tác để tiếp tục quy trình</ng-container>
-          <ng-container *ngIf="!r.needAction && r.trangThai === 0">Bản nháp — có thể chỉnh sửa hoặc gửi lên trợ lý</ng-container>
-          <ng-container *ngIf="!r.needAction && r.trangThai !== 0">Nhấn vào tiêu đề hoặc nút chi tiết để theo dõi lịch sử xử lý</ng-container>
-        </span>
-
-        <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
-          <button type="button" class="btn btn-warning text-dark fw-medium btn-sm"
-                  *ngIf="r.needAction" (click)="xemChiTiet(r)">
-            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>{{ r.actionLabel }}
-          </button>
-          <button type="button" class="btn btn-primary btn-sm" *ngIf="r.canSend" (click)="gui(r)">
-            <i class="fa-solid fa-paper-plane me-1"></i>Gửi yêu cầu
-          </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="r.canEdit" (click)="sua(r)">
-            <i class="fa-solid fa-pen me-1"></i>Sửa
-          </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="xemChiTiet(r)">
-            <i class="fa-regular fa-eye me-1"></i>Chi tiết
-          </button>
-          <button type="button" class="btn btn-outline-danger btn-sm" *ngIf="r.canCancel" (click)="moHopHuy(r)">
-            <i class="fa-solid fa-ban me-1"></i>Hủy
-          </button>
-        </div>
+      <!-- Paginator gắn liền dưới danh sách -->
+      <div class="nv-board-foot" *ngIf="total > 0 && !chiCanHanhDong">
+        <mat-paginator
+          [length]="total"
+          [pageIndex]="pageIndex"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          showFirstLastButtons
+          (page)="onPage($event)"
+        ></mat-paginator>
       </div>
-    </article>
-  </div>
-
-  <div class="nv-paginator-wrap mt-3" *ngIf="total > 0 && !chiCanHanhDong">
-    <mat-paginator
-      [length]="total" [pageIndex]="pageIndex" [pageSize]="pageSize"
-      [pageSizeOptions]="pageSizeOptions" showFirstLastButtons
-      (page)="onPage($event)">
-    </mat-paginator>
+    </div>
   </div>
 </div>
 
-<!-- Modal hủy: điều khiển bằng showHuyModal -->
+<!-- Modal hủy -->
 <ng-container *ngIf="showHuyModal && huyTarget">
   <div class="modal fade show d-block" tabindex="-1" (click)="dongHopHuy()">
     <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
@@ -318,8 +330,13 @@
           <label class="form-label small fw-medium">
             Lý do hủy <span class="text-danger" *ngIf="huyTarget.huyCanLyDo">*</span>
           </label>
-          <textarea class="form-control form-control-sm" rows="3" maxlength="500" placeholder="Nhập lý do hủy yêu cầu..."
-                    [(ngModel)]="lyDoHuy"></textarea>
+          <textarea
+            class="form-control form-control-sm"
+            rows="3"
+            maxlength="500"
+            placeholder="Nhập lý do hủy yêu cầu..."
+            [(ngModel)]="lyDoHuy"
+          ></textarea>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dongHopHuy()" [disabled]="dangHuy">Đóng</button>
@@ -333,3 +350,9 @@
   </div>
   <div class="modal-backdrop fade show"></div>
 </ng-container>
+
+<!-- Modal xuất báo cáo Excel -->
+<app-excel-export-modal
+  [visible]="showExportModal"
+  (closeModal)="showExportModal = false"
+></app-excel-export-modal>

@@ -28,6 +28,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isDropdownOpen = false;
   isLoading = false;
   showLogoutModal = false;
+  showChangePasswordModal = false;
 
   private signalRSub?: Subscription;
   private scheduleSignalRSub?: Subscription;
@@ -104,6 +105,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.signalRService.stopConnection();
       }
     });
+  }
+
+  openProfile(): void {
+    this.router.navigate(['/ho-so']);
+  }
+
+  openChangePassword(): void {
+    this.showChangePasswordModal = true;
   }
 
   onLogout(): void {

@@ -39,6 +39,13 @@ import { LeaderTimelineComponent } from './view-lanh-dao/lanh-dao/leader-timelin
 import { TodayTasksComponent } from './view-lanh-dao/lanh-dao/today-tasks/today-tasks.component';
 import { FeedbackModalComponent } from './view-lanh-dao/lanh-dao/feedback-modal/feedback-modal.component';
 import { BusyEventModalComponent } from './shared/busy-event-modal/busy-event-modal.component';
+import { WeekScheduleComponent } from './shared/week-schedule/week-schedule.component';
+import { ExcelExportModalComponent } from './shared/excel-export-modal/excel-export-modal.component';
+import { ChangePasswordModalComponent } from './components/change-password-modal/change-password-modal.component';
+import { ProfileComponent } from './view-profile/profile.component';
+import { AdminLeadersComponent } from './view-admin/home/admin-leaders/admin-leaders.component';
+import { AdminCatalogComponent } from './view-admin/home/admin-catalog/admin-catalog.component';
+import { VnDateInputComponent } from './shared/vn-date-input/vn-date-input.component';
 import { MatIconModule } from '@angular/material/icon';
 
 
@@ -68,11 +75,18 @@ export function appInitializer(authService: AuthService) {
     TodayTasksComponent,
     FeedbackModalComponent,
     BusyEventModalComponent,
+    WeekScheduleComponent,
+    ExcelExportModalComponent,
+    ChangePasswordModalComponent,
+    ProfileComponent,
+    AdminLeadersComponent,
+    AdminCatalogComponent,
     PhongBanComponent,
     ChucVuComponent,
     CreateRequestComponent,
     EditRequestComponent,
-    DetailRequestComponent
+    DetailRequestComponent,
+    VnDateInputComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

@@ -34,10 +34,21 @@
           >
             {{ currentUser?.tenNguoiDung }}
           </a>
-          <ul class="dropdown-menu dropdown-menu-end">
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
             <li>
-              <a class="dropdown-item" href="javascript:void(0)" (click)="onLogout()">
-                <i class="fa-solid fa-right-from-bracket me-2 text-danger"></i>Đăng xuất
+              <a class="dropdown-item" href="javascript:void(0)" (click)="openProfile()">
+                <i class="fa-regular fa-id-card me-2 text-primary"></i>Thông tin cá nhân
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="javascript:void(0)" (click)="openChangePassword()">
+                <i class="fa-solid fa-key me-2 text-secondary"></i>Thay đổi mật khẩu
+              </a>
+            </li>
+            <li><hr class="dropdown-divider my-1" /></li>
+            <li>
+              <a class="dropdown-item text-danger" href="javascript:void(0)" (click)="onLogout()">
+                <i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất
               </a>
             </li>
           </ul>
@@ -191,3 +202,9 @@
   </div>
   <div class="modal-backdrop fade show"></div>
 </ng-container>
+
+<!-- Modal thay đổi mật khẩu -->
+<app-change-password-modal
+  [visible]="showChangePasswordModal"
+  (closeModal)="showChangePasswordModal = false"
+></app-change-password-modal>

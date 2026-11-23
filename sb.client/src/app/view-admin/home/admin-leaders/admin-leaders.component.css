@@ -1,0 +1,36 @@
+.adm-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.adm-panel-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.status-chip {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.status-chip.is-on {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.status-chip.is-off {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

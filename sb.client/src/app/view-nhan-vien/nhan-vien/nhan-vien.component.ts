@@ -65,6 +65,7 @@ const STATUS_INFO: Record<number, { label: string; css: string }> = {
 };
 
 const DANG_XU_LY = [0, 1, 2, 3, 4, 5, 10];
+const CHUA_DUYET_LICH = [1, 2, 3, 4]; // Đã gửi đi, chờ trợ lý xem xét / duyệt lịch
 const LICH_SU = [6, 7, 8, 9, 11];
 @Component({
   selector: 'app-nhan-vien',
@@ -88,6 +89,7 @@ export class NhanVienComponent implements OnInit, OnDestroy {
   tab = 1; // 0 tất cả, 1 đang xử lý, 2 lịch sử
   trangThaiLoc: number | null = null;
   chiCanHanhDong = false;
+  showExportModal = false;
   tabCount = { all: 0, dangXuLy: 0, lichSu: 0, daDuyetLich: 0 };
   canHanhDong = 0;
 
@@ -322,9 +324,13 @@ export class NhanVienComponent implements OnInit, OnDestroy {
     trangThai: number
   ): { status: 'overdue' | 'soon' | 'normal' | null; hint: string } {
     if (!hanChot) return { status: null, hint: '' };
-    if (!DANG_XU_LY.includes(trangThai)) return { status: 'normal', hint: '' };
+    // Chỉ hiển thị cảnh báo còn bao nhiêu ngày / quá hạn khi yêu cầu đã gửi và chưa duyệt lịch (1, 2, 3, 4)
+    if (!CHUA_DUYET_LICH.includes(trangThai)) return { status: 'normal', hint: '' };
 
-    const due = new Date(hanChot);
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(hanChot.trim());
+    const due = dateMatch
+      ? new Date(Number(dateMatch[1]), Number(dateMatch[2]) - 1, Number(dateMatch[3]))
+      : new Date(hanChot);
     if (isNaN(due.getTime())) return { status: null, hint: '' };
 
     const today = new Date();

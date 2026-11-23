@@ -13,23 +13,48 @@
     </div>
 
     <div class="d-flex flex-wrap align-items-center gap-2">
-      <!-- Chọn ngày -->
+      <!-- Chuyển chế độ Ngày / Tuần -->
+      <div class="btn-group btn-group-sm" role="group">
+        <button
+          type="button"
+          class="btn"
+          [ngClass]="viewMode === 'day' ? 'btn-primary' : 'btn-outline-secondary bg-white'"
+          (click)="switchViewMode('day')"
+        >
+          <i class="fa-regular fa-calendar-days me-1"></i>Ngày
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [ngClass]="viewMode === 'week' ? 'btn-primary' : 'btn-outline-secondary bg-white'"
+          (click)="switchViewMode('week')"
+        >
+          <i class="fa-solid fa-table-columns me-1"></i>Tuần
+        </button>
+      </div>
+
+      <!-- Chọn ngày / tuần -->
       <div class="btn-group btn-group-sm shadow-xs">
-        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(-1)" title="Ngày trước">
+        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(-1)" [title]="viewMode === 'week' ? 'Tuần trước' : 'Ngày trước'">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <button type="button" class="btn btn-outline-primary bg-white fw-semibold" (click)="chonHomNay()">Hôm nay</button>
-        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(1)" title="Ngày sau">
+        <button type="button" class="btn btn-outline-primary bg-white fw-semibold" (click)="chonHomNay()">
+          {{ viewMode === 'week' ? 'Tuần này' : 'Hôm nay' }}
+        </button>
+        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(1)" [title]="viewMode === 'week' ? 'Tuần sau' : 'Ngày sau'">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
-      <input type="date" class="form-control form-control-sm w-auto" [(ngModel)]="ngay" (ngModelChange)="onDateInputChange()" />
+      <app-vn-date-input [compact]="true" [(ngModel)]="ngay" (ngModelChange)="onDateInputChange()"></app-vn-date-input>
 
       <button type="button" class="btn btn-outline-primary btn-sm" *ngIf="dashboard" (click)="showWorkingHoursModal = true">
-        <i class="fa-solid fa-sliders me-1"></i>Giờ làm việc của sếp
+        <i class="fa-solid fa-sliders me-1"></i>Giờ làm việc
       </button>
       <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="dashboard" (click)="showBusyEventModal = true">
-        <i class="fa-solid fa-calendar-minus me-1"></i>Thêm lịch bận
+        <i class="fa-solid fa-calendar-minus me-1"></i>Lịch bận
+      </button>
+      <button type="button" class="btn btn-outline-success btn-sm" (click)="showExportModal = true">
+        <i class="fa-solid fa-file-excel me-1"></i>Xuất Excel
       </button>
     </div>
   </div>
@@ -74,9 +99,9 @@
       </div>
     </div>
 
-    <!-- Layout 2 cột: Hàng chờ (trái) + Lịch kéo thả (phải) -->
+    <!-- Layout 2 cột: Hàng chờ (trái) + Lịch Ngày hoặc Tuần (phải) -->
     <div class="row g-3">
-      <div class="col-lg-5">
+      <div [ngClass]="viewMode === 'week' ? 'col-lg-4' : 'col-lg-5'">
         <app-tro-ly-request-queue
           [hangCho]="dashboard.hangCho"
           [mucUuTiens]="dashboard.mucUuTiens"
@@ -91,8 +116,9 @@
         ></app-tro-ly-request-queue>
       </div>
 
-      <div class="col-lg-7">
+      <div [ngClass]="viewMode === 'week' ? 'col-lg-8' : 'col-lg-7'">
         <app-tro-ly-schedule-grid
+          *ngIf="viewMode === 'day'"
           [ngay]="dashboard.ngay"
           [cauHinh]="dashboard.cauHinh"
           [lichNgay]="dashboard.lichNgay"
@@ -103,6 +129,20 @@
           (deleteSuKien)="onDeleteSuKien($event)"
           (dragStartScheduled)="draggingYeuCauId = $event.yeuCauId"
         ></app-tro-ly-schedule-grid>
+
+        <app-week-schedule
+          *ngIf="viewMode === 'week'"
+          [tuNgay]="weekStart"
+          [selectedNgay]="ngay"
+          [cauHinh]="weekData?.cauHinh || dashboard.cauHinh"
+          [lichTrinhs]="weekData?.lichTrinhs || []"
+          [suKiens]="weekData?.suKiens || []"
+          [allowDrop]="true"
+          [loading]="loadingWeek"
+          (selectDay)="onSelectDayFromWeek($event)"
+          (selectLich)="onSelectLich($event)"
+          (dayDropped)="onWeekDayDropped($event)"
+        ></app-week-schedule>
       </div>
     </div>
   </ng-container>
@@ -124,7 +164,7 @@
   [saving]="savingSchedule"
   [context]="scheduleModalCtx"
   [mucUuTiens]="dashboard?.mucUuTiens || []"
-  [existingLichNgay]="dashboard?.lichNgay || []"
+  [existingLichNgay]="viewMode === 'week' ? (weekData?.lichTrinhs || []) : (dashboard?.lichNgay || [])"
   (closeModal)="showScheduleModal = false"
   (confirmSchedule)="onConfirmSchedule($event)"
 ></app-tro-ly-schedule-action-modal>
@@ -212,11 +252,26 @@
           <div class="fw-bold fs-6 text-dark mb-1">{{ selectedLich.tieuDe }}</div>
           <div class="text-secondary mb-2">
             <div><i class="fa-solid fa-user me-1"></i><b>{{ selectedLich.tenNguoiTrinh }}</b> ({{ selectedLich.chucVuNguoiTrinh }} · {{ selectedLich.phongBanNguoiTrinh }})</div>
-            <div><i class="fa-regular fa-clock me-1"></i>{{ selectedLich.batDau | date:'HH:mm' }} - {{ selectedLich.ketThuc | date:'HH:mm' }} ({{ selectedLich.thoiLuongPhut }} phút) · {{ selectedLich.diaDiem || 'Phòng Lãnh đạo' }}</div>
+            <div><i class="fa-regular fa-clock me-1"></i>{{ selectedLich.batDau | date:'dd/MM/yyyy · HH:mm' }} - {{ selectedLich.ketThuc | date:'HH:mm' }} ({{ selectedLich.thoiLuongPhut }} phút)</div>
           </div>
           <div class="p-2.5 rounded bg-light border mb-2" *ngIf="selectedLich.tomTat">
             {{ selectedLich.tomTat }}
           </div>
+
+          <!-- Phản hồi & Ghi chú riêng từ Lãnh đạo cho Trợ lý -->
+          <div class="p-2.5 rounded bg-success-subtle border border-success-subtle mb-2" *ngIf="selectedLich.ketQua?.chiDaoCuaLanhDao">
+            <div class="fw-semibold text-success-emphasis mb-1">
+              <i class="fa-solid fa-comment-dots me-1"></i>Phản hồi cho nhân viên:
+            </div>
+            <div class="text-dark">{{ selectedLich.ketQua?.chiDaoCuaLanhDao }}</div>
+          </div>
+          <div class="p-2.5 rounded bg-warning-subtle border border-warning-subtle mb-2" *ngIf="selectedLich.ghiChuLanhDao">
+            <div class="fw-semibold text-warning-emphasis mb-1">
+              <i class="fa-solid fa-user-shield me-1"></i>Ghi chú riêng của Lãnh đạo cho Trợ lý:
+            </div>
+            <div class="text-dark">{{ selectedLich.ghiChuLanhDao }}</div>
+          </div>
+
           <div class="mb-2">
             <label class="form-label fw-semibold mb-1">Ghi chú cập nhật trạng thái (tùy chọn)</label>
             <input type="text" class="form-control form-control-sm" [(ngModel)]="lichUpdateLyDo" placeholder="VD: Đã trình xong nhanh trong 15 phút..." />
@@ -250,3 +305,9 @@
   </div>
   <div class="modal-backdrop fade show"></div>
 </ng-container>
+
+<!-- Modal xuất báo cáo Excel -->
+<app-excel-export-modal
+  [visible]="showExportModal"
+  (closeModal)="showExportModal = false"
+></app-excel-export-modal>

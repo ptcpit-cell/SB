@@ -1,0 +1,90 @@
+<div
+  #wrapperEl
+  class="vn-date-wrapper"
+  [class.vn-date-compact]="compact"
+>
+  <div class="input-group input-group-sm">
+    <input
+      #textInput
+      type="text"
+      inputmode="numeric"
+      maxlength="10"
+      autocomplete="off"
+      class="form-control form-control-sm vn-date-text"
+      [class.is-invalid]="invalid"
+      [value]="displayText"
+      [placeholder]="placeholder"
+      [disabled]="disabled"
+      [title]="inputTitle || 'Định dạng dd/MM/yyyy'"
+      (input)="onTextInput($any($event.target).value)"
+      (blur)="onTextBlur()"
+    />
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-sm vn-date-btn"
+      [disabled]="disabled"
+      (click)="togglePopup($event)"
+      title="Chọn ngày từ lịch"
+    >
+      <i class="fa-regular fa-calendar"></i>
+    </button>
+  </div>
+
+  <div
+    *ngIf="popupOpen"
+    class="vn-calendar-popover shadow-lg border rounded-3 bg-white p-2"
+    [style.top.px]="popupTop"
+    [style.left.px]="popupLeft"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <button type="button" class="btn btn-light btn-sm px-2 py-0.5" (click)="prevMonth()" title="Tháng trước">
+        <i class="fa-solid fa-chevron-left fa-xs"></i>
+      </button>
+      <div class="fw-semibold small text-dark">
+        {{ monthNames[viewMonth] }} / {{ viewYear }}
+      </div>
+      <button type="button" class="btn btn-light btn-sm px-2 py-0.5" (click)="nextMonth()" title="Tháng sau">
+        <i class="fa-solid fa-chevron-right fa-xs"></i>
+      </button>
+    </div>
+
+    <div class="vn-calendar-grid vn-calendar-weekdays mb-1">
+      <div *ngFor="let wd of weekDays" class="vn-weekday-cell">{{ wd }}</div>
+    </div>
+
+    <div class="vn-calendar-grid">
+      <button
+        type="button"
+        *ngFor="let cell of calendarCells"
+        class="vn-day-cell"
+        [class.other-month]="!cell.inCurrentMonth"
+        [class.is-today]="cell.isToday"
+        [class.is-selected]="cell.isSelected"
+        [disabled]="cell.isDisabled"
+        (click)="selectDay(cell)"
+      >
+        {{ cell.day }}
+      </button>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between pt-2 mt-2 border-top">
+      <button
+        type="button"
+        class="btn btn-link btn-sm text-decoration-none p-0 small"
+        [disabled]="isTodayDisabled()"
+        (click)="selectToday()"
+      >
+        Hôm nay
+      </button>
+      <button
+        *ngIf="allowClear"
+        type="button"
+        class="btn btn-link btn-sm text-secondary text-decoration-none p-0 small"
+        (click)="clearDate()"
+      >
+        Xóa
+      </button>
+    </div>
+  </div>
+</div>
