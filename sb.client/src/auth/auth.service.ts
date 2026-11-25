@@ -22,6 +22,7 @@ export class AuthService {
     { prefix: '/phong-ban', permission: 'Xem phòng ban' },
     { prefix: '/chuc-vu', permission: 'Xem chức vụ' },
     { prefix: '/ho-so', permission: null },
+    { prefix: '/xem-tai-lieu', permission: null },
   ];
 
   constructor(private http: HttpClient, private router: Router) {}

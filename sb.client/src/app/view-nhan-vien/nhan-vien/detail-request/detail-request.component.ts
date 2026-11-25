@@ -6,6 +6,13 @@ import { ToastrService } from 'ngx-toastr';
 import { RequestService } from '../../../../services/request.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { TepDinhKemInput, YeuCauChiTiet } from '../../../../type';
+import {
+  AttachmentLike,
+  buildFileUrl,
+  buildOpenFileUrl,
+  getFileIconClass,
+  isDocxFile,
+} from '../../../shared/file-preview.util';
 
 interface StepView {
   label: string;
@@ -295,7 +302,19 @@ export class DetailRequestComponent implements OnInit, OnDestroy {
   }
 
   fileUrl(duongDan: string): string {
-    return `${this.baseUrl}Files/${duongDan}`;
+    return buildFileUrl(this.baseUrl, duongDan);
+  }
+
+  openFileUrl(t: AttachmentLike): string {
+    return buildOpenFileUrl(this.baseUrl, t);
+  }
+
+  fileIcon(tenFile?: string | null): string {
+    return getFileIconClass(tenFile);
+  }
+
+  isDocx(t: AttachmentLike): boolean {
+    return isDocxFile(t.tenFile, t.duongDan, t.contentType);
   }
 
   formatSize(bytes: number): string {

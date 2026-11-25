@@ -1,6 +1,7 @@
 using Dapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using SB_DAL.DapperContext;
 using SB_Services.Helpers;
@@ -87,8 +88,23 @@ app.UseHttpsRedirection();
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 provider.Mappings[".doc"] = "application/msword";
+provider.Mappings[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+provider.Mappings[".xls"] = "application/vnd.ms-excel";
+provider.Mappings[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+provider.Mappings[".ppt"] = "application/vnd.ms-powerpoint";
 provider.Mappings[".pdf"] = "application/pdf";
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider
+});
+var filesDir = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "Files");
+Directory.CreateDirectory(filesDir);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(filesDir),
+    RequestPath = "/Files",
+    ContentTypeProvider = provider
+});
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

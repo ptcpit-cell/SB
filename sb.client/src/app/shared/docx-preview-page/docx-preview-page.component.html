@@ -1,0 +1,73 @@
+<div class="docx-viewer-shell">
+  <!-- Thanh công cụ cố định phía trên (ẩn khi in) -->
+  <header class="docx-toolbar no-print">
+    <div class="d-flex align-items-center gap-2 min-w-0">
+      <span class="doc-badge">
+        <i class="fa-regular fa-file-word"></i>
+      </span>
+      <div class="min-w-0">
+        <div class="fw-semibold text-white text-truncate small" [title]="fileName">{{ fileName }}</div>
+        <div class="text-white-50" style="font-size: 0.7rem">Xem trực tuyến tài liệu Word</div>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+      <div class="btn-group btn-group-sm" role="group" aria-label="Thu phóng">
+        <button type="button" class="btn btn-outline-light" (click)="zoomOut()" [disabled]="zoomPct <= 60" title="Thu nhỏ">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <button type="button" class="btn btn-outline-light tabular-nums" (click)="resetZoom()" title="Đặt lại 100%">
+          {{ zoomPct }}%
+        </button>
+        <button type="button" class="btn btn-outline-light" (click)="zoomIn()" [disabled]="zoomPct >= 160" title="Phóng to">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+
+      <button type="button" class="btn btn-outline-light btn-sm" (click)="printDoc()" [disabled]="loading || !!errorMsg" title="In tài liệu">
+        <i class="fa-solid fa-print me-1"></i><span class="d-none d-sm-inline">In</span>
+      </button>
+
+      <a
+        *ngIf="downloadUrl"
+        [href]="downloadUrl"
+        [attr.download]="fileName"
+        class="btn btn-primary btn-sm"
+        title="Tải tệp gốc về máy"
+      >
+        <i class="fa-solid fa-download me-1"></i>Tải về
+      </a>
+    </div>
+  </header>
+
+  <!-- Nội dung tài liệu -->
+  <div class="docx-stage">
+    <div class="docx-state-box" *ngIf="loading">
+      <div class="spinner-border text-primary mb-2" role="status"></div>
+      <div class="small text-secondary">Đang tải và hiển thị tài liệu Word...</div>
+    </div>
+
+    <div class="docx-state-box" *ngIf="!loading && errorMsg">
+      <i class="fa-solid fa-circle-exclamation fa-2x text-danger mb-2"></i>
+      <div class="fw-semibold text-dark mb-1">Không thể xem trước tài liệu</div>
+      <div class="small text-secondary mb-3">{{ errorMsg }}</div>
+      <div class="d-flex justify-content-center gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadAndRender()" *ngIf="downloadUrl">
+          <i class="fa-solid fa-rotate-right me-1"></i>Thử lại
+        </button>
+        <a *ngIf="downloadUrl" [href]="downloadUrl" [attr.download]="fileName" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-download me-1"></i>Tải tệp về máy
+        </a>
+      </div>
+    </div>
+
+    <div #styleContainer class="d-none"></div>
+    <div
+      class="docx-zoom-frame"
+      [class.d-none]="loading || !!errorMsg"
+      [style.zoom.%]="zoomPct"
+    >
+      <div #previewContainer class="docx-render-target"></div>
+    </div>
+  </div>
+</div>

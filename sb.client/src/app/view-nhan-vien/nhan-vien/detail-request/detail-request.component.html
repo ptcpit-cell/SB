@@ -159,11 +159,31 @@
             </label>
           </div>
           <ul class="list-group" *ngIf="boSungTeps.length > 0">
-            <li class="list-group-item d-flex align-items-center justify-content-between py-1 small" *ngFor="let f of boSungTeps; let i = index">
-              <span class="text-truncate"><i class="fa-regular fa-file me-1"></i>{{ f.tenFile }} ({{ formatSize(f.kichThuoc) }})</span>
-              <button type="button" class="btn btn-link btn-sm text-danger p-0" (click)="removeBoSungTep(i)">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
+            <li class="list-group-item d-flex align-items-center justify-content-between gap-2 py-1 small" *ngFor="let f of boSungTeps; let i = index">
+              <a
+                [href]="openFileUrl(f)"
+                target="_blank"
+                rel="noopener"
+                class="text-decoration-none text-truncate"
+                [title]="isDocx(f) ? 'Mở tab mới xem tài liệu Word' : 'Mở tệp trong tab mới'"
+              >
+                <i [ngClass]="fileIcon(f.tenFile)" class="me-1"></i>{{ f.tenFile }}
+              </a>
+              <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <span class="text-muted text-nowrap" style="font-size: 0.75rem">{{ formatSize(f.kichThuoc) }}</span>
+                <a
+                  [href]="fileUrl(f.duongDan)"
+                  [attr.download]="f.tenFile"
+                  class="btn btn-sm btn-outline-secondary py-0 px-1"
+                  style="font-size: 0.72rem; line-height: 1.35"
+                  title="Tải tệp về"
+                >
+                  <i class="fa-solid fa-download"></i>
+                </a>
+                <button type="button" class="btn btn-link btn-sm text-danger p-0" (click)="removeBoSungTep(i)" title="Xóa tệp">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
             </li>
           </ul>
         </div>
@@ -284,10 +304,27 @@
                 <div class="text-muted small py-2" *ngIf="data.teps.length === 0">Chưa có tệp đính kèm.</div>
                 <ul class="list-group list-group-flush" *ngIf="data.teps.length > 0">
                   <li class="list-group-item px-0 py-2 small d-flex align-items-center justify-content-between gap-2" *ngFor="let t of data.teps">
-                    <a [href]="fileUrl(t.duongDan)" target="_blank" class="text-decoration-none text-truncate">
-                      <i class="fa-regular fa-file-lines me-1 text-primary"></i>{{ t.tenFile }}
+                    <a
+                      [href]="openFileUrl(t)"
+                      target="_blank"
+                      rel="noopener"
+                      class="text-decoration-none text-truncate"
+                      [title]="isDocx(t) ? 'Mở tab mới xem tài liệu Word' : 'Mở tệp trong tab mới'"
+                    >
+                      <i [ngClass]="fileIcon(t.tenFile)" class="me-1"></i>{{ t.tenFile }}
                     </a>
-                    <span class="text-muted text-nowrap" style="font-size: 0.75rem">{{ formatSize(t.kichThuoc) }}</span>
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                      <span class="text-muted text-nowrap" style="font-size: 0.75rem">{{ formatSize(t.kichThuoc) }}</span>
+                      <a
+                        [href]="fileUrl(t.duongDan)"
+                        [attr.download]="t.tenFile"
+                        class="btn btn-sm btn-outline-secondary py-0 px-1"
+                        style="font-size: 0.72rem; line-height: 1.35"
+                        title="Tải tệp về"
+                      >
+                        <i class="fa-solid fa-download"></i>
+                      </a>
+                    </div>
                   </li>
                 </ul>
               </div>

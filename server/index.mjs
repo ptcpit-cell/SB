@@ -37,9 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 // Static uploaded files
 app.use('/Files', express.static(UPLOAD_ROOT));
 const legacyFilesDir = path.join(ROOT_DIR, 'SB.Server', 'wwwroot', 'Files');
-if (fs.existsSync(legacyFilesDir)) {
-  app.use('/Files', express.static(legacyFilesDir));
-}
+app.use('/Files', express.static(legacyFilesDir));
 
 // =========================================================================
 // SignalR Hub (/hubs/thongbao) — JSON Hub Protocol over WebSocket
@@ -1910,7 +1908,7 @@ if (!fs.existsSync(CLIENT_INDEX)) {
 
 app.use(express.static(CLIENT_DIST));
 app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api/') || req.path.startsWith('/hubs/')) return next();
+  if (req.path.startsWith('/api/') || req.path.startsWith('/hubs/') || req.path.startsWith('/Files/')) return next();
   if (fs.existsSync(CLIENT_INDEX)) {
     return res.sendFile(CLIENT_INDEX);
   }

@@ -1,0 +1,94 @@
+.docx-viewer-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #e2e8f0;
+}
+
+.docx-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background-color: #1e293b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+.doc-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background-color: rgba(59, 130, 246, 0.22);
+  color: #93c5fd;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.docx-stage {
+  flex: 1;
+  padding: 20px 16px 40px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.docx-state-box {
+  margin-top: 64px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 440px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.docx-zoom-frame {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+:host ::ng-deep .docx-render-target .docx-wrapper {
+  background: transparent !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+:host ::ng-deep .docx-render-target .docx-wrapper > section.docx {
+  background: #ffffff;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.14);
+  margin-bottom: 0 !important;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .docx-viewer-shell,
+  .docx-stage {
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  :host ::ng-deep .docx-render-target .docx-wrapper > section.docx {
+    box-shadow: none !important;
+  }
+}

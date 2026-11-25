@@ -46,6 +46,7 @@ import { ProfileComponent } from './view-profile/profile.component';
 import { AdminLeadersComponent } from './view-admin/home/admin-leaders/admin-leaders.component';
 import { AdminCatalogComponent } from './view-admin/home/admin-catalog/admin-catalog.component';
 import { VnDateInputComponent } from './shared/vn-date-input/vn-date-input.component';
+import { DocxPreviewPageComponent } from './shared/docx-preview-page/docx-preview-page.component';
 import { MatIconModule } from '@angular/material/icon';
 
 
@@ -86,7 +87,8 @@ export function appInitializer(authService: AuthService) {
     CreateRequestComponent,
     EditRequestComponent,
     DetailRequestComponent,
-    VnDateInputComponent
+    VnDateInputComponent,
+    DocxPreviewPageComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

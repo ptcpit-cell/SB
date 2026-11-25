@@ -1,5 +1,12 @@
 import { Component, EventEmitter, Inject, Input, OnChanges, Output } from '@angular/core';
 import { LichTrinhView, PhanHoiLanhDaoRequest } from '../../../../type';
+import {
+  AttachmentLike,
+  buildFileUrl,
+  buildOpenFileUrl,
+  getFileIconClass,
+  isDocxFile,
+} from '../../../shared/file-preview.util';
 
 interface FollowUpDraft {
   noiDung: string;
@@ -49,7 +56,19 @@ export class FeedbackModalComponent implements OnChanges {
   }
 
   fileUrl(duongDan: string): string {
-    return `${this.baseUrl}Files/${duongDan}`;
+    return buildFileUrl(this.baseUrl, duongDan);
+  }
+
+  openFileUrl(t: AttachmentLike): string {
+    return buildOpenFileUrl(this.baseUrl, t);
+  }
+
+  fileIcon(tenFile?: string | null): string {
+    return getFileIconClass(tenFile);
+  }
+
+  isDocx(t: AttachmentLike): boolean {
+    return isDocxFile(t.tenFile, t.duongDan, t.contentType);
   }
 
   formatSize(bytes: number): string {

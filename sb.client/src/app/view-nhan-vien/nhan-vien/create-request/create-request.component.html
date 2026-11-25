@@ -213,10 +213,26 @@
                   </div>
                   <ul class="list-group file-list" *ngIf="teps.length">
                     <li class="list-group-item d-flex align-items-center gap-2 py-1.5 small" *ngFor="let f of teps; let i = index">
-                      <i class="fa-regular fa-file text-primary"></i>
-                      <span class="flex-grow-1 text-truncate">{{ f.tenFile }}</span>
-                      <span class="text-secondary tabular-nums">{{ formatSize(f.kichThuoc) }}</span>
-                      <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="removeTep(i)">
+                      <a
+                        [href]="openFileUrl(f)"
+                        target="_blank"
+                        rel="noopener"
+                        class="flex-grow-1 text-decoration-none text-truncate"
+                        [title]="isDocx(f) ? 'Mở tab mới xem tài liệu Word' : 'Mở tệp trong tab mới'"
+                      >
+                        <i [ngClass]="fileIcon(f.tenFile)" class="me-1"></i>{{ f.tenFile }}
+                      </a>
+                      <span class="text-secondary tabular-nums text-nowrap">{{ formatSize(f.kichThuoc) }}</span>
+                      <a
+                        [href]="fileUrl(f.duongDan)"
+                        [attr.download]="f.tenFile"
+                        class="btn btn-sm btn-outline-secondary py-0 px-1"
+                        style="font-size: 0.72rem; line-height: 1.35"
+                        title="Tải tệp về"
+                      >
+                        <i class="fa-solid fa-download"></i>
+                      </a>
+                      <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="removeTep(i)" title="Xóa tệp">
                         <i class="fa-solid fa-xmark"></i>
                       </button>
                     </li>

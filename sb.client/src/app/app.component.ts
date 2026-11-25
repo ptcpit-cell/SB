@@ -19,10 +19,16 @@ export class AppComponent {
   loading$: Observable<boolean>;
 
   constructor(private http: HttpClient, private router: Router, private loadingService: LoadingService, public authService: AuthService) {
-    // hide sidebar on login route
+    // hide sidebar on login route and hide full chrome on document viewer route
+    const updateChrome = (url: string) => {
+      const isDocViewer = url.includes('/xem-tai-lieu');
+      this.showSidebar = !url.includes('/auth/login') && !isDocViewer;
+      this.showNavbar = !isDocViewer;
+    };
+    updateChrome(window.location.hash || this.router.url || '');
+
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: any) => {
-      const url: string = e.urlAfterRedirects || e.url || '';
-      this.showSidebar = !url.includes('/auth/login');
+      updateChrome(e.urlAfterRedirects || e.url || '');
     });
 
     // Router navigation loading

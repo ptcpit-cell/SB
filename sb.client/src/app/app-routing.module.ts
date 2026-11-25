@@ -14,6 +14,7 @@ import { CreateRequestComponent } from './view-nhan-vien/nhan-vien/create-reques
 import { EditRequestComponent } from './view-nhan-vien/nhan-vien/edit-request/edit-request.component';
 import { DetailRequestComponent } from './view-nhan-vien/nhan-vien/detail-request/detail-request.component';
 import { ProfileComponent } from './view-profile/profile.component';
+import { DocxPreviewPageComponent } from './shared/docx-preview-page/docx-preview-page.component';
 
 const routes: Routes = [
   { path: 'auth/login', component: DangNhapComponent },
@@ -61,6 +62,9 @@ const routes: Routes = [
       },
       {
         path: 'ho-so', component: ProfileComponent
+      },
+      {
+        path: 'xem-tai-lieu', component: DocxPreviewPageComponent
       }
       // { path: 'nhan-vien/create', component: NhanVienFormComponent, data: { permission: 'Thêm nhân viên' } },
       // { path: 'nhan-vien/edit/:nhanVienId', component: NhanVienFormComponent, data: { permission: 'Sửa nhân viên' } },

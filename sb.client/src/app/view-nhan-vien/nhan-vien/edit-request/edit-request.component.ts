@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, forkJoin, of } from 'rxjs';
@@ -10,6 +10,13 @@ import {
   TepDinhKemInput,
   SuaYeuCauRequest,
 } from '../../../../type';
+import {
+  AttachmentLike,
+  buildFileUrl,
+  buildOpenFileUrl,
+  getFileIconClass,
+  isDocxFile,
+} from '../../../shared/file-preview.util';
 
 interface ThamDu {
   hoTenNgoai: string;
@@ -67,7 +74,8 @@ readonly quickDays = [1, 3, 5, 7];
     private toastrService: ToastrService,
     private router: Router,
     private route: ActivatedRoute,
-    private requestService: RequestService
+    private requestService: RequestService,
+    @Inject('BASE_URL') public baseUrl: string
   ) {}
 
   ngOnInit(): void {
@@ -221,6 +229,22 @@ get selectedLanhDao(): LanhDaoChon | undefined {
     return b >= 1048576
       ? `${(b / 1048576).toFixed(1)} MB`
       : `${Math.max(1, Math.round(b / 1024))} KB`;
+  }
+
+  fileUrl(duongDan: string): string {
+    return buildFileUrl(this.baseUrl, duongDan);
+  }
+
+  openFileUrl(t: AttachmentLike): string {
+    return buildOpenFileUrl(this.baseUrl, t);
+  }
+
+  fileIcon(tenFile?: string | null): string {
+    return getFileIconClass(tenFile);
+  }
+
+  isDocx(t: AttachmentLike): boolean {
+    return isDocxFile(t.tenFile, t.duongDan, t.contentType);
   }
 
   // ---------- Gửi / lưu nháp ----------

@@ -1,10 +1,17 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, forkJoin, of } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 import { RequestService } from '../../../../services/request.service';
 import { LanhDaoChon, LoaiYeuCauChon, TepDinhKemInput, LichBanResult, KhoangBan, TaoYeuCauRequest } from '../../../../type';
+import {
+  AttachmentLike,
+  buildFileUrl,
+  buildOpenFileUrl,
+  getFileIconClass,
+  isDocxFile,
+} from '../../../shared/file-preview.util';
 
 interface ThamDu { hoTenNgoai: string; donViNgoai: string; vaiTro: string; }
 
@@ -54,7 +61,8 @@ export class CreateRequestComponent implements OnInit, OnDestroy {
   constructor(
     private toastrService: ToastrService,
     private router: Router,
-    private requestService: RequestService
+    private requestService: RequestService,
+    @Inject('BASE_URL') public baseUrl: string
   ) {}
 
   ngOnInit(): void {
@@ -180,6 +188,22 @@ private addDays(d: Date, n: number): Date { const x = new Date(d); x.setDate(x.g
 
   formatSize(b: number): string {
     return b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+  }
+
+  fileUrl(duongDan: string): string {
+    return buildFileUrl(this.baseUrl, duongDan);
+  }
+
+  openFileUrl(t: AttachmentLike): string {
+    return buildOpenFileUrl(this.baseUrl, t);
+  }
+
+  fileIcon(tenFile?: string | null): string {
+    return getFileIconClass(tenFile);
+  }
+
+  isDocx(t: AttachmentLike): boolean {
+    return isDocxFile(t.tenFile, t.duongDan, t.contentType);
   }
 
   // ---------- Gửi / lưu nháp ----------
