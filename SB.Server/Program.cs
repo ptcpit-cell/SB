@@ -16,8 +16,14 @@ using System.Text;
 using static SB_DAL.DapperContext.DapperContext;
 
 var builder = WebApplication.CreateBuilder(args);
+var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "tCKxFPOVqsTpOsy+zJbmYeha/P2HHjxGWmVxYJ9j7RErvz/fzMM7c5TQ8HB6hxvb");
+var jwtKeyRaw = !string.IsNullOrWhiteSpace(jwtSection["Key"])
+    ? jwtSection["Key"]!
+    : (!string.IsNullOrWhiteSpace(jwtSettings["Key"])
+        ? jwtSettings["Key"]!
+        : "tCKxFPOVqsTpOsy+zJbmYeha/P2HHjxGWmVxYJ9j7RErvz/fzMM7c5TQ8HB6hxvb");
+var key = Encoding.UTF8.GetBytes(jwtKeyRaw);
 // Add services to the container.
 SqlMapper.AddTypeHandler(new SqlTimeOnlyTypeHandler()); // Đăng ký SqlTimeOnlyTypeHandler để xử lý kiểu dữ liệu TimeOnly
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

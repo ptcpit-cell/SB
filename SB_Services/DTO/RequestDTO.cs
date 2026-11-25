@@ -1,4 +1,4 @@
-﻿namespace SB_Services.DTO
+namespace SB_Services.DTO
 {
     public class RequestDTO { }
     // ===== Request (nhận từ Angular) =====
@@ -102,14 +102,20 @@
         public bool IsTroLyChinh { get; set; }
     }
 
-    // Dùng chung cho Gui / BoSung / PhanHoiDeXuat (các cột không có trong SP sẽ để mặc định)
+    // Dùng chung cho Gui / BoSung / Sua / PhanHoiDeXuat (các cột không có trong SP sẽ để mặc định)
     public class NguoiCanBaoDto
     {
+        private int _troLyUserId;
         public int YeuCauId { get; set; }
         public string MaYeuCau { get; set; } = null!;
         public string? TieuDe { get; set; }
         public int LanhDaoId { get; set; }
-        public int TroLyUserId { get; set; }
+        public int UserId { get; set; }
+        public int TroLyUserId
+        {
+            get => _troLyUserId > 0 ? _troLyUserId : UserId;
+            set => _troLyUserId = value;
+        }
         public bool IsTroLyChinh { get; set; }
         public int? TroLyXuLyId { get; set; }      // chỉ có ở BoSung
         public bool? DongY { get; set; }           // chỉ có ở PhanHoiDeXuat
@@ -118,11 +124,17 @@
 
     public class HuyYeuCauNotifyDto
     {
+        private int _troLyUserId;
         public int YeuCauId { get; set; }
         public string MaYeuCau { get; set; } = null!;
         public string TieuDe { get; set; } = null!;
         public bool CoLich { get; set; }
-        public int TroLyUserId { get; set; }
+        public int UserId { get; set; }
+        public int TroLyUserId
+        {
+            get => _troLyUserId > 0 ? _troLyUserId : UserId;
+            set => _troLyUserId = value;
+        }
         public int LanhDaoUserId { get; set; }
     }
 
@@ -226,6 +238,11 @@
         public string MaYeuCau { get; set; } = null!;
         public int? NhomYeuCauId { get; set; }
         public string? MaNhom { get; set; }
+        public int NguoiTaoId { get; set; }
+        public string? TenNguoiTao { get; set; }
+        public string? PhongBanNguoiTao { get; set; }
+        public string? ChucVuNguoiTao { get; set; }
+        public string? ChiNhanhNguoiTao { get; set; }
         public int LanhDaoId { get; set; }
         public string TenLanhDao { get; set; } = null!;
         public int LoaiYeuCauId { get; set; }
@@ -234,7 +251,9 @@
         public string? TomTat { get; set; }
         public byte MucKhan { get; set; }
         public string? LyDoKhan { get; set; }
+        public int? MucUuTienId { get; set; }
         public string? TenMucUuTien { get; set; }
+        public string? MauMucUuTien { get; set; }
         public int ThoiLuongPhut { get; set; }
         public DateTime? HanChot { get; set; }
         public bool LaBaoMat { get; set; }
@@ -286,6 +305,7 @@
         public int UserId { get; set; }
         public string TenNguoiDung { get; set; } = null!;
         public string NoiDung { get; set; } = null!;
+        public bool ChiNoiBo { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
@@ -310,6 +330,9 @@
         public byte TrangThai { get; set; }
         public int? ThuTuTrongNgay { get; set; }
         public DateTime? NgayChot { get; set; }
+        public bool DaGhiDeXungDot { get; set; }
+        public string? LyDoGhiDe { get; set; }
+        public string? GhiChuLanhDao { get; set; }
     }
 
     public class LichTrinhLichSuDto
@@ -333,6 +356,7 @@
         public byte KetQua { get; set; }
         public DateTime? ThoiGianThucTe { get; set; }
         public string? ChiDaoCuaLanhDao { get; set; }
+        public string? GhiChu { get; set; }
         public string NguoiGhiNhan { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
     }

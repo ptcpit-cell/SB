@@ -87,8 +87,8 @@ namespace SB_Services.Services.LanhDao
             if (result == null)
                 throw new KeyNotFoundException("Không tìm thấy buổi trình thuộc lịch của bạn.");
 
-            // Lưu danh sách công việc sau trình (nếu lãnh đạo có giao thêm)
-            if (req.CongViecs != null && req.CongViecs.Count > 0 && result.KetQuaTrinhId > 0)
+            // Lưu / đồng bộ danh sách công việc sau trình (cho phép xóa hết nếu gửi mảng rỗng)
+            if (req.CongViecs != null && result.KetQuaTrinhId > 0)
             {
                 const string sqlClearOld = @"
                     UPDATE dbo.CongViecSauTrinh

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using SB_Services.DTO;
 using SB_Services.Services.LanhDao;
 using SB_Services.Services.Requests;
@@ -79,20 +80,23 @@ namespace SB.Server.Controllers
                     LoaiSuKien = "PHAN_HOI_LANH_DAO",
                     YeuCauId = res.YeuCauId,
                     LichTrinhId = res.LichTrinhId,
-                    RouteUrl = $"/nhan-vien/chi-tiet/{res.YeuCauId}",
+                    RouteUrl = $"/nhan-vien/detail-request/{res.YeuCauId}",
                     CreatedBy = CurrentUserId
                 });
 
-                // 3. Nếu lãnh đạo có nhập "Ghi chú cho trợ lý", gửi thêm thông báo lịch trình cho trợ lý
-                if (res.TroLyUserId.HasValue && !string.IsNullOrWhiteSpace(req.GhiChuLanhDao))
+                // 3. Gửi thông báo lịch trình cho trợ lý (có hoặc không có ghi chú riêng)
+                if (res.TroLyUserId.HasValue && res.TroLyUserId.Value > 0)
                 {
+                    bool hasNote = !string.IsNullOrWhiteSpace(req.GhiChuLanhDao);
                     await SafeNotifyScheduleAsync(new ThongBaoLichTrinhCreateInput
                     {
                         ChiNhanhId = CurrentChiNhanhId,
                         NguoiNhanId = res.TroLyUserId.Value,
-                        TieuDe = "Ghi chú mới từ lãnh đạo",
-                        NoiDung = $"Sếp {res.TenLanhDao} để lại ghi chú cho yêu cầu {res.MaYeuCau}: {req.GhiChuLanhDao.Trim()}",
-                        LoaiSuKien = "GHI_CHU_TRO_LY",
+                        TieuDe = hasNote ? "Ghi chú mới từ lãnh đạo" : "Lãnh đạo vừa phản hồi buổi trình",
+                        NoiDung = hasNote
+                            ? $"Sếp {res.TenLanhDao} để lại ghi chú cho yêu cầu {res.MaYeuCau}: {req.GhiChuLanhDao!.Trim()}"
+                            : $"Sếp {res.TenLanhDao} vừa cập nhật phản hồi cho yêu cầu \"{res.TieuDe}\" ({res.MaYeuCau}).",
+                        LoaiSuKien = hasNote ? "GHI_CHU_TRO_LY" : "PHAN_HOI_LANH_DAO_TRO_LY",
                         YeuCauId = res.YeuCauId,
                         LichTrinhId = res.LichTrinhId,
                         RouteUrl = "/tro-ly",
@@ -104,6 +108,7 @@ namespace SB.Server.Controllers
             }
             catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
             catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (SqlException ex) when (ex.Number >= 50000) { return BadRequest(new { message = ex.Message }); }
             catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
         }
 

@@ -1,4 +1,4 @@
-﻿namespace SB_Services.EF
+namespace SB_Services.EF
 {
     public class User
     {
@@ -10,11 +10,11 @@
         public string TenChiNhanh { get; set; } // Trường ảo, không có cột db
         public string TenChucVu { get; set; } // Trường ảo, không có cột db
         public string TenPhongBan { get; set; } // Trường ảo, không có cột db
-        public int PhongBanId { get; set; }
-        public int ChucVuId { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
-        public int ZaloId { get; set; }
+        public int? PhongBanId { get; set; }
+        public int? ChucVuId { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? ZaloId { get; set; }
         public bool IsDeleted { get; set; }
         public string TrangThai { get; set; }
         public string RefreshToken { get; set; }

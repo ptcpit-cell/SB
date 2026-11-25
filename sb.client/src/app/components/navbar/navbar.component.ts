@@ -51,10 +51,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.signalRSub = this.signalRService.notificationReceived$.subscribe({
       next: (newNotification: any) => {
         if (!this.currentUser) return;
-        if (
+        const myId = Number(this.currentUser.userId);
+        if (Array.isArray(newNotification.nguoiNhanIds) && newNotification.nguoiNhanIds.length > 0) {
+          if (!newNotification.nguoiNhanIds.map((x: any) => Number(x)).includes(myId)) {
+            return;
+          }
+        } else if (
           newNotification.nguoiNhanId !== null &&
           newNotification.nguoiNhanId !== undefined &&
-          Number(newNotification.nguoiNhanId) !== Number(this.currentUser.userId)
+          Number(newNotification.nguoiNhanId) !== myId
         ) {
           return;
         }
@@ -265,16 +270,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
   getScheduleIcon(loaiSuKien: string): { icon: string; css: string } {
     switch (loaiSuKien) {
       case 'PHAN_HOI_LANH_DAO':
+      case 'PHAN_HOI_LANH_DAO_TRO_LY':
+      case 'GHI_CHU_TRO_LY':
         return { icon: 'fa-solid fa-comment-dots', css: 'text-success bg-success-subtle' };
       case 'DA_DUYET':
+      case 'DA_XEP_LICH':
       case 'LICH_MOI':
       case 'LICH_HOM_NAY':
+      case 'LICH_SAP_TRINH_LANH_DAO':
+      case 'DONG_Y_DE_XUAT':
         return { icon: 'fa-regular fa-calendar-check', css: 'text-primary bg-primary-subtle' };
       case 'DE_XUAT_DOI_LICH':
       case 'CAN_BO_SUNG':
+      case 'YEU_CAU_BO_SUNG':
+      case 'TU_CHOI_DE_XUAT':
         return { icon: 'fa-solid fa-triangle-exclamation', css: 'text-warning bg-warning-subtle' };
       case 'TU_CHOI':
       case 'DA_HUY':
+      case 'DA_HUY_TRO_LY':
+      case 'DA_HUY_LANH_DAO':
         return { icon: 'fa-solid fa-ban', css: 'text-danger bg-danger-subtle' };
       default:
         return { icon: 'fa-solid fa-bell', css: 'text-info bg-info-subtle' };

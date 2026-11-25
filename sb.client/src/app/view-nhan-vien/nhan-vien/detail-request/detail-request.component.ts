@@ -166,7 +166,7 @@ export class DetailRequestComponent implements OnInit, OnDestroy {
   }
 
   vaiTroLabel(v: string): string {
-    switch (v) {
+    switch ((v || '').trim().toUpperCase()) {
       case 'NHANVIEN': return 'Nhân viên';
       case 'TROLY': return 'Trợ lý';
       case 'LANHDAO': return 'Lãnh đạo';

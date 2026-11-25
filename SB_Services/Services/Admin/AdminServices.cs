@@ -30,19 +30,19 @@ namespace SB_Services.Services.Admin
 
             const string sqlTongQuan = @"
                 SELECT
-                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0) AS TongYeuCau,
-                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND TrangThai IN (1, 2, 3, 4)) AS ChoXuLy,
-                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND TrangThai = 5) AS DaDuyetLich,
-                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND TrangThai IN (6, 7)) AS DaHoanThanh,
-                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND TrangThai IN (8, 9)) AS TuChoiHuy,
+                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND IsActived = 1) AS TongYeuCau,
+                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND IsActived = 1 AND TrangThai IN (1, 2, 3, 4)) AS ChoXuLy,
+                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND IsActived = 1 AND TrangThai = 5) AS DaDuyetLich,
+                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND IsActived = 1 AND TrangThai IN (6, 7)) AS DaHoanThanh,
+                    (SELECT COUNT(1) FROM dbo.YeuCau WHERE IsDeleted = 0 AND IsActived = 1 AND TrangThai IN (8, 9, 11)) AS TuChoiHuy,
                     (SELECT COUNT(1) FROM dbo.LanhDao WHERE IsDeleted = 0 AND IsActived = 1) AS TongLanhDao,
-                    (SELECT COUNT(1) FROM dbo.LichTrinh WHERE IsDeleted = 0 AND TrangThai <> 3 AND BatDau >= @TodayStart AND BatDau < @TodayEnd) AS BuoiTrinhHomNay,
+                    (SELECT COUNT(1) FROM dbo.LichTrinh WHERE IsDeleted = 0 AND IsActived = 1 AND TrangThai <> 3 AND BatDau >= @TodayStart AND BatDau < @TodayEnd) AS BuoiTrinhHomNay,
                     (SELECT COUNT(1) FROM dbo.Users WHERE ISNULL(IsDeleted, 0) = 0 AND ISNULL(IsActived, 1) = 1) AS TongNguoiDung";
 
             const string sqlTheoTrangThai = @"
                 SELECT TrangThai, COUNT(1) AS SoLuong
                 FROM dbo.YeuCau
-                WHERE IsDeleted = 0
+                WHERE IsDeleted = 0 AND IsActived = 1
                 GROUP BY TrangThai
                 ORDER BY TrangThai ASC";
 
@@ -52,11 +52,11 @@ namespace SB_Services.Services.Admin
                     cn.MaChiNhanh,
                     cn.TenChiNhanh,
                     COUNT(yc.Id) AS TongYeuCau,
-                    SUM(CASE WHEN yc.TrangThai IN (1, 2, 3, 4, 5) THEN 1 ELSE 0 END) AS DangXuLy,
+                    SUM(CASE WHEN yc.TrangThai IN (1, 2, 3, 4, 5, 10) THEN 1 ELSE 0 END) AS DangXuLy,
                     SUM(CASE WHEN yc.TrangThai IN (6, 7) THEN 1 ELSE 0 END) AS HoanThanh,
-                    SUM(CASE WHEN yc.TrangThai IN (8, 9) THEN 1 ELSE 0 END) AS TuChoiHuy
+                    SUM(CASE WHEN yc.TrangThai IN (8, 9, 11) THEN 1 ELSE 0 END) AS TuChoiHuy
                 FROM dbo.ChiNhanh cn
-                LEFT JOIN dbo.YeuCau yc ON yc.ChiNhanhId = cn.ChiNhanhId AND yc.IsDeleted = 0
+                LEFT JOIN dbo.YeuCau yc ON yc.ChiNhanhId = cn.ChiNhanhId AND yc.IsDeleted = 0 AND yc.IsActived = 1
                 WHERE cn.IsActive = 1
                 GROUP BY cn.ChiNhanhId, cn.MaChiNhanh, cn.TenChiNhanh
                 ORDER BY cn.ChiNhanhId ASC";
@@ -86,13 +86,17 @@ namespace SB_Services.Services.Admin
             var tongQuan = (await _dapper.GetSQLAsync<AdminTongQuanDto>(sqlTongQuan, new { TodayStart = todayStart, TodayEnd = todayEnd }))
                 .FirstOrDefault() ?? new AdminTongQuanDto();
 
-            var theoTrangThai = (await _dapper.GetSQLAsync<AdminTheoTrangThaiDto>(sqlTheoTrangThai)).ToList();
-            foreach (var item in theoTrangThai)
-            {
-                item.TenTrangThai = TrangThaiLabels.TryGetValue(item.TrangThai, out var label)
-                    ? label
-                    : $"Trạng thái {item.TrangThai}";
-            }
+            var rawStatusCounts = (await _dapper.GetSQLAsync<AdminTheoTrangThaiDto>(sqlTheoTrangThai))
+                .ToDictionary(x => x.TrangThai, x => x.SoLuong);
+            var theoTrangThai = TrangThaiLabels
+                .OrderBy(kv => kv.Key)
+                .Select(kv => new AdminTheoTrangThaiDto
+                {
+                    TrangThai = kv.Key,
+                    TenTrangThai = kv.Value,
+                    SoLuong = rawStatusCounts.TryGetValue(kv.Key, out var cnt) ? cnt : 0
+                })
+                .ToList();
 
             var theoChiNhanh = (await _dapper.GetSQLAsync<AdminTheoChiNhanhDto>(sqlTheoChiNhanh)).ToList();
             var lichHomNay = (await _dapper.GetSQLAsync<AdminLichHomNayDto>(sqlLichHomNay, new { TodayStart = todayStart, TodayEnd = todayEnd })).ToList();

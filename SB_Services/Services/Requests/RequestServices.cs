@@ -270,6 +270,7 @@ namespace SB_Services.Services.Requests
                 noiDungTB = noiDung.Trim(),
                 createdAt = now,
                 chiNhanhId,
+                nguoiNhanId = receivers.Count == 1 ? receivers[0] : (int?)null,
                 nguoiNhanIds = receivers,
                 isRead = false
             };
@@ -322,7 +323,7 @@ namespace SB_Services.Services.Requests
                 LichTrinhId = input.LichTrinhId,
                 RouteUrl = !string.IsNullOrWhiteSpace(input.RouteUrl)
                     ? input.RouteUrl
-                    : (input.YeuCauId.HasValue ? $"/nhan-vien/chi-tiet/{input.YeuCauId.Value}" : "/nhan-vien"),
+                    : (input.YeuCauId.HasValue ? $"/nhan-vien/detail-request/{input.YeuCauId.Value}" : "/nhan-vien"),
                 DaDoc = false,
                 NgayDoc = null,
                 CreatedAt = now

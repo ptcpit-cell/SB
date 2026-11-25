@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SB_Services.DTO;
 using SB_Services.EF;
 using SB_Services.Services.Users;
@@ -21,10 +21,10 @@ namespace SB.Server.Controllers
             var data = await _userServices.GetAllPermissionsAsync();
             return Ok(data);
         }
-        [HttpPost("[action]")]
-        public async Task<IActionResult> UpdatePermissionStatus([FromQuery] Permission permission)
+        [HttpPost("[action]/{permissionId}")]
+        public async Task<IActionResult> UpdatePermissionStatus(int permissionId, [FromBody] bool isActived)
         {
-            var result = await _userServices.UpdatePermissionStatusAsync(permission.PermissionId, permission.IsActived);
+            var result = await _userServices.UpdatePermissionStatusAsync(permissionId, isActived);
             if (result) return Ok(new { message = "Cập nhật trạng thái quyền thành công" });
             return StatusCode(500, new { message = "Có lỗi xảy ra trong quá trình cập nhật" });
         }

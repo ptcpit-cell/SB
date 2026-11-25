@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using SB_DAL.DapperContext;
 using SB_Services.DTO;
 using SB_Services.EF;
@@ -194,6 +194,13 @@ namespace SB_Services.Services.Users
             parameters.Add("PhongBanId", request.PhongBanId);
             parameters.Add("ChucVuId", request.ChucVuId);
 
+            string chiNhanhSql = "";
+            if (request.ChiNhanhId > 0)
+            {
+                chiNhanhSql = ", ChiNhanhId = @ChiNhanhId";
+                parameters.Add("ChiNhanhId", request.ChiNhanhId);
+            }
+
             string passwordSql = "";
             if (!string.IsNullOrEmpty(request.Password))
             {
@@ -202,7 +209,7 @@ namespace SB_Services.Services.Users
                 parameters.Add("Password", hashedPassword);
             }
 
-            string sqlUser = $@"UPDATE Users SET TenNguoiDung = @TenNguoiDung, Email = @Email, Phone = @Phone, PhongBanId = @PhongBanId, ChucVuId = @ChucVuId {passwordSql}
+            string sqlUser = $@"UPDATE Users SET TenNguoiDung = @TenNguoiDung, Email = @Email, Phone = @Phone, PhongBanId = @PhongBanId, ChucVuId = @ChucVuId {chiNhanhSql} {passwordSql}
                         WHERE UserId = @UserId";
             await _dapperContext.ExecuteSQLAsync(sqlUser, parameters);
 

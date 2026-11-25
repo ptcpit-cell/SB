@@ -77,7 +77,7 @@ namespace SB.Server.Controllers
                     NoiDung = $"Trợ lý đã tiếp nhận xem xét yêu cầu \"{res.TieuDe}\" ({res.MaYeuCau}).",
                     LoaiSuKien = "TIEP_NHAN",
                     YeuCauId = res.YeuCauId,
-                    RouteUrl = $"/nhan-vien/chi-tiet/{res.YeuCauId}",
+                    RouteUrl = $"/nhan-vien/detail-request/{res.YeuCauId}",
                     CreatedBy = CurrentUserId
                 });
 
@@ -126,7 +126,7 @@ namespace SB.Server.Controllers
                     LoaiSuKien = req.YeuCauXacNhanNV ? "DE_XUAT_DOI_LICH" : "DA_XEP_LICH",
                     YeuCauId = res.YeuCauId,
                     LichTrinhId = res.LichTrinhId,
-                    RouteUrl = $"/nhan-vien/chi-tiet/{res.YeuCauId}",
+                    RouteUrl = $"/nhan-vien/detail-request/{res.YeuCauId}",
                     CreatedBy = CurrentUserId
                 });
 
@@ -175,7 +175,7 @@ namespace SB.Server.Controllers
                     NoiDung = $"Trợ lý yêu cầu bổ sung cho \"{res.TieuDe}\": {req.NoiDung}",
                     LoaiSuKien = "YEU_CAU_BO_SUNG",
                     YeuCauId = res.YeuCauId,
-                    RouteUrl = $"/nhan-vien/chi-tiet/{res.YeuCauId}",
+                    RouteUrl = $"/nhan-vien/detail-request/{res.YeuCauId}",
                     CreatedBy = CurrentUserId
                 });
 
@@ -206,7 +206,7 @@ namespace SB.Server.Controllers
                     NoiDung = $"Yêu cầu \"{res.TieuDe}\" bị từ chối. Lý do: {req.LyDo}",
                     LoaiSuKien = "TU_CHOI",
                     YeuCauId = res.YeuCauId,
-                    RouteUrl = $"/nhan-vien/chi-tiet/{res.YeuCauId}",
+                    RouteUrl = $"/nhan-vien/detail-request/{res.YeuCauId}",
                     CreatedBy = CurrentUserId
                 });
 
@@ -248,7 +248,7 @@ namespace SB.Server.Controllers
                     LoaiSuKien = "CAP_NHAT_LICH",
                     YeuCauId = res.YeuCauId,
                     LichTrinhId = lichTrinhId,
-                    RouteUrl = $"/nhan-vien/chi-tiet/{res.YeuCauId}",
+                    RouteUrl = $"/nhan-vien/detail-request/{res.YeuCauId}",
                     CreatedBy = CurrentUserId
                 });
 
@@ -256,6 +256,7 @@ namespace SB.Server.Controllers
             }
             catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
             catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (SqlException ex) when (ex.Number >= 50000) { return BadRequest(new { message = ex.Message }); }
             catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
         }
 

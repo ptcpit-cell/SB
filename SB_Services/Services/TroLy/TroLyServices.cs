@@ -50,7 +50,8 @@ namespace SB_Services.Services.TroLy
                 LEFT JOIN dbo.MucUuTien ut ON ut.Id = yc.MucUuTienId AND ut.IsDeleted = 0
                 WHERE yc.LanhDaoId = @LanhDaoId
                   AND yc.IsDeleted = 0
-                  AND yc.TrangThai IN (1, 2, 3, 4)
+                  AND yc.IsActived = 1
+                  AND yc.TrangThai IN (1, 2, 3, 4, 10)
                 ORDER BY
                     ISNULL(ut.TrongSo, 0) DESC,
                     yc.MucKhan DESC,
@@ -128,7 +129,7 @@ namespace SB_Services.Services.TroLy
                     ChiNhanhId, YeuCauId, TuTrangThai, DenTrangThai, NguoiThucHienId, VaiTroThucHien, LyDo, GhiChu, CreatedAt
                 )
                 VALUES (
-                    @ChiNhanhId, @YeuCauId, @TuTrangThai, @DangXemXet, @TroLyUserId, N'TroLy', NULL, N'Trợ lý tiếp nhận xem xét', GETDATE()
+                    @ChiNhanhId, @YeuCauId, @TuTrangThai, @DangXemXet, @TroLyUserId, N'TROLY', NULL, N'Trợ lý tiếp nhận xem xét', GETDATE()
                 );
 
                 INSERT INTO dbo.YeuCauXuLyLichSu (
@@ -259,7 +260,7 @@ namespace SB_Services.Services.TroLy
                     ChiNhanhId, YeuCauId, TuTrangThai, DenTrangThai, NguoiThucHienId, VaiTroThucHien, LyDo, GhiChu, CreatedAt
                 )
                 VALUES (
-                    @ChiNhanhId, @YeuCauId, @TuTrangThai, @TrangThaiBoSung, @TroLyUserId, N'TroLy', @NoiDung, N'Trợ lý yêu cầu bổ sung thông tin', GETDATE()
+                    @ChiNhanhId, @YeuCauId, @TuTrangThai, @TrangThaiBoSung, @TroLyUserId, N'TROLY', @NoiDung, N'Trợ lý yêu cầu bổ sung thông tin', GETDATE()
                 );";
 
             await _dapper.ExecuteSQLAsync(sql, new
@@ -306,13 +307,13 @@ namespace SB_Services.Services.TroLy
                 SET TrangThai = @LichDaHuy,
                     UpdatedAt = GETDATE(),
                     UpdatedBy = @TroLyUserId
-                WHERE YeuCauId = @YeuCauId AND IsDeleted = 0 AND TrangThai = 1;
+                WHERE YeuCauId = @YeuCauId AND IsDeleted = 0 AND TrangThai IN (1, 4);
 
                 INSERT INTO dbo.YeuCauLichSuTrangThai (
                     ChiNhanhId, YeuCauId, TuTrangThai, DenTrangThai, NguoiThucHienId, VaiTroThucHien, LyDo, GhiChu, CreatedAt
                 )
                 VALUES (
-                    @ChiNhanhId, @YeuCauId, @TuTrangThai, @TrangThaiTuChoi, @TroLyUserId, N'TroLy', @LyDo, N'Trợ lý từ chối yêu cầu', GETDATE()
+                    @ChiNhanhId, @YeuCauId, @TuTrangThai, @TrangThaiTuChoi, @TroLyUserId, N'TROLY', @LyDo, N'Trợ lý từ chối yêu cầu', GETDATE()
                 );";
 
             await _dapper.ExecuteSQLAsync(sql, new
@@ -580,7 +581,7 @@ namespace SB_Services.Services.TroLy
                     ISNULL(m.MauHienThi, N'#2563eb') AS MauHienThi
                 FROM dbo.MucUuTien m
                 WHERE m.IsDeleted = 0 AND m.IsActived = 1
-                  AND (m.ChiNhanhId = @ChiNhanhId OR m.ChiNhanhId IS NULL)
+                  AND (m.ChiNhanhId IN (SELECT ChiNhanhId FROM dbo.fn_ChiNhanhVaCha(@ChiNhanhId)) OR m.ChiNhanhId IS NULL)
                 ORDER BY m.TrongSo DESC, m.Ma ASC";
 
             return (await _dapper.GetSQLAsync<MucUuTienItemDto>(sql, new { ChiNhanhId = chiNhanhId })).ToList();
@@ -628,6 +629,8 @@ namespace SB_Services.Services.TroLy
                 LEFT JOIN dbo.MucUuTien ut ON ut.Id = yc.MucUuTienId AND ut.IsDeleted = 0
                 WHERE lt.LanhDaoId = @LanhDaoId
                   AND lt.IsDeleted = 0
+                  AND lt.IsActived = 1
+                  AND lt.TrangThai <> 3
                   AND lt.BatDau < @EndExclusive
                   AND lt.KetThuc > @Start
                 ORDER BY lt.BatDau ASC, lt.Id ASC";

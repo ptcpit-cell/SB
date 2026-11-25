@@ -55,11 +55,15 @@ namespace SB_Services.Services.Account
         private async Task<AuthResponse?> GenerateAuthResponse(User user, bool rotate = true)
         {
             string sqlPerms = @"
-                SELECT PermissionName
+                SELECT DISTINCT p.PermissionName
                 FROM Permissions p
                 INNER JOIN RolePermissions rp ON p.PermissionId = rp.PermissionId
                 INNER JOIN UserRoles ur ON rp.RoleId = ur.RoleId
-                WHERE ur.UserId = @UserId";
+                INNER JOIN Roles r ON r.RoleId = ur.RoleId
+                WHERE ur.UserId = @UserId
+                  AND ISNULL(p.IsActived, 1) = 1
+                  AND ISNULL(r.IsDeleted, 0) = 0
+                  AND ISNULL(r.IsActived, 1) = 1";
 
             var permsDto = await _dapper.GetSQLAsync<PermissionMappingDto>(sqlPerms, new { user.UserId });
             List<string> permissions = permsDto.Select(x => x.PermissionName).ToList();
@@ -70,7 +74,7 @@ namespace SB_Services.Services.Account
             if (rotate || string.IsNullOrEmpty(refreshToken))
             {
                 refreshToken = Guid.NewGuid().ToString();
-                expiry = DateTime.UtcNow.AddDays(14);
+                expiry = DateTime.Now.AddDays(14);
                 await _dapper.ExecuteSQLAsync(
                     "UPDATE Users SET RefreshToken = @refreshToken, ExpiryToken = @expiry WHERE UserId = @UserId",
                     new { refreshToken, expiry, user.UserId });
@@ -95,7 +99,13 @@ namespace SB_Services.Services.Account
         private string GenerateJwtToken(User user, List<string> permissions)
         {
             var jwtSettings = _config.GetSection("Jwt");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+            var fallbackKey = _config.GetSection("JwtSettings")["Key"];
+            var rawKey = !string.IsNullOrWhiteSpace(jwtSettings["Key"])
+                ? jwtSettings["Key"]!
+                : (!string.IsNullOrWhiteSpace(fallbackKey)
+                    ? fallbackKey!
+                    : "tCKxFPOVqsTpOsy+zJbmYeha/P2HHjxGWmVxYJ9j7RErvz/fzMM7c5TQ8HB6hxvb");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(rawKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim> {

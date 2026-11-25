@@ -14,7 +14,7 @@ namespace SB_Services.Services.Common
         }
         public async Task<IEnumerable<ChiNhanh>> GetChiNhanhsAsync()
         {
-            string sql = @"SELECT * FROM ChiNhanh";
+            string sql = @"SELECT ChiNhanhId, ParentId, ChiNhanhType, MaChiNhanh, TenChiNhanh, Address, Phone, IsActive AS IsActived FROM ChiNhanh";
             return await _dapperContext.GetSQLAsync<ChiNhanh>(sql);
         }
         public async Task<IEnumerable<ThongBaoDTO>> GetDanhSachThongBaoAsync(int chiNhanhId, int userId)
@@ -70,12 +70,12 @@ namespace SB_Services.Services.Common
                     tb.YeuCauId,
                     tb.LichTrinhId,
                     CASE
-                        WHEN tb.LoaiSuKien IN (N'LICH_SAP_TRINH_LANH_DAO', N'LICH_MOI_LANH_DAO', N'NHAC_LICH_LANH_DAO')
+                        WHEN tb.LoaiSuKien IN (N'LICH_SAP_TRINH_LANH_DAO', N'LICH_MOI_LANH_DAO', N'LICH_MOI', N'NHAC_LICH_LANH_DAO', N'DA_HUY_LANH_DAO')
                             THEN N'/lanh-dao'
-                        WHEN tb.LoaiSuKien IN (N'YEU_CAU_MOI_TRO_LY', N'BO_SUNG_TRO_LY', N'PHAN_HOI_DE_XUAT', N'GHI_CHU_TRO_LY')
+                        WHEN tb.LoaiSuKien IN (N'YEU_CAU_MOI_TRO_LY', N'YEUCAU_MOI', N'BO_SUNG_TRO_LY', N'PHAN_HOI_DE_XUAT', N'GHI_CHU_TRO_LY', N'DA_HUY_TRO_LY', N'PHAN_HOI_LANH_DAO_TRO_LY')
                             THEN N'/tro-ly'
                         WHEN tb.YeuCauId IS NOT NULL
-                            THEN CONCAT(N'/nhan-vien/chi-tiet/', tb.YeuCauId)
+                            THEN CONCAT(N'/nhan-vien/detail-request/', tb.YeuCauId)
                         ELSE N'/nhan-vien'
                     END AS RouteUrl,
                     tb.DaDoc,
