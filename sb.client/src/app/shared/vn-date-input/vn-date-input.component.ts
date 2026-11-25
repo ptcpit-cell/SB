@@ -1,9 +1,11 @@
 import {
   Component,
   ElementRef,
+  EventEmitter,
   forwardRef,
   HostListener,
   Input,
+  Output,
   ViewChild
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -38,6 +40,11 @@ export class VnDateInputComponent implements ControlValueAccessor {
   @Input() allowClear = false;
   @Input() inputTitle = '';
   @Input() compact = false;
+  @Input() showNavButtons = false;
+  @Input() prevTitle = 'Ngày trước';
+  @Input() nextTitle = 'Ngày sau';
+
+  @Output() stepDate = new EventEmitter<number>();
 
   @ViewChild('wrapperEl', { static: true }) wrapperEl!: ElementRef<HTMLElement>;
   @ViewChild('textInput') textInput?: ElementRef<HTMLInputElement>;

@@ -280,6 +280,36 @@ namespace SB.Server.Controllers
             try
             {
                 var result = await _troLyServices.TaoSuKienLanhDaoAsync(CurrentUserId, req);
+
+                if (result.NotifyTargetUserId.HasValue && result.NotifyTargetUserId.Value > 0)
+                {
+                    string loaiText = result.Loai switch
+                    {
+                        3 => "nghỉ phép",
+                        2 => "công tác",
+                        1 => "họp riêng",
+                        _ => "lịch bận"
+                    };
+                    string rangeLabel = result.BatDau.Date != result.KetThuc.Date
+                        ? $"{result.BatDau:dd/MM/yyyy} - {result.KetThuc:dd/MM/yyyy}"
+                        : $"{result.BatDau:dd/MM/yyyy}";
+
+                    await SafeNotifyBasicAsync(
+                        new[] { result.NotifyTargetUserId.Value },
+                        $"Trợ lý vừa thêm lịch {loaiText}: {result.TieuDe} ({rangeLabel})");
+
+                    await SafeNotifyScheduleAsync(new ThongBaoLichTrinhCreateInput
+                    {
+                        ChiNhanhId = CurrentChiNhanhId,
+                        NguoiNhanId = result.NotifyTargetUserId.Value,
+                        TieuDe = result.Loai == 3 ? "Trợ lý cập nhật lịch nghỉ phép" : "Trợ lý vừa thêm lịch bận mới",
+                        NoiDung = $"Trợ lý vừa thêm lịch {loaiText} \"{result.TieuDe}\" ({rangeLabel}) vào lịch trình của bạn.",
+                        LoaiSuKien = "LICH_MOI",
+                        RouteUrl = "/lanh-dao",
+                        CreatedBy = CurrentUserId
+                    });
+                }
+
                 return Ok(result);
             }
             catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }

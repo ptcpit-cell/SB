@@ -11,20 +11,32 @@
   width: 146px;
 }
 
+.vn-date-wrapper.vn-date-compact.vn-date-with-nav {
+  width: 212px;
+}
+
 .vn-date-text {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
+  line-height: 1.3;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
-.vn-date-btn {
+.vn-date-btn,
+.vn-date-nav-btn {
   border-color: #dee2e6;
   background-color: #ffffff;
   color: #475569;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.vn-date-btn:hover:not(:disabled) {
+.vn-date-btn:hover:not(:disabled),
+.vn-date-nav-btn:hover:not(:disabled) {
   background-color: #f1f5f9;
   color: #0d6efd;
   border-color: #cbd5e1;

@@ -30,7 +30,12 @@ export function registerLanhDaoRoutes(app, deps) {
       .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
 
     const suKiens = db.suKienLanhDaos
-      .filter((sk) => sk.lanhDaoId === lanhDaoId && !sk.isDeleted && sk.isActived && getYmd(sk.batDau) === ngay)
+      .filter((sk) => {
+        if (sk.lanhDaoId !== lanhDaoId || sk.isDeleted || !sk.isActived) return false;
+        const s = getYmd(sk.batDau);
+        const e = getYmd(sk.ketThuc || sk.batDau);
+        return s <= ngay && e >= ngay;
+      })
       .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
 
     const thongKe = {
@@ -74,8 +79,9 @@ export function registerLanhDaoRoutes(app, deps) {
     const suKiens = db.suKienLanhDaos
       .filter((sk) => {
         if (sk.lanhDaoId !== lanhDaoId || sk.isDeleted || !sk.isActived) return false;
-        const d = getYmd(sk.batDau);
-        return d >= tuNgay && d <= denNgay;
+        const s = getYmd(sk.batDau);
+        const e = getYmd(sk.ketThuc || sk.batDau);
+        return s <= denNgay && e >= tuNgay;
       })
       .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
 
@@ -225,11 +231,15 @@ export function registerLanhDaoRoutes(app, deps) {
     if (!body.tieuDe || !body.batDau || !body.ketThuc) {
       return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin sự kiện.' });
     }
+    if (new Date(body.ketThuc) <= new Date(body.batDau)) {
+      return res.status(400).json({ message: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu.' });
+    }
+    const loai = Number(body.loai ?? 1);
     const item = {
       id: nextId(db.suKienLanhDaos, 'id'),
       chiNhanhId: ctx.lanhDao.chiNhanhId,
       lanhDaoId: ctx.lanhDao.id,
-      loai: Number(body.loai ?? 1),
+      loai,
       tieuDe: String(body.tieuDe).trim(),
       batDau: body.batDau,
       ketThuc: body.ketThuc,
@@ -242,6 +252,28 @@ export function registerLanhDaoRoutes(app, deps) {
       isDeleted: false
     };
     db.suKienLanhDaos.push(item);
+
+    if (ctx.info.troLyUserId) {
+      const loaiText = loai === 3 ? 'nghỉ phép' : loai === 2 ? 'công tác' : loai === 1 ? 'họp riêng' : 'lịch bận';
+      const ngayLabel = getYmd(item.batDau).split('-').reverse().join('/');
+      const endYmd = getYmd(item.ketThuc);
+      const rangeLabel = endYmd !== getYmd(item.batDau) ? `${ngayLabel} - ${endYmd.split('-').reverse().join('/')}` : ngayLabel;
+      emitThongBao(
+        ctx.lanhDao.chiNhanhId,
+        req.currentUserId,
+        `Lãnh đạo ${ctx.info.hoTen} vừa thêm lịch ${loaiText}: ${item.tieuDe} (${rangeLabel})`,
+        ctx.info.troLyUserId
+      );
+      emitThongBaoLichTrinh({
+        chiNhanhId: ctx.lanhDao.chiNhanhId,
+        nguoiNhanId: ctx.info.troLyUserId,
+        tieuDe: loai === 3 ? 'Lãnh đạo đăng ký lịch nghỉ phép' : 'Lãnh đạo vừa thêm lịch bận',
+        noiDung: `${ctx.info.hoTen} vừa thêm lịch ${loaiText} "${item.tieuDe}" (${rangeLabel}).`,
+        loaiSuKien: loai === 3 ? 'CAN_BO_SUNG' : 'LICH_MOI',
+        routeUrl: '/tro-ly'
+      });
+    }
+
     res.json(item);
   });
 

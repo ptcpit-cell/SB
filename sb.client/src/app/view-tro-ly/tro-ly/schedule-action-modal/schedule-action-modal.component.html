@@ -26,7 +26,7 @@
           <div class="row g-2 mb-2">
             <div class="col-5">
               <label class="form-label fw-semibold mb-1">Ngày trình <span class="text-danger">*</span></label>
-              <app-vn-date-input [(ngModel)]="ngay"></app-vn-date-input>
+              <app-vn-date-input [(ngModel)]="ngay" (ngModelChange)="onNgayChange()"></app-vn-date-input>
             </div>
             <div class="col-3">
               <label class="form-label fw-semibold mb-1">Bắt đầu <span class="text-danger">*</span></label>
@@ -36,6 +36,39 @@
               <label class="form-label fw-semibold mb-1">Kết thúc <span class="text-danger">*</span></label>
               <input type="time" class="form-control form-control-sm" [(ngModel)]="gioKetThuc" />
             </div>
+          </div>
+
+          <div class="text-danger small mb-2" *ngIf="isTimeRangeInvalid">
+            <i class="fa-solid fa-circle-exclamation me-1"></i>Giờ kết thúc phải lớn hơn giờ bắt đầu.
+          </div>
+
+          <!-- Cảnh báo Lãnh đạo nghỉ phép (KHÔNG CHẶN — cảnh báo phòng hờ trường hợp) -->
+          <div class="alert alert-danger py-2 mb-2 small" *ngIf="leaveEventsOnSelectedDate.length > 0">
+            <div class="fw-bold mb-1">
+              <i class="fa-solid fa-calendar-xmark me-1"></i>
+              Cảnh báo: Ngày {{ ngay | date:'dd/MM/yyyy' }} Lãnh đạo có lịch nghỉ phép!
+            </div>
+            <ul class="mb-1 ps-3">
+              <li *ngFor="let lv of leaveEventsOnSelectedDate">
+                <b>{{ lv.tieuDe }}</b> ({{ formatSkTime(lv) }})<span *ngIf="lv.ghiChu"> — {{ lv.ghiChu }}</span>
+              </li>
+            </ul>
+            <div class="opacity-75" style="font-size: 0.74rem">
+              Vui lòng cân nhắc chọn ngày khác để tránh xếp lịch vào ngày nghỉ. Bạn vẫn có thể lưu nếu là trường hợp đặc biệt.
+            </div>
+          </div>
+
+          <!-- Lưu ý trùng lịch bận khác của Lãnh đạo (Họp / Công tác / Khác) -->
+          <div class="alert alert-warning py-2 mb-2 small" *ngIf="overlappingBusyEvents.length > 0">
+            <div class="fw-semibold mb-1">
+              <i class="fa-solid fa-triangle-exclamation me-1"></i>
+              Lưu ý: Khung giờ trùng với lịch bận của Lãnh đạo:
+            </div>
+            <ul class="mb-0 ps-3">
+              <li *ngFor="let sk of overlappingBusyEvents">
+                <b>[{{ getSuKienMeta(sk.loai).label }}]</b> {{ sk.tieuDe }} ({{ formatSkTime(sk) }})
+              </li>
+            </ul>
           </div>
 
           <!-- Thông báo xếp chồng (KHÔNG CHẶN — cho phép xếp chồng theo nghiệp vụ) -->
@@ -74,7 +107,7 @@
 
         <div class="modal-footer py-2">
           <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeModal.emit()" [disabled]="saving">Đóng</button>
-          <button type="button" class="btn btn-sm btn-primary" (click)="submit()" [disabled]="saving">
+          <button type="button" class="btn btn-sm btn-primary" (click)="submit()" [disabled]="saving || isTimeRangeInvalid">
             <span class="spinner-border spinner-border-sm me-1" *ngIf="saving"></span>
             <i class="fa-solid fa-check me-1" *ngIf="!saving"></i>
             {{ yeuCauXacNhanNV ? 'Gửi đề xuất khung giờ' : 'Chốt lịch trình' }}

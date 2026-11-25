@@ -28,10 +28,32 @@
   background: #f8fbff;
 }
 
+.week-col.is-day-off {
+  border-color: #fda4af;
+  background: #fff1f2;
+}
+
+.week-col.is-day-off .week-col-header {
+  background: #ffe4e6;
+  border-bottom-color: #fecdd3;
+}
+
 .week-col.is-drop-over {
   border-color: #0d6efd;
   background: #eff6ff;
   box-shadow: inset 0 0 0 1px #0d6efd;
+}
+
+.week-leave-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .week-col-header {
@@ -93,13 +115,65 @@
   font-weight: 600;
 }
 
+.week-drop-hint.is-leave-warn {
+  border-color: #dc2626;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .week-busy-chip {
   background: #f1f5f9;
   border: 1px dashed #94a3b8;
+  border-left: 3px solid #64748b;
   border-radius: 6px;
   padding: 5px 6px;
   font-size: 0.72rem;
-  color: #475569;
+  color: #334155;
+}
+
+.week-busy-chip.ev-meeting {
+  background: #eef2ff;
+  border-color: #a5b4fc;
+  border-left-color: #4f46e5;
+  color: #312e81;
+}
+
+.week-busy-chip.ev-trip {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  border-left-color: #d97706;
+  color: #78350f;
+}
+
+.week-busy-chip.ev-leave {
+  background: #fee2e2;
+  border: 1px solid #f87171;
+  border-left: 3px solid #dc2626;
+  color: #991b1b;
+}
+
+.week-busy-chip.ev-other {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  border-left-color: #475569;
+  color: #334155;
+}
+
+.week-busy-del {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  padding: 0 2px;
+  font-size: 0.68rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.week-busy-del:hover {
+  opacity: 1;
 }
 
 .week-appt {

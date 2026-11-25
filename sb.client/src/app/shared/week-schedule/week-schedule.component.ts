@@ -1,6 +1,14 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { LanhDaoCauHinh, LichTrinhView, SuKienLanhDaoView } from '../../../type';
-import { getTodayYmd, shiftYmd } from '../schedule-layout.util';
+import {
+  formatSuKienTimeLabel,
+  getSuKienMeta,
+  getTodayYmd,
+  isLeaveEvent,
+  isSuKienOnDate,
+  shiftYmd,
+  SuKienMeta
+} from '../schedule-layout.util';
 
 export interface WeekDayColumn {
   ymd: string;
@@ -10,6 +18,8 @@ export interface WeekDayColumn {
   isSelected: boolean;
   lichTrinhs: LichTrinhView[];
   suKiens: SuKienLanhDaoView[];
+  hasLeave: boolean;
+  hasFullDayLeave: boolean;
   totalMinutes: number;
   capacityPct: number;
   isOverCapacity: boolean;
@@ -41,6 +51,7 @@ export class WeekScheduleComponent implements OnChanges {
   @Output() selectDay = new EventEmitter<string>();
   @Output() selectLich = new EventEmitter<LichTrinhView>();
   @Output() dayDropped = new EventEmitter<WeekDropPayload>();
+  @Output() deleteSuKien = new EventEmitter<SuKienLanhDaoView>();
 
   days: WeekDayColumn[] = [];
   hoveredYmd: string | null = null;
@@ -64,8 +75,16 @@ export class WeekScheduleComponent implements OnChanges {
         .filter((x) => x.batDau.slice(0, 10) === ymd)
         .sort((a, b) => a.batDau.localeCompare(b.batDau));
       const daySk = this.suKiens
-        .filter((x) => x.batDau.slice(0, 10) === ymd)
-        .sort((a, b) => a.batDau.localeCompare(b.batDau));
+        .filter((x) => isSuKienOnDate(x, ymd))
+        .sort((a, b) => {
+          const leaveDiff = Number(isLeaveEvent(b)) - Number(isLeaveEvent(a));
+          if (leaveDiff !== 0) return leaveDiff;
+          const allDayDiff = Number(b.caNgay) - Number(a.caNgay);
+          if (allDayDiff !== 0) return allDayDiff;
+          return a.batDau.localeCompare(b.batDau);
+        });
+      const hasLeave = daySk.some((x) => isLeaveEvent(x));
+      const hasFullDayLeave = daySk.some((x) => isLeaveEvent(x) && x.caNgay);
       const totalMinutes = dayLich.reduce((sum, x) => sum + (x.thoiLuongPhut || 0), 0);
       const capacityPct = Math.min(100, Math.round((totalMinutes / limit) * 100));
       const parts = ymd.split('-');
@@ -78,12 +97,27 @@ export class WeekScheduleComponent implements OnChanges {
         isSelected: ymd === this.selectedNgay,
         lichTrinhs: dayLich,
         suKiens: daySk,
+        hasLeave,
+        hasFullDayLeave,
         totalMinutes,
         capacityPct,
         isOverCapacity: totalMinutes > limit
       });
     }
     this.days = cols;
+  }
+
+  getSuKienMeta(loai: number): SuKienMeta {
+    return getSuKienMeta(loai);
+  }
+
+  formatSkTime(sk: SuKienLanhDaoView): string {
+    return formatSuKienTimeLabel(sk);
+  }
+
+  onDeleteSuKien(ev: Event, sk: SuKienLanhDaoView): void {
+    ev.stopPropagation();
+    this.deleteSuKien.emit(sk);
   }
 
   onDragOverDay(ev: DragEvent, ymd: string): void {

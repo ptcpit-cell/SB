@@ -20,6 +20,59 @@
   </div>
 
   <div class="card-body p-2 grid-scroll">
+    <!-- Cảnh báo nổi bật khi Lãnh đạo nghỉ phép -->
+    <div class="leave-day-banner mb-2" *ngIf="leaveSuKiens.length > 0">
+      <div class="d-flex align-items-center gap-2 fw-bold small">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Lãnh đạo có lịch nghỉ phép ngày {{ ngay | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="small" style="font-size: 0.76rem">
+        Lưu ý: Vui lòng cân nhắc không xếp lịch trình vào thời gian nghỉ phép của Lãnh đạo.
+      </div>
+      <div
+        class="leave-item-row d-flex justify-content-between align-items-start gap-2"
+        *ngFor="let lv of leaveSuKiens"
+      >
+        <div class="min-w-0">
+          <span class="fw-semibold">{{ lv.tieuDe }}</span>
+          <span class="opacity-75 ms-1">({{ formatSkTime(lv) }})</span>
+          <span class="opacity-75" *ngIf="lv.ghiChu"> · {{ lv.ghiChu }}</span>
+        </div>
+        <button
+          type="button"
+          class="btn btn-link btn-sm text-danger p-0 ms-1 flex-shrink-0"
+          title="Xóa lịch nghỉ này"
+          (click)="onDeleteSuKien($event, lv)"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dải sự kiện cả ngày khác (Họp / Công tác / Khác) -->
+    <div class="allday-strip mb-2" *ngIf="allDayOtherSuKiens.length > 0">
+      <div
+        *ngFor="let sk of allDayOtherSuKiens"
+        class="allday-chip d-flex justify-content-between align-items-center gap-2"
+        [ngClass]="getSuKienMeta(sk.loai).chipClass"
+        [title]="sk.ghiChu ? (sk.tieuDe + ' — ' + sk.ghiChu) : sk.tieuDe"
+      >
+        <div class="min-w-0 text-truncate">
+          <i [ngClass]="getSuKienMeta(sk.loai).icon" class="me-1"></i>
+          <b>[{{ getSuKienMeta(sk.loai).label }}]</b> {{ sk.tieuDe }}
+          <span class="opacity-75 ms-1">({{ formatSkTime(sk) }})</span>
+        </div>
+        <button
+          type="button"
+          class="btn btn-link btn-sm text-reset opacity-75 p-0"
+          title="Xóa sự kiện bận"
+          (click)="onDeleteSuKien($event, sk)"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
     <div class="schedule-canvas position-relative" [style.height.px]="totalHeightPx">
       <!-- Lưới khung giờ 30 phút (vùng thả kéo-thả) -->
       <div
@@ -29,6 +82,7 @@
         [class.slot-hour]="slot.isHour"
         [class.slot-half]="!slot.isHour"
         [class.slot-lunch]="slot.isLunch"
+        [class.slot-day-off]="hasFullDayLeave"
         [class.slot-drag-over]="hoveredSlotMinute === slot.startMinute"
         (dragover)="onDragOverSlot($event, slot)"
         (dragleave)="onDragLeaveSlot(slot)"
@@ -42,8 +96,9 @@
           <span class="lunch-tag" *ngIf="slot.isLunch && slot.isHour">
             <i class="fa-solid fa-mug-hot me-1"></i>Nghỉ trưa
           </span>
-          <span class="drop-hint" *ngIf="hoveredSlotMinute === slot.startMinute">
-            <i class="fa-solid fa-arrow-down me-1"></i>Thả vào {{ slot.label }} (hỗ trợ xếp chồng)
+          <span class="drop-hint" [class.is-leave-warn]="hasFullDayLeave" *ngIf="hoveredSlotMinute === slot.startMinute">
+            <i class="fa-solid fa-arrow-down me-1"></i>
+            {{ hasFullDayLeave ? ('Thả vào ' + slot.label + ' (Lưu ý: Lãnh đạo nghỉ phép)') : ('Thả vào ' + slot.label + ' (hỗ trợ xếp chồng)') }}
           </span>
         </div>
       </div>
@@ -53,20 +108,22 @@
         <div
           *ngFor="let sk of positionedSuKiens"
           class="busy-event-block rounded-2 px-2 py-1 d-flex justify-content-between align-items-start"
+          [ngClass]="getSuKienMeta(sk.item.loai).blockClass"
           [ngStyle]="getSuKienStyle(sk)"
+          [title]="sk.item.ghiChu ? (sk.item.tieuDe + ' — ' + sk.item.ghiChu) : sk.item.tieuDe"
         >
           <div class="min-w-0">
             <div class="fw-semibold small text-truncate">
-              <i class="fa-solid fa-calendar-minus me-1"></i>[{{ suKienLoaiLabel(sk.item.loai) }}] {{ sk.item.tieuDe }}
+              <i [ngClass]="getSuKienMeta(sk.item.loai).icon" class="me-1"></i>[{{ getSuKienMeta(sk.item.loai).label }}] {{ sk.item.tieuDe }}
             </div>
             <div style="font-size: 0.7rem" class="opacity-75 text-truncate">
-              {{ sk.item.batDau | date:'HH:mm' }} - {{ sk.item.ketThuc | date:'HH:mm' }}
+              {{ formatSkTime(sk.item) }}
               <span *ngIf="sk.item.diaDiem"> · {{ sk.item.diaDiem }}</span>
             </div>
           </div>
           <button
             type="button"
-            class="btn btn-link btn-sm text-secondary p-0 ms-1"
+            class="btn btn-link btn-sm text-reset opacity-75 p-0 ms-1"
             title="Xóa sự kiện bận"
             (click)="onDeleteSuKien($event, sk.item)"
           >

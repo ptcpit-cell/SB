@@ -13,7 +13,7 @@
           <div class="row g-2 mb-2">
             <div class="col-4">
               <label class="form-label fw-semibold mb-1">Loại sự kiện</label>
-              <select class="form-select form-select-sm" [(ngModel)]="loai">
+              <select class="form-select form-select-sm" [(ngModel)]="loai" (ngModelChange)="onLoaiChange()">
                 <option [ngValue]="1">Họp</option>
                 <option [ngValue]="2">Công tác</option>
                 <option [ngValue]="3">Nghỉ phép</option>
@@ -22,14 +22,25 @@
             </div>
             <div class="col-8">
               <label class="form-label fw-semibold mb-1">Tiêu đề <span class="text-danger">*</span></label>
-              <input type="text" class="form-control form-control-sm" [(ngModel)]="tieuDe" placeholder="VD: Họp giao ban Ban Giám đốc" />
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="tieuDe" [placeholder]="tieuDePlaceholder" />
+            </div>
+          </div>
+
+          <div class="alert alert-danger py-2 px-2.5 small mb-2 d-flex align-items-start gap-2" *ngIf="loai === 3">
+            <i class="fa-solid fa-calendar-xmark mt-0.5 flex-shrink-0"></i>
+            <div>
+              Lịch nghỉ phép sẽ được hiển thị nổi bật trên lịch của cả <b>Lãnh đạo</b> và <b>Trợ lý</b> để tránh xếp lịch trình vào ngày nghỉ.
             </div>
           </div>
 
           <div class="row g-2 mb-2">
-            <div class="col-5">
-              <label class="form-label fw-semibold mb-1">Ngày <span class="text-danger">*</span></label>
-              <app-vn-date-input [(ngModel)]="ngay"></app-vn-date-input>
+            <div [ngClass]="caNgay ? 'col-6' : 'col-5'">
+              <label class="form-label fw-semibold mb-1">{{ caNgay ? 'Từ ngày' : 'Ngày' }} <span class="text-danger">*</span></label>
+              <app-vn-date-input [(ngModel)]="ngay" (ngModelChange)="onNgayChange()"></app-vn-date-input>
+            </div>
+            <div class="col-6" *ngIf="caNgay">
+              <label class="form-label fw-semibold mb-1">Đến ngày <span class="text-danger">*</span></label>
+              <app-vn-date-input [(ngModel)]="denNgay"></app-vn-date-input>
             </div>
             <div class="col-3" *ngIf="!caNgay">
               <label class="form-label fw-semibold mb-1">Từ</label>
@@ -39,6 +50,11 @@
               <label class="form-label fw-semibold mb-1">Đến</label>
               <input type="time" class="form-control form-control-sm" [(ngModel)]="gioKetThuc" />
             </div>
+          </div>
+
+          <div class="text-danger small mb-2" *ngIf="isTimeRangeInvalid">
+            <i class="fa-solid fa-circle-exclamation me-1"></i>
+            {{ caNgay ? 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.' : 'Giờ kết thúc phải lớn hơn giờ bắt đầu.' }}
           </div>
 
           <div class="d-flex gap-3 mb-2">
@@ -52,7 +68,6 @@
             </div>
           </div>
 
-
           <div>
             <label class="form-label fw-semibold mb-1">Ghi chú</label>
             <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="ghiChu" placeholder="Ghi chú thêm..."></textarea>
@@ -61,7 +76,7 @@
 
         <div class="modal-footer py-2">
           <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeModal.emit()" [disabled]="saving">Đóng</button>
-          <button type="button" class="btn btn-sm btn-primary" (click)="submit()" [disabled]="saving || !tieuDe.trim()">
+          <button type="button" class="btn btn-sm btn-primary" (click)="submit()" [disabled]="saving || !tieuDe.trim() || isTimeRangeInvalid">
             <span class="spinner-border spinner-border-sm me-1" *ngIf="saving"></span>
             <i class="fa-solid fa-plus me-1" *ngIf="!saving"></i>Lưu sự kiện
           </button>

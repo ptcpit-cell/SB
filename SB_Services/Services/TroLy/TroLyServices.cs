@@ -475,7 +475,9 @@ namespace SB_Services.Services.TroLy
                 LaCung = req.LaCung,
                 LaRiengTu = req.LaRiengTu,
                 DiaDiem = req.DiaDiem,
-                GhiChu = req.GhiChu
+                GhiChu = req.GhiChu,
+                NotifyTargetUserId = lanhDao.UserId,
+                NotifyActorName = lanhDao.TenTroLy
             };
         }
 

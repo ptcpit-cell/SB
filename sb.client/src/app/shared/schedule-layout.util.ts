@@ -172,23 +172,113 @@ export function layoutOverlappingLichTrinhs(
   return result;
 }
 
+export interface SuKienMeta {
+  label: string;
+  icon: string;
+  blockClass: string;
+  chipClass: string;
+  badgeClass: string;
+}
+
+export function getSuKienMeta(loai: number): SuKienMeta {
+  switch (Number(loai)) {
+    case 1:
+      return {
+        label: 'Họp',
+        icon: 'fa-solid fa-users',
+        blockClass: 'ev-meeting',
+        chipClass: 'ev-meeting',
+        badgeClass: 'bg-primary-subtle text-primary-emphasis border-primary-subtle'
+      };
+    case 2:
+      return {
+        label: 'Công tác',
+        icon: 'fa-solid fa-briefcase',
+        blockClass: 'ev-trip',
+        chipClass: 'ev-trip',
+        badgeClass: 'bg-warning-subtle text-warning-emphasis border-warning-subtle'
+      };
+    case 3:
+      return {
+        label: 'Nghỉ phép',
+        icon: 'fa-solid fa-calendar-xmark',
+        blockClass: 'ev-leave',
+        chipClass: 'ev-leave',
+        badgeClass: 'bg-danger-subtle text-danger-emphasis border-danger-subtle'
+      };
+    default:
+      return {
+        label: 'Lịch riêng',
+        icon: 'fa-solid fa-calendar-minus',
+        blockClass: 'ev-other',
+        chipClass: 'ev-other',
+        badgeClass: 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle'
+      };
+  }
+}
+
+export function isLeaveEvent(sk: SuKienLanhDaoView): boolean {
+  return Number(sk.loai) === 3;
+}
+
+export function isSuKienOnDate(sk: SuKienLanhDaoView, ymd: string): boolean {
+  if (!sk || !ymd) return false;
+  const startYmd = (sk.batDau || '').slice(0, 10);
+  const endYmd = (sk.ketThuc || sk.batDau || '').slice(0, 10);
+  if (!startYmd) return false;
+  return startYmd <= ymd && endYmd >= ymd;
+}
+
+function formatYmdShort(ymd: string): string {
+  const parts = ymd.split('-');
+  if (parts.length !== 3) return ymd;
+  return `${parts[2]}/${parts[1]}`;
+}
+
+export function formatSuKienTimeLabel(sk: SuKienLanhDaoView): string {
+  const startYmd = (sk.batDau || '').slice(0, 10);
+  const endYmd = (sk.ketThuc || sk.batDau || '').slice(0, 10);
+  if (sk.caNgay) {
+    if (startYmd && endYmd && endYmd > startYmd) {
+      return `Cả ngày (${formatYmdShort(startYmd)} – ${formatYmdShort(endYmd)})`;
+    }
+    return 'Cả ngày';
+  }
+  const sHm = minutesToHm(isoToMinutes(sk.batDau));
+  const eHm = minutesToHm(isoToMinutes(sk.ketThuc));
+  if (startYmd && endYmd && endYmd > startYmd) {
+    return `${formatYmdShort(startYmd)} ${sHm} – ${formatYmdShort(endYmd)} ${eHm}`;
+  }
+  return `${sHm} – ${eHm}`;
+}
+
 export function layoutSuKiens(
   items: SuKienLanhDaoView[],
   gridStartMin: number,
-  gridEndMin: number
+  gridEndMin: number,
+  currentYmd?: string
 ): PositionedSuKien[] {
   if (!items || items.length === 0) return [];
-  return items.map((item) => {
-    const startMin = item.caNgay ? gridStartMin : isoToMinutes(item.batDau);
-    const endMin = item.caNgay ? gridEndMin : Math.max(startMin + 20, isoToMinutes(item.ketThuc));
-    const clampedStart = Math.max(gridStartMin, Math.min(gridEndMin - 15, startMin));
-    const clampedEnd = Math.max(clampedStart + 15, Math.min(gridEndMin, endMin));
-    return {
-      item,
-      topPx: ((clampedStart - gridStartMin) / 60) * PIXELS_PER_HOUR,
-      heightPx: Math.max(32, ((clampedEnd - clampedStart) / 60) * PIXELS_PER_HOUR)
-    };
-  });
+  return items
+    .filter((item) => !item.caNgay)
+    .map((item) => {
+      const startYmd = (item.batDau || '').slice(0, 10);
+      const endYmd = (item.ketThuc || item.batDau || '').slice(0, 10);
+      const startMin = currentYmd && startYmd && startYmd < currentYmd
+        ? gridStartMin
+        : isoToMinutes(item.batDau);
+      const rawEnd = currentYmd && endYmd && endYmd > currentYmd
+        ? gridEndMin
+        : isoToMinutes(item.ketThuc);
+      const endMin = Math.max(startMin + 20, rawEnd);
+      const clampedStart = Math.max(gridStartMin, Math.min(gridEndMin - 15, startMin));
+      const clampedEnd = Math.max(clampedStart + 15, Math.min(gridEndMin, endMin));
+      return {
+        item,
+        topPx: ((clampedStart - gridStartMin) / 60) * PIXELS_PER_HOUR,
+        heightPx: Math.max(32, ((clampedEnd - clampedStart) / 60) * PIXELS_PER_HOUR)
+      };
+    });
 }
 
 export function getTrangThaiYeuCauBadge(st: number): { label: string; css: string } {

@@ -33,19 +33,16 @@
         </button>
       </div>
 
-      <!-- Chọn ngày / tuần -->
-      <div class="btn-group btn-group-sm shadow-xs">
-        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(-1)" [title]="viewMode === 'week' ? 'Tuần trước' : 'Ngày trước'">
-          <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <button type="button" class="btn btn-outline-primary bg-white fw-semibold" (click)="chonHomNay()">
-          {{ viewMode === 'week' ? 'Tuần này' : 'Hôm nay' }}
-        </button>
-        <button type="button" class="btn btn-outline-secondary bg-white" (click)="doiNgay(1)" [title]="viewMode === 'week' ? 'Tuần sau' : 'Ngày sau'">
-          <i class="fa-solid fa-chevron-right"></i>
-        </button>
-      </div>
-      <app-vn-date-input [compact]="true" [(ngModel)]="ngay" (ngModelChange)="onDateInputChange()"></app-vn-date-input>
+      <!-- Chọn ngày / tuần tích hợp nút chuyển -->
+      <app-vn-date-input
+        [compact]="true"
+        [showNavButtons]="true"
+        [prevTitle]="viewMode === 'week' ? 'Tuần trước' : 'Ngày trước'"
+        [nextTitle]="viewMode === 'week' ? 'Tuần sau' : 'Ngày sau'"
+        [(ngModel)]="ngay"
+        (ngModelChange)="onDateInputChange()"
+        (stepDate)="doiNgay($event)"
+      ></app-vn-date-input>
 
       <button type="button" class="btn btn-outline-primary btn-sm" *ngIf="dashboard" (click)="showWorkingHoursModal = true">
         <i class="fa-solid fa-sliders me-1"></i>Giờ làm việc
@@ -142,6 +139,7 @@
           (selectDay)="onSelectDayFromWeek($event)"
           (selectLich)="onSelectLich($event)"
           (dayDropped)="onWeekDayDropped($event)"
+          (deleteSuKien)="onDeleteSuKien($event)"
         ></app-week-schedule>
       </div>
     </div>
@@ -165,6 +163,7 @@
   [context]="scheduleModalCtx"
   [mucUuTiens]="dashboard?.mucUuTiens || []"
   [existingLichNgay]="viewMode === 'week' ? (weekData?.lichTrinhs || []) : (dashboard?.lichNgay || [])"
+  [existingSuKiens]="viewMode === 'week' ? (weekData?.suKiens || []) : (dashboard?.suKienNgay || [])"
   (closeModal)="showScheduleModal = false"
   (confirmSchedule)="onConfirmSchedule($event)"
 ></app-tro-ly-schedule-action-modal>

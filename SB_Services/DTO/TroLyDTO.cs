@@ -154,6 +154,12 @@ namespace SB_Services.DTO
         public bool LaRiengTu { get; set; }
         public string? DiaDiem { get; set; }
         public string? GhiChu { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int? NotifyTargetUserId { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? NotifyActorName { get; set; }
     }
 
     public class TroLyThongKeDto

@@ -119,6 +119,37 @@ namespace SB.Server.Controllers
             try
             {
                 var result = await _lanhDaoServices.TaoSuKienAsync(CurrentUserId, req);
+
+                if (result.NotifyTargetUserId.HasValue && result.NotifyTargetUserId.Value > 0)
+                {
+                    string loaiText = result.Loai switch
+                    {
+                        3 => "nghỉ phép",
+                        2 => "công tác",
+                        1 => "họp riêng",
+                        _ => "lịch bận"
+                    };
+                    string rangeLabel = result.BatDau.Date != result.KetThuc.Date
+                        ? $"{result.BatDau:dd/MM/yyyy} - {result.KetThuc:dd/MM/yyyy}"
+                        : $"{result.BatDau:dd/MM/yyyy}";
+                    string tenSep = string.IsNullOrWhiteSpace(result.NotifyActorName) ? "Lãnh đạo" : result.NotifyActorName;
+
+                    await SafeNotifyBasicAsync(
+                        new[] { result.NotifyTargetUserId.Value },
+                        $"{tenSep} vừa thêm lịch {loaiText}: {result.TieuDe} ({rangeLabel})");
+
+                    await SafeNotifyScheduleAsync(new ThongBaoLichTrinhCreateInput
+                    {
+                        ChiNhanhId = CurrentChiNhanhId,
+                        NguoiNhanId = result.NotifyTargetUserId.Value,
+                        TieuDe = result.Loai == 3 ? "Lãnh đạo đăng ký lịch nghỉ phép" : "Lãnh đạo vừa thêm lịch bận",
+                        NoiDung = $"{tenSep} vừa thêm lịch {loaiText} \"{result.TieuDe}\" ({rangeLabel}).",
+                        LoaiSuKien = result.Loai == 3 ? "CAN_BO_SUNG" : "LICH_MOI",
+                        RouteUrl = "/tro-ly",
+                        CreatedBy = CurrentUserId
+                    });
+                }
+
                 return Ok(result);
             }
             catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }

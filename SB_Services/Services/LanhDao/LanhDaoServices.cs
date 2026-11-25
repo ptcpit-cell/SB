@@ -173,7 +173,9 @@ namespace SB_Services.Services.LanhDao
                 LaCung = req.LaCung,
                 LaRiengTu = req.LaRiengTu,
                 DiaDiem = req.DiaDiem,
-                GhiChu = req.GhiChu
+                GhiChu = req.GhiChu,
+                NotifyTargetUserId = lanhDao.TroLyUserId,
+                NotifyActorName = lanhDao.HoTen
             };
         }
 

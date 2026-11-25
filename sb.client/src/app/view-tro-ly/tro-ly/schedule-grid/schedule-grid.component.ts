@@ -2,12 +2,16 @@ import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core
 import { LanhDaoCauHinh, LichTrinhView, SuKienLanhDaoView } from '../../../../type';
 import {
   buildTimeSlots,
+  formatSuKienTimeLabel,
+  getSuKienMeta,
+  isLeaveEvent,
   layoutOverlappingLichTrinhs,
   layoutSuKiens,
   minutesToHm,
   PIXELS_PER_HOUR,
   PositionedLichTrinh,
   PositionedSuKien,
+  SuKienMeta,
   TimeSlotRow
 } from '../../../shared/schedule-layout.util';
 
@@ -45,6 +49,9 @@ export class ScheduleGridComponent implements OnChanges {
   slots: TimeSlotRow[] = [];
   positionedLichs: PositionedLichTrinh[] = [];
   positionedSuKiens: PositionedSuKien[] = [];
+  leaveSuKiens: SuKienLanhDaoView[] = [];
+  allDayOtherSuKiens: SuKienLanhDaoView[] = [];
+  hasFullDayLeave = false;
   hoveredSlotMinute: number | null = null;
 
   ngOnChanges(): void {
@@ -54,7 +61,10 @@ export class ScheduleGridComponent implements OnChanges {
     this.slots = built.slots;
     this.totalHeightPx = built.totalHeightPx;
     this.positionedLichs = layoutOverlappingLichTrinhs(this.lichNgay, this.startMin, this.endMin);
-    this.positionedSuKiens = layoutSuKiens(this.suKienNgay, this.startMin, this.endMin);
+    this.leaveSuKiens = (this.suKienNgay || []).filter((x) => isLeaveEvent(x));
+    this.hasFullDayLeave = this.leaveSuKiens.some((x) => x.caNgay);
+    this.allDayOtherSuKiens = (this.suKienNgay || []).filter((x) => !isLeaveEvent(x) && x.caNgay);
+    this.positionedSuKiens = layoutSuKiens(this.suKienNgay, this.startMin, this.endMin, this.ngay);
   }
 
   onDragOverSlot(ev: DragEvent, slot: TimeSlotRow): void {
@@ -143,13 +153,12 @@ export class ScheduleGridComponent implements OnChanges {
     }
   }
 
-  suKienLoaiLabel(loai: number): string {
-    switch (loai) {
-      case 1: return 'Họp';
-      case 2: return 'Công tác';
-      case 3: return 'Nghỉ phép';
-      default: return 'Lịch bận';
-    }
+  getSuKienMeta(loai: number): SuKienMeta {
+    return getSuKienMeta(loai);
+  }
+
+  formatSkTime(sk: SuKienLanhDaoView): string {
+    return formatSuKienTimeLabel(sk);
   }
 
   onDeleteSuKien(ev: Event, sk: SuKienLanhDaoView): void {

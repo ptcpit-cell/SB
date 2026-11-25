@@ -2,8 +2,19 @@
   #wrapperEl
   class="vn-date-wrapper"
   [class.vn-date-compact]="compact"
+  [class.vn-date-with-nav]="showNavButtons"
 >
   <div class="input-group input-group-sm">
+    <button
+      *ngIf="showNavButtons"
+      type="button"
+      class="btn btn-outline-secondary btn-sm vn-date-nav-btn"
+      [disabled]="disabled"
+      (click)="stepDate.emit(-1)"
+      [title]="prevTitle"
+    >
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
     <input
       #textInput
       type="text"
@@ -11,6 +22,8 @@
       maxlength="10"
       autocomplete="off"
       class="form-control form-control-sm vn-date-text"
+      [class.text-center]="showNavButtons"
+      [class.fw-semibold]="showNavButtons"
       [class.is-invalid]="invalid"
       [value]="displayText"
       [placeholder]="placeholder"
@@ -27,6 +40,16 @@
       title="Chọn ngày từ lịch"
     >
       <i class="fa-regular fa-calendar"></i>
+    </button>
+    <button
+      *ngIf="showNavButtons"
+      type="button"
+      class="btn btn-outline-secondary btn-sm vn-date-nav-btn"
+      [disabled]="disabled"
+      (click)="stepDate.emit(1)"
+      [title]="nextTitle"
+    >
+      <i class="fa-solid fa-chevron-right"></i>
     </button>
   </div>
 

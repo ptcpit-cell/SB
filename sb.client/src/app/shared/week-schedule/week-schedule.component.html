@@ -29,6 +29,7 @@
         class="week-col"
         [class.is-today]="col.isToday"
         [class.is-selected]="col.isSelected"
+        [class.is-day-off]="col.hasLeave"
         [class.is-drop-over]="hoveredYmd === col.ymd"
         (dragover)="onDragOverDay($event, col.ymd)"
         (dragleave)="onDragLeaveDay(col.ymd)"
@@ -37,8 +38,15 @@
         <!-- Đầu cột ngày -->
         <button type="button" class="week-col-header" (click)="selectDay.emit(col.ymd)" title="Mở lịch chi tiết ngày này">
           <div class="d-flex justify-content-between align-items-center">
-            <span class="fw-bold" [class.text-primary]="col.isToday">{{ col.dayName }}</span>
+            <span class="fw-bold" [class.text-primary]="col.isToday && !col.hasLeave" [class.text-danger]="col.hasLeave">
+              {{ col.dayName }}
+            </span>
             <span class="week-date tabular-nums">{{ col.shortDate }}</span>
+          </div>
+          <div class="mt-1" *ngIf="col.hasLeave">
+            <span class="week-leave-badge">
+              <i class="fa-solid fa-calendar-xmark me-1"></i>Lãnh đạo nghỉ
+            </span>
           </div>
           <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.7rem">
             <span class="text-secondary tabular-nums">{{ col.lichTrinhs.length }} buổi</span>
@@ -55,15 +63,37 @@
 
         <!-- Nội dung ngày -->
         <div class="week-col-body">
-          <div class="week-drop-hint" *ngIf="hoveredYmd === col.ymd">
+          <div class="week-drop-hint" [class.is-leave-warn]="col.hasLeave" *ngIf="hoveredYmd === col.ymd">
             <i class="fa-solid fa-plus me-1"></i>Thả vào {{ col.dayName }} ({{ col.shortDate }})
+            <div *ngIf="col.hasLeave" style="font-size: 0.66rem">Lưu ý: Lãnh đạo nghỉ phép</div>
           </div>
 
-          <!-- Sự kiện bận -->
-          <div class="week-busy-chip" *ngFor="let sk of col.suKiens">
-            <div class="fw-semibold text-truncate">{{ sk.tieuDe }}</div>
-            <div class="tabular-nums opacity-75" style="font-size: 0.67rem">
-              {{ sk.batDau | date:'HH:mm' }}–{{ sk.ketThuc | date:'HH:mm' }}
+          <!-- Sự kiện bận / lịch riêng / nghỉ phép -->
+          <div
+            class="week-busy-chip"
+            *ngFor="let sk of col.suKiens"
+            [ngClass]="getSuKienMeta(sk.loai).chipClass"
+            [title]="sk.ghiChu ? (sk.tieuDe + ' — ' + sk.ghiChu) : sk.tieuDe"
+          >
+            <div class="d-flex justify-content-between align-items-start gap-1">
+              <div class="min-w-0">
+                <div class="fw-bold d-flex align-items-center gap-1" style="font-size: 0.66rem">
+                  <i [ngClass]="getSuKienMeta(sk.loai).icon"></i>
+                  <span>{{ getSuKienMeta(sk.loai).label }}</span>
+                </div>
+                <div class="fw-semibold text-truncate">{{ sk.tieuDe }}</div>
+              </div>
+              <button
+                type="button"
+                class="week-busy-del"
+                title="Xóa sự kiện này"
+                (click)="onDeleteSuKien($event, sk)"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <div class="tabular-nums opacity-75" style="font-size: 0.66rem">
+              {{ formatSkTime(sk) }}
             </div>
           </div>
 

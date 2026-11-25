@@ -74,7 +74,12 @@ export function registerTroLyRoutes(app, deps) {
       .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
 
     const suKienNgay = db.suKienLanhDaos
-      .filter((sk) => sk.lanhDaoId === lanhDaoId && !sk.isDeleted && sk.isActived && getYmd(sk.batDau) === ngay)
+      .filter((sk) => {
+        if (sk.lanhDaoId !== lanhDaoId || sk.isDeleted || !sk.isActived) return false;
+        const s = getYmd(sk.batDau);
+        const e = getYmd(sk.ketThuc || sk.batDau);
+        return s <= ngay && e >= ngay;
+      })
       .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
 
     const thongKe = {
@@ -120,8 +125,9 @@ export function registerTroLyRoutes(app, deps) {
     const suKienTuan = db.suKienLanhDaos
       .filter((sk) => {
         if (sk.lanhDaoId !== lanhDaoId || sk.isDeleted || !sk.isActived) return false;
-        const d = getYmd(sk.batDau);
-        return d >= tuNgay && d <= denNgay;
+        const s = getYmd(sk.batDau);
+        const e = getYmd(sk.ketThuc || sk.batDau);
+        return s <= denNgay && e >= tuNgay;
       })
       .sort((a, b) => new Date(a.batDau) - new Date(b.batDau));
 
@@ -578,11 +584,15 @@ export function registerTroLyRoutes(app, deps) {
     if (!body.tieuDe || !body.batDau || !body.ketThuc) {
       return res.status(400).json({ message: 'Vui lòng nhập đầy đủ tiêu đề và thời gian sự kiện.' });
     }
+    if (new Date(body.ketThuc) <= new Date(body.batDau)) {
+      return res.status(400).json({ message: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu.' });
+    }
+    const loai = Number(body.loai ?? 1);
     const item = {
       id: nextId(db.suKienLanhDaos, 'id'),
       chiNhanhId: ctx.lanhDao.chiNhanhId,
       lanhDaoId: ctx.lanhDao.id,
-      loai: Number(body.loai ?? 1),
+      loai,
       tieuDe: String(body.tieuDe).trim(),
       batDau: body.batDau,
       ketThuc: body.ketThuc,
@@ -595,6 +605,30 @@ export function registerTroLyRoutes(app, deps) {
       isDeleted: false
     };
     db.suKienLanhDaos.push(item);
+
+    if (ctx.lanhDao.userId) {
+      const loaiText = loai === 3 ? 'nghỉ phép' : loai === 2 ? 'công tác' : loai === 1 ? 'họp riêng' : 'lịch bận';
+      const startYmd = getYmd(item.batDau);
+      const endYmd = getYmd(item.ketThuc);
+      const rangeLabel = endYmd !== startYmd
+        ? `${startYmd.split('-').reverse().join('/')} - ${endYmd.split('-').reverse().join('/')}`
+        : startYmd.split('-').reverse().join('/');
+      emitThongBao(
+        ctx.lanhDao.chiNhanhId,
+        req.currentUserId,
+        `Trợ lý vừa thêm lịch ${loaiText}: ${item.tieuDe} (${rangeLabel})`,
+        ctx.lanhDao.userId
+      );
+      emitThongBaoLichTrinh({
+        chiNhanhId: ctx.lanhDao.chiNhanhId,
+        nguoiNhanId: ctx.lanhDao.userId,
+        tieuDe: loai === 3 ? 'Trợ lý cập nhật lịch nghỉ phép' : 'Trợ lý vừa thêm lịch bận mới',
+        noiDung: `Trợ lý vừa thêm lịch ${loaiText} "${item.tieuDe}" (${rangeLabel}) vào lịch trình của bạn.`,
+        loaiSuKien: 'LICH_MOI',
+        routeUrl: '/lanh-dao'
+      });
+    }
+
     res.json(item);
   });
 

@@ -20,6 +20,7 @@ export class BusyEventModalComponent implements OnChanges {
   tieuDe = '';
   loai = 1;
   ngay = '';
+  denNgay = '';
   gioBatDau = '10:30';
   gioKetThuc = '11:30';
   diaDiem = '';
@@ -32,6 +33,7 @@ export class BusyEventModalComponent implements OnChanges {
       this.tieuDe = '';
       this.loai = 1;
       this.ngay = this.defaultNgay;
+      this.denNgay = this.defaultNgay;
       this.gioBatDau = '10:30';
       this.gioKetThuc = '11:30';
       this.diaDiem = '';
@@ -41,13 +43,45 @@ export class BusyEventModalComponent implements OnChanges {
     }
   }
 
+  onLoaiChange(): void {
+    if (Number(this.loai) === 3) {
+      this.caNgay = true;
+      if (!this.denNgay || this.denNgay < this.ngay) {
+        this.denNgay = this.ngay;
+      }
+    }
+  }
+
+  onNgayChange(): void {
+    if (!this.denNgay || (this.ngay && this.denNgay < this.ngay)) {
+      this.denNgay = this.ngay;
+    }
+  }
+
+  get tieuDePlaceholder(): string {
+    switch (Number(this.loai)) {
+      case 1: return 'VD: Họp giao ban Ban Giám đốc';
+      case 2: return 'VD: Công tác tại chi nhánh TP.HCM';
+      case 3: return 'VD: Nghỉ phép năm / Nghỉ việc riêng';
+      default: return 'VD: Tiếp khách đối tác';
+    }
+  }
+
+  get isTimeRangeInvalid(): boolean {
+    if (this.caNgay) {
+      return Boolean(this.ngay && this.denNgay && this.denNgay < this.ngay);
+    }
+    return Boolean(this.gioBatDau && this.gioKetThuc && this.gioKetThuc <= this.gioBatDau);
+  }
+
   submit(): void {
-    if (!this.tieuDe.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(this.ngay)) return;
+    if (!this.tieuDe.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(this.ngay) || this.isTimeRangeInvalid) return;
+    const endYmd = this.caNgay && /^\d{4}-\d{2}-\d{2}$/.test(this.denNgay) ? this.denNgay : this.ngay;
     this.submitEvent.emit({
       loai: Number(this.loai),
       tieuDe: this.tieuDe.trim(),
       batDau: buildLocalIso(this.ngay, this.caNgay ? '08:00' : this.gioBatDau),
-      ketThuc: buildLocalIso(this.ngay, this.caNgay ? '17:00' : this.gioKetThuc),
+      ketThuc: buildLocalIso(endYmd, this.caNgay ? '17:00' : this.gioKetThuc),
       caNgay: this.caNgay,
       laCung: true,
       laRiengTu: this.laRiengTu,

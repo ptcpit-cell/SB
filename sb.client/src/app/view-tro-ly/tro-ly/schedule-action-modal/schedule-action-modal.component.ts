@@ -1,6 +1,16 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { LichTrinhView, MucUuTienItem, XepLichRequest } from '../../../../type';
-import { buildLocalIso, isoToMinutes, minutesToHm } from '../../../shared/schedule-layout.util';
+import { RequestService } from '../../../../services/request.service';
+import { LichTrinhView, MucUuTienItem, SuKienLanhDaoView, XepLichRequest } from '../../../../type';
+import {
+  buildLocalIso,
+  formatSuKienTimeLabel,
+  getSuKienMeta,
+  isLeaveEvent,
+  isSuKienOnDate,
+  isoToMinutes,
+  minutesToHm,
+  SuKienMeta
+} from '../../../shared/schedule-layout.util';
 
 export interface XepLichModalContext {
   yeuCauId: number;
@@ -28,6 +38,7 @@ export class ScheduleActionModalComponent implements OnChanges {
   @Input() context: XepLichModalContext | null = null;
   @Input() mucUuTiens: MucUuTienItem[] = [];
   @Input() existingLichNgay: LichTrinhView[] = [];
+  @Input() existingSuKiens: SuKienLanhDaoView[] = [];
 
   @Output() closeModal = new EventEmitter<void>();
   @Output() confirmSchedule = new EventEmitter<{ yeuCauId: number; payload: XepLichRequest }>();
@@ -39,8 +50,15 @@ export class ScheduleActionModalComponent implements OnChanges {
   ghiChu = '';
   yeuCauXacNhanNV = false;
 
+  private wasVisible = false;
+  private fetchedDate = '';
+  private fetchedLichTrinhs: LichTrinhView[] = [];
+  private fetchedSuKiens: SuKienLanhDaoView[] = [];
+
+  constructor(private requestService: RequestService) {}
+
   ngOnChanges(): void {
-    if (this.visible && this.context) {
+    if (this.visible && this.context && !this.wasVisible) {
       this.ngay = this.context.defaultNgay;
       this.gioBatDau = this.context.defaultGioBatDau || '09:00';
       const [h, m] = this.gioBatDau.split(':').map(Number);
@@ -49,7 +67,33 @@ export class ScheduleActionModalComponent implements OnChanges {
       this.mucUuTienId = this.context.mucUuTienId ?? null;
       this.ghiChu = '';
       this.yeuCauXacNhanNV = false;
+      this.fetchedDate = '';
+      this.fetchedLichTrinhs = [];
+      this.fetchedSuKiens = [];
+      this.loadTargetDateEvents(this.ngay);
     }
+    this.wasVisible = this.visible;
+  }
+
+  onNgayChange(): void {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(this.ngay)) {
+      this.loadTargetDateEvents(this.ngay);
+    }
+  }
+
+  private loadTargetDateEvents(ymd: string): void {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return;
+    this.requestService.getTroLyLichTuan(ymd, ymd).subscribe({
+      next: (res) => {
+        if (this.ngay !== ymd) return;
+        this.fetchedDate = ymd;
+        this.fetchedLichTrinhs = res?.lichTrinhs || [];
+        this.fetchedSuKiens = res?.suKiens || [];
+      },
+      error: () => {
+        // Fallback to parent inputs silently
+      }
+    });
   }
 
   onStartTimeChange(): void {
@@ -57,6 +101,44 @@ export class ScheduleActionModalComponent implements OnChanges {
     const [h, m] = this.gioBatDau.split(':').map(Number);
     if (Number.isNaN(h) || Number.isNaN(m)) return;
     this.gioKetThuc = minutesToHm(h * 60 + m + (this.context.thoiLuongPhut || 30));
+  }
+
+  private get activeLichTrinhs(): LichTrinhView[] {
+    return this.fetchedDate === this.ngay ? this.fetchedLichTrinhs : (this.existingLichNgay || []);
+  }
+
+  private get activeSuKiens(): SuKienLanhDaoView[] {
+    return this.fetchedDate === this.ngay ? this.fetchedSuKiens : (this.existingSuKiens || []);
+  }
+
+  get isTimeRangeInvalid(): boolean {
+    if (!this.gioBatDau || !this.gioKetThuc) return false;
+    return this.gioKetThuc <= this.gioBatDau;
+  }
+
+  get leaveEventsOnSelectedDate(): SuKienLanhDaoView[] {
+    if (!this.ngay) return [];
+    return this.activeSuKiens.filter((sk) => isLeaveEvent(sk) && isSuKienOnDate(sk, this.ngay));
+  }
+
+  get overlappingBusyEvents(): SuKienLanhDaoView[] {
+    if (!this.ngay || !this.gioBatDau || !this.gioKetThuc) return [];
+    const [sh, sm] = this.gioBatDau.split(':').map(Number);
+    const [eh, em] = this.gioKetThuc.split(':').map(Number);
+    const sMin = sh * 60 + sm;
+    const eMin = eh * 60 + em;
+    if (eMin <= sMin) return [];
+
+    return this.activeSuKiens.filter((sk) => {
+      if (isLeaveEvent(sk)) return false;
+      if (!isSuKienOnDate(sk, this.ngay)) return false;
+      if (sk.caNgay) return true;
+      const startYmd = (sk.batDau || '').slice(0, 10);
+      const endYmd = (sk.ketThuc || sk.batDau || '').slice(0, 10);
+      const ls = startYmd < this.ngay ? 0 : isoToMinutes(sk.batDau);
+      const le = endYmd > this.ngay ? 24 * 60 : isoToMinutes(sk.ketThuc);
+      return ls < eMin && le > sMin;
+    });
   }
 
   get overlappingItems(): LichTrinhView[] {
@@ -67,7 +149,7 @@ export class ScheduleActionModalComponent implements OnChanges {
     const eMin = eh * 60 + em;
     if (eMin <= sMin) return [];
 
-    return this.existingLichNgay.filter((lt) => {
+    return this.activeLichTrinhs.filter((lt) => {
       if (lt.yeuCauId === this.context?.yeuCauId) return false;
       if (lt.batDau.slice(0, 10) !== this.ngay) return false;
       const ls = isoToMinutes(lt.batDau);
@@ -76,9 +158,17 @@ export class ScheduleActionModalComponent implements OnChanges {
     });
   }
 
+  getSuKienMeta(loai: number): SuKienMeta {
+    return getSuKienMeta(loai);
+  }
+
+  formatSkTime(sk: SuKienLanhDaoView): string {
+    return formatSuKienTimeLabel(sk);
+  }
+
   submit(): void {
     if (!this.context) return;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.ngay) || !this.gioBatDau || !this.gioKetThuc) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.ngay) || !this.gioBatDau || !this.gioKetThuc || this.isTimeRangeInvalid) return;
     this.confirmSchedule.emit({
       yeuCauId: this.context.yeuCauId,
       payload: {
