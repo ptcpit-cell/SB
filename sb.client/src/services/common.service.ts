@@ -11,6 +11,15 @@ export class CommonService {
   getAllChiNhanh(): Observable<any> {
     return this.http.get(this.baseUrl + 'api/Common/GetChiNhanh', {});
   }
+  createChiNhanh(data: any): Observable<any> {
+    return this.http.post(this.baseUrl + 'api/Common/CreateChiNhanh', data);
+  }
+  updateChiNhanh(data: any): Observable<any> {
+    return this.http.put(this.baseUrl + 'api/Common/UpdateChiNhanh', data);
+  }
+  deleteChiNhanh(id: number): Observable<any> {
+    return this.http.delete(this.baseUrl + `api/Common/DeleteChiNhanh/${id}`, {});
+  }
   getPhongBan(): Observable<any> {
     return this.http.get(this.baseUrl + 'api/Common/GetPhongBan', {});
   }

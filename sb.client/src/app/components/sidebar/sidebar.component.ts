@@ -25,6 +25,7 @@ export class SidebarComponent implements OnInit {
   ];
 
   subTabs: SubTab[] = [
+    { id: 'chi-nhanh', label: 'Chi nhánh', icon: 'fa-solid fa-code-branch', route: '/chi-nhanh', parentId: 'danh-muc', appHasPermission: 'View admin' },
     { id: 'phong-ban', label: 'Phòng ban', icon: 'fa-solid fa-building', route: '/phong-ban', parentId: 'danh-muc', appHasPermission: 'Xem phòng ban' },
     { id: 'chuc-vu', label: 'Chức vụ', icon: 'fa-solid fa-user-tag', route: '/chuc-vu', parentId: 'danh-muc', appHasPermission: 'Xem chức vụ' },
   ];

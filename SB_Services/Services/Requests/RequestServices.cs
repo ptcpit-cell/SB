@@ -76,6 +76,12 @@ namespace SB_Services.Services.Requests
             return rows.ToList();   // rỗng nếu hủy bản nháp
         }
 
+        public async Task XoaAsync(int userId, int yeuCauId)
+        {
+            await _dapperContext.ExecuteStoreAsync("dbo.usp_YeuCau_XoaMem",
+                new { YeuCauId = yeuCauId, NguoiTaoId = userId });
+        }
+
         public async Task<List<NguoiCanBaoDto>> BoSungAsync(int userId, int yeuCauId, BoSungRequest req)
         {
             var rows = await _dapperContext.GetStoreAsync<NguoiCanBaoDto>("dbo.usp_YeuCau_BoSung", new

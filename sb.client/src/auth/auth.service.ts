@@ -19,6 +19,7 @@ export class AuthService {
     { prefix: '/home', permission: 'View admin' },
     { prefix: '/user', permission: 'Xem user' },
     { prefix: '/role', permission: 'Xem role' },
+    { prefix: '/chi-nhanh', permission: 'View admin' },
     { prefix: '/phong-ban', permission: 'Xem phòng ban' },
     { prefix: '/chuc-vu', permission: 'Xem chức vụ' },
     { prefix: '/ho-so', permission: null },

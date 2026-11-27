@@ -2040,4 +2040,63 @@ BEGIN
 END
 GO
 
+-- =========================================================================
+-- =============== MÃ MỚI BỔ SUNG (SOFT DELETE YÊU CẦU) ====================
+-- =========================================================================
+
+-- =========================================================================
+-- 17. NHÂN VIÊN: XÓA MỀM YÊU CẦU (IsDeleted = 1) Ở MỌI TRẠNG THÁI
+-- =========================================================================
+CREATE OR ALTER PROCEDURE dbo.usp_YeuCau_XoaMem
+    @YeuCauId   INT,
+    @NguoiTaoId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.YeuCau
+        WHERE Id = @YeuCauId
+          AND NguoiTaoId = @NguoiTaoId
+          AND IsDeleted = 0
+    )
+    BEGIN
+        THROW 50001, N'Không tìm thấy yêu cầu hoặc bạn không có quyền xóa.', 1;
+    END
+
+    DECLARE @Now DATETIME2(7) = GETDATE();
+
+    BEGIN TRAN;
+
+    UPDATE nl
+    SET nl.IsActived = 0,
+        nl.IsDeleted = 1,
+        nl.UpdatedAt = @Now,
+        nl.UpdatedBy = @NguoiTaoId
+    FROM dbo.NhacLich nl
+    INNER JOIN dbo.LichTrinh lt ON lt.Id = nl.LichTrinhId
+    WHERE lt.YeuCauId = @YeuCauId
+      AND nl.DaGui = 0
+      AND nl.IsDeleted = 0;
+
+    UPDATE dbo.LichTrinh
+    SET IsDeleted = 1,
+        UpdatedAt = @Now,
+        UpdatedBy = @NguoiTaoId
+    WHERE YeuCauId = @YeuCauId
+      AND IsDeleted = 0;
+
+    UPDATE dbo.YeuCau
+    SET IsDeleted = 1,
+        UpdatedAt = @Now,
+        UpdatedBy = @NguoiTaoId
+    WHERE Id = @YeuCauId;
+
+    COMMIT;
+END
+GO
+
+
 

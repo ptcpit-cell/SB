@@ -292,6 +292,9 @@
               <button type="button" class="btn btn-outline-danger btn-sm bg-white" *ngIf="r.canCancel" (click)="moHopHuy(r)">
                 <i class="fa-solid fa-ban me-1"></i>Hủy
               </button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="moHopXoa(r)">
+                <i class="fa-solid fa-trash me-1"></i>Xóa
+              </button>
             </div>
           </div>
         </article>
@@ -343,6 +346,36 @@
           <button type="button" class="btn btn-danger btn-sm" (click)="xacNhanHuy()" [disabled]="dangHuy">
             <span class="spinner-border spinner-border-sm me-1" *ngIf="dangHuy"></span>
             {{ dangHuy ? 'Đang hủy...' : 'Xác nhận hủy' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>
+
+<!-- Modal xác nhận xóa -->
+<ng-container *ngIf="showXoaModal && xoaTarget">
+  <div class="modal fade show d-block" tabindex="-1" (click)="dongHopXoa()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fs-6 fw-semibold text-danger">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>Xóa yêu cầu {{ xoaTarget.maYeuCau }}?
+          </h5>
+          <button type="button" class="btn-close" (click)="dongHopXoa()" [disabled]="dangXoa"></button>
+        </div>
+        <div class="modal-body small">
+          <p class="fw-medium text-dark mb-2">{{ xoaTarget.tieuDe }}</p>
+          <p class="text-secondary mb-0">
+            Bạn có chắc chắn muốn xóa yêu cầu này khỏi danh sách không? Hành động này sẽ ẩn yêu cầu khỏi toàn bộ danh sách theo dõi.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dongHopXoa()" [disabled]="dangXoa">Đóng</button>
+          <button type="button" class="btn btn-danger btn-sm" (click)="xacNhanXoa()" [disabled]="dangXoa">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="dangXoa"></span>
+            <i class="fa-solid fa-trash me-1" *ngIf="!dangXoa"></i>{{ dangXoa ? 'Đang xóa...' : 'Xác nhận xóa' }}
           </button>
         </div>
       </div>

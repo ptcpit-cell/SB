@@ -18,61 +18,75 @@
         </div>
 
         <div class="modal-body small">
-          <!-- Thông tin buổi trình -->
-          <div class="row g-2 p-2.5 rounded-3 bg-light border mb-3">
-            <div class="col-md-6">
-              <div class="text-secondary">Người trình:</div>
-              <div class="fw-bold text-dark">{{ item.tenNguoiTrinh }}</div>
-              <div class="text-secondary" style="font-size: 0.78rem">
-                {{ item.chucVuNguoiTrinh }} · {{ item.phongBanNguoiTrinh }} · {{ item.chiNhanhNguoiTrinh }}
+          <!-- Thông tin buổi trình, người tham dự & tài liệu -->
+          <div class="p-3 rounded-3 bg-light border mb-3">
+            <!-- Nửa trên: Người trình | Cùng tham dự | Tài liệu đính kèm -->
+            <div class="row g-2">
+              <div class="col-md-4">
+                <div class="text-secondary fw-semibold mb-1"><i class="fa-solid fa-user me-1"></i>Người trình:</div>
+                <div class="fw-bold text-dark">{{ item.tenNguoiTrinh }}</div>
+                <div class="text-secondary" style="font-size: 0.78rem">
+                  {{ item.chucVuNguoiTrinh }} · {{ item.phongBanNguoiTrinh }} · {{ item.chiNhanhNguoiTrinh }}
+                </div>
               </div>
-            </div>
-            <div class="col-md-6">
-              <div class="text-secondary">Loại yêu cầu:</div>
-              <div class="fw-semibold text-dark">{{ item.tenLoai }}</div>
-            </div>
-            <div class="col-12 mt-2" *ngIf="item.tomTat">
-              <div class="text-secondary fw-semibold">Tóm tắt nội dung:</div>
-              <div class="text-dark" style="white-space: pre-line">{{ item.tomTat }}</div>
-            </div>
-          </div>
 
-          <!-- Người tham dự & Tài liệu -->
-          <div class="row g-2 mb-3" *ngIf="item.nguoiThamDus.length > 0 || item.teps.length > 0">
-            <div class="col-md-6" *ngIf="item.nguoiThamDus.length > 0">
-              <div class="fw-semibold text-secondary mb-1"><i class="fa-solid fa-users me-1"></i>Cùng tham dự:</div>
-              <div class="d-flex flex-wrap gap-1">
-                <span class="badge bg-light text-dark border fw-normal" *ngFor="let p of item.nguoiThamDus">
-                  {{ p.hoTen }}<span *ngIf="p.vaiTro"> ({{ p.vaiTro }})</span>
-                </span>
+              <div class="col-md-4">
+                <div class="text-secondary fw-semibold mb-1"><i class="fa-solid fa-users me-1"></i>Cùng tham dự:</div>
+                <div class="d-flex flex-wrap gap-1" *ngIf="item.nguoiThamDus.length > 0; else noParticipants">
+                  <span class="badge bg-white text-dark border fw-normal" *ngFor="let p of item.nguoiThamDus">
+                    {{ p.hoTen }}<span *ngIf="p.vaiTro"> ({{ p.vaiTro }})</span>
+                  </span>
+                </div>
+                <ng-template #noParticipants>
+                  <span class="text-muted fst-italic">Không có</span>
+                </ng-template>
               </div>
-            </div>
-            <div class="col-md-6" *ngIf="item.teps.length > 0">
-              <div class="fw-semibold text-secondary mb-1"><i class="fa-solid fa-paperclip me-1"></i>Tài liệu đính kèm:</div>
-              <div class="d-flex flex-column gap-1">
-                <div *ngFor="let t of item.teps" class="d-flex align-items-center justify-content-between gap-2">
-                  <a
-                    [href]="openFileUrl(t)"
-                    target="_blank"
-                    rel="noopener"
-                    class="text-decoration-none text-truncate"
-                    [title]="isDocx(t) ? 'Mở tab mới xem tài liệu Word' : 'Mở tệp trong tab mới'"
-                  >
-                    <i [ngClass]="fileIcon(t.tenFile)" class="me-1"></i>{{ t.tenFile }}
-                  </a>
-                  <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                    <span class="text-muted text-nowrap" style="font-size: 0.75rem">{{ formatSize(t.kichThuoc) }}</span>
+
+              <div class="col-md-4">
+                <div class="text-secondary fw-semibold mb-1"><i class="fa-solid fa-paperclip me-1"></i>Tài liệu đính kèm:</div>
+                <div class="d-flex flex-column gap-1" *ngIf="item.teps.length > 0; else noAttachments">
+                  <div *ngFor="let t of item.teps" class="d-flex align-items-center justify-content-between gap-2" style="min-width: 0">
                     <a
-                      [href]="fileUrl(t.duongDan)"
-                      [attr.download]="t.tenFile"
-                      class="btn btn-sm btn-outline-secondary py-0 px-1"
-                      style="font-size: 0.72rem; line-height: 1.35"
-                      title="Tải tệp về"
+                      [href]="openFileUrl(t)"
+                      target="_blank"
+                      rel="noopener"
+                      class="text-decoration-none text-truncate"
+                      [title]="isDocx(t) ? 'Mở tab mới xem tài liệu Word' : 'Mở tệp trong tab mới'"
                     >
-                      <i class="fa-solid fa-download"></i>
+                      <i [ngClass]="fileIcon(t.tenFile)" class="me-1"></i>{{ t.tenFile }}
                     </a>
+                    <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                      <span class="text-muted text-nowrap" style="font-size: 0.72rem">{{ formatSize(t.kichThuoc) }}</span>
+                      <a
+                        [href]="fileUrl(t.duongDan)"
+                        [attr.download]="t.tenFile"
+                        class="btn btn-sm btn-outline-secondary bg-white py-0 px-1"
+                        style="font-size: 0.72rem; line-height: 1.35"
+                        title="Tải tệp về"
+                      >
+                        <i class="fa-solid fa-download"></i>
+                      </a>
+                    </div>
                   </div>
                 </div>
+                <ng-template #noAttachments>
+                  <span class="text-muted fst-italic">Không có</span>
+                </ng-template>
+              </div>
+            </div>
+
+            <!-- Nửa dưới: Loại yêu cầu & Tóm tắt nội dung -->
+            <div class="row g-2 border-top pt-2 mt-2">
+              <div class="col-md-4">
+                <div class="text-secondary fw-semibold mb-1">Loại yêu cầu:</div>
+                <div class="fw-semibold text-dark">{{ item.tenLoai }}</div>
+              </div>
+              <div class="col-md-8">
+                <div class="text-secondary fw-semibold mb-1">Tóm tắt nội dung:</div>
+                <div class="text-dark" style="white-space: pre-line" *ngIf="item.tomTat; else noSummary">{{ item.tomTat }}</div>
+                <ng-template #noSummary>
+                  <span class="text-muted fst-italic">Không có tóm tắt.</span>
+                </ng-template>
               </div>
             </div>
           </div>

@@ -68,58 +68,59 @@
             <div *ngIf="col.hasLeave" style="font-size: 0.66rem">Lưu ý: Lãnh đạo nghỉ phép</div>
           </div>
 
-          <!-- Sự kiện bận / lịch riêng / nghỉ phép -->
-          <div
-            class="week-busy-chip"
-            *ngFor="let sk of col.suKiens"
-            [ngClass]="getSuKienMeta(sk.loai).chipClass"
-            [title]="sk.ghiChu ? (sk.tieuDe + ' — ' + sk.ghiChu) : sk.tieuDe"
-          >
-            <div class="d-flex justify-content-between align-items-start gap-1">
-              <div class="min-w-0">
-                <div class="fw-bold d-flex align-items-center gap-1" style="font-size: 0.66rem">
-                  <i [ngClass]="getSuKienMeta(sk.loai).icon"></i>
-                  <span>{{ getSuKienMeta(sk.loai).label }}</span>
-                </div>
-                <div class="fw-semibold text-truncate">{{ sk.tieuDe }}</div>
+          <!-- Các lịch trong ngày sắp xếp theo timeline (cả lịch cá nhân lẫn buổi trình) -->
+          <ng-container *ngFor="let entry of col.entries">
+            <!-- Sự kiện bận / lịch riêng / nghỉ phép -->
+            <div
+              *ngIf="entry.kind === 'sukien'"
+              class="week-busy-chip"
+              [ngClass]="getSuKienMeta(entry.suKien.loai).chipClass"
+              [title]="entry.suKien.ghiChu ? (entry.suKien.tieuDe + ' — ' + entry.suKien.ghiChu) : entry.suKien.tieuDe"
+            >
+              <div class="d-flex justify-content-between align-items-center gap-1 mb-0.5">
+                <span class="fw-bold tabular-nums d-flex align-items-center gap-1 text-truncate" style="font-size: 0.68rem">
+                  <i [ngClass]="getSuKienMeta(entry.suKien.loai).icon"></i>
+                  <span class="text-truncate">{{ formatSkTime(entry.suKien) }}</span>
+                </span>
+                <button
+                  type="button"
+                  class="week-busy-del"
+                  title="Xóa sự kiện này"
+                  (click)="onDeleteSuKien($event, entry.suKien)"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </div>
-              <button
-                type="button"
-                class="week-busy-del"
-                title="Xóa sự kiện này"
-                (click)="onDeleteSuKien($event, sk)"
-              >
-                <i class="fa-solid fa-xmark"></i>
-              </button>
+              <div class="fw-semibold text-truncate">{{ entry.suKien.tieuDe }}</div>
+              <div class="opacity-75" style="font-size: 0.66rem">
+                {{ getSuKienMeta(entry.suKien.loai).label }}
+              </div>
             </div>
-            <div class="tabular-nums opacity-75" style="font-size: 0.66rem">
-              {{ formatSkTime(sk) }}
-            </div>
-          </div>
 
-          <!-- Buổi trình -->
-          <div
-            *ngFor="let lt of col.lichTrinhs"
-            class="week-appt"
-            [style.border-left-color]="lt.mauMucUuTien || '#0d6efd'"
-            [attr.draggable]="allowDrop ? 'true' : null"
-            (dragstart)="onDragStartItem($event, lt)"
-            (click)="selectLich.emit(lt)"
-          >
-            <div class="d-flex justify-content-between align-items-center gap-1 mb-0.5">
-              <span class="fw-bold text-primary tabular-nums" style="font-size: 0.7rem">
-                {{ lt.batDau | date:'HH:mm' }}–{{ lt.ketThuc | date:'HH:mm' }}
-              </span>
-              <span class="week-dot" [ngClass]="lichStatusDot(lt.trangThaiLich)"></span>
+            <!-- Buổi trình -->
+            <div
+              *ngIf="entry.kind === 'lichtrinh'"
+              class="week-appt"
+              [style.border-left-color]="entry.lichTrinh.mauMucUuTien || '#0d6efd'"
+              [attr.draggable]="allowDrop ? 'true' : null"
+              (dragstart)="onDragStartItem($event, entry.lichTrinh)"
+              (click)="selectLich.emit(entry.lichTrinh)"
+            >
+              <div class="d-flex justify-content-between align-items-center gap-1 mb-0.5">
+                <span class="fw-bold text-primary tabular-nums" style="font-size: 0.7rem">
+                  {{ entry.lichTrinh.batDau | date:'HH:mm' }}–{{ entry.lichTrinh.ketThuc | date:'HH:mm' }}
+                </span>
+                <span class="week-dot" [ngClass]="lichStatusDot(entry.lichTrinh.trangThaiLich)"></span>
+              </div>
+              <div class="fw-semibold text-dark week-appt-title">{{ entry.lichTrinh.tieuDe }}</div>
+              <div class="text-secondary text-truncate" style="font-size: 0.69rem">
+                {{ entry.lichTrinh.tenNguoiTrinh }}
+              </div>
             </div>
-            <div class="fw-semibold text-dark week-appt-title">{{ lt.tieuDe }}</div>
-            <div class="text-secondary text-truncate" style="font-size: 0.69rem">
-              {{ lt.tenNguoiTrinh }}
-            </div>
-          </div>
+          </ng-container>
 
           <div class="text-center text-muted py-3" style="font-size: 0.72rem"
-               *ngIf="col.lichTrinhs.length === 0 && col.suKiens.length === 0 && hoveredYmd !== col.ymd">
+               *ngIf="col.entries.length === 0 && hoveredYmd !== col.ymd">
             Trống
           </div>
         </div>

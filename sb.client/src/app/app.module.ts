@@ -28,6 +28,7 @@ import { LanhDaoComponent } from '../app/view-lanh-dao/lanh-dao/lanh-dao.compone
 import { NhanVienComponent } from '../app/view-nhan-vien/nhan-vien/nhan-vien.component';
 import { PhongBanComponent } from './view-admin/phong-ban/phong-ban.component';
 import { ChucVuComponent } from './view-admin/chuc-vu/chuc-vu.component';
+import { ChiNhanhComponent } from './view-admin/chi-nhanh/chi-nhanh.component';
 import { CreateRequestComponent } from './view-nhan-vien/nhan-vien/create-request/create-request.component';
 import { EditRequestComponent } from './view-nhan-vien/nhan-vien/edit-request/edit-request.component';
 import { DetailRequestComponent } from './view-nhan-vien/nhan-vien/detail-request/detail-request.component';
@@ -82,6 +83,7 @@ export function appInitializer(authService: AuthService) {
     ProfileComponent,
     AdminLeadersComponent,
     AdminCatalogComponent,
+    ChiNhanhComponent,
     PhongBanComponent,
     ChucVuComponent,
     CreateRequestComponent,

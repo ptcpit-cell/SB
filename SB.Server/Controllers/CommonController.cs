@@ -16,6 +16,43 @@ namespace SB.Server.Controllers
             var result = await _commonServices.GetChiNhanhsAsync();
             return Ok(result);
         }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CreateChiNhanh([FromBody] ChiNhanh chiNhanh)
+        {
+            if (string.IsNullOrWhiteSpace(chiNhanh.MaChiNhanh) || string.IsNullOrWhiteSpace(chiNhanh.TenChiNhanh))
+                return BadRequest(new { message = "Vui lòng nhập mã và tên chi nhánh." });
+            if (chiNhanh.ChiNhanhType != 2 && chiNhanh.ChiNhanhType != 3)
+                return BadRequest(new { message = "Loại chi nhánh chỉ nhận Đại lý (2) hoặc Cửa hàng (3)." });
+
+            chiNhanh.Address = null;
+            chiNhanh.Phone = null;
+            var result = await _commonServices.CreateChiNhanhAsync(chiNhanh);
+            return Ok(result);
+        }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateChiNhanh([FromBody] ChiNhanh chiNhanh)
+        {
+            if (chiNhanh.ChiNhanhId <= 0)
+                return BadRequest(new { message = "Chi nhánh không hợp lệ." });
+            if (string.IsNullOrWhiteSpace(chiNhanh.MaChiNhanh) || string.IsNullOrWhiteSpace(chiNhanh.TenChiNhanh))
+                return BadRequest(new { message = "Vui lòng nhập mã và tên chi nhánh." });
+            if (chiNhanh.ParentId.HasValue && chiNhanh.ParentId.Value == chiNhanh.ChiNhanhId)
+                return BadRequest(new { message = "Chi nhánh cha không thể trùng với chính chi nhánh này." });
+
+            chiNhanh.Address = null;
+            chiNhanh.Phone = null;
+            var result = await _commonServices.UpdateChiNhanhAsync(chiNhanh);
+            return Ok(result);
+        }
+
+        [HttpDelete("[action]/{id}")]
+        public async Task<IActionResult> DeleteChiNhanh(int id)
+        {
+            var result = await _commonServices.DeleteChiNhanhAsync(id);
+            return Ok(result);
+        }
         [HttpGet("[action]")]
         public async Task<IActionResult> GetMyNotifications()
         {

@@ -5,10 +5,27 @@ import {
   getSuKienMeta,
   getTodayYmd,
   isLeaveEvent,
+  isoToMinutes,
   isSuKienOnDate,
   shiftYmd,
   SuKienMeta
 } from '../schedule-layout.util';
+
+export type WeekDayEntry =
+  | {
+      kind: 'sukien';
+      suKien: SuKienLanhDaoView;
+      isAllDay: boolean;
+      sortMinute: number;
+      endMinute: number;
+    }
+  | {
+      kind: 'lichtrinh';
+      lichTrinh: LichTrinhView;
+      isAllDay: false;
+      sortMinute: number;
+      endMinute: number;
+    };
 
 export interface WeekDayColumn {
   ymd: string;
@@ -18,6 +35,7 @@ export interface WeekDayColumn {
   isSelected: boolean;
   lichTrinhs: LichTrinhView[];
   suKiens: SuKienLanhDaoView[];
+  entries: WeekDayEntry[];
   hasLeave: boolean;
   hasFullDayLeave: boolean;
   totalMinutes: number;
@@ -75,14 +93,43 @@ export class WeekScheduleComponent implements OnChanges {
         .filter((x) => x.batDau.slice(0, 10) === ymd)
         .sort((a, b) => a.batDau.localeCompare(b.batDau));
       const daySk = this.suKiens
-        .filter((x) => isSuKienOnDate(x, ymd))
-        .sort((a, b) => {
-          const leaveDiff = Number(isLeaveEvent(b)) - Number(isLeaveEvent(a));
+        .filter((x) => isSuKienOnDate(x, ymd));
+
+      const entries: WeekDayEntry[] = [
+        ...daySk.map((sk): WeekDayEntry => {
+          const startYmd = (sk.batDau || '').slice(0, 10);
+          const endYmd = (sk.ketThuc || sk.batDau || '').slice(0, 10);
+          const isAllDay = !!sk.caNgay;
+          const sortMinute = isAllDay
+            ? -1
+            : startYmd && startYmd < ymd
+              ? 0
+              : isoToMinutes(sk.batDau);
+          const endMinute = isAllDay
+            ? 24 * 60
+            : endYmd && endYmd > ymd
+              ? 24 * 60
+              : Math.max(sortMinute, isoToMinutes(sk.ketThuc));
+          return { kind: 'sukien', suKien: sk, isAllDay, sortMinute, endMinute };
+        }),
+        ...dayLich.map((lt): WeekDayEntry => {
+          const sortMinute = isoToMinutes(lt.batDau);
+          const endMinute = Math.max(sortMinute, isoToMinutes(lt.ketThuc));
+          return { kind: 'lichtrinh', lichTrinh: lt, isAllDay: false, sortMinute, endMinute };
+        })
+      ].sort((a, b) => {
+        if (a.isAllDay !== b.isAllDay) return a.isAllDay ? -1 : 1;
+        if (a.isAllDay && b.isAllDay && a.kind === 'sukien' && b.kind === 'sukien') {
+          const leaveDiff = Number(isLeaveEvent(b.suKien)) - Number(isLeaveEvent(a.suKien));
           if (leaveDiff !== 0) return leaveDiff;
-          const allDayDiff = Number(b.caNgay) - Number(a.caNgay);
-          if (allDayDiff !== 0) return allDayDiff;
-          return a.batDau.localeCompare(b.batDau);
-        });
+          return a.suKien.batDau.localeCompare(b.suKien.batDau);
+        }
+        if (a.sortMinute !== b.sortMinute) return a.sortMinute - b.sortMinute;
+        if (a.endMinute !== b.endMinute) return a.endMinute - b.endMinute;
+        if (a.kind !== b.kind) return a.kind === 'sukien' ? -1 : 1;
+        return 0;
+      });
+
       const hasLeave = daySk.some((x) => isLeaveEvent(x));
       const hasFullDayLeave = daySk.some((x) => isLeaveEvent(x) && x.caNgay);
       const totalMinutes = dayLich.reduce((sum, x) => sum + (x.thoiLuongPhut || 0), 0);
@@ -97,6 +144,7 @@ export class WeekScheduleComponent implements OnChanges {
         isSelected: ymd === this.selectedNgay,
         lichTrinhs: dayLich,
         suKiens: daySk,
+        entries,
         hasLeave,
         hasFullDayLeave,
         totalMinutes,

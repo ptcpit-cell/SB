@@ -83,6 +83,9 @@ export class NhanVienComponent implements OnInit, OnDestroy {
   huyTarget: YeuCauView | null = null;
   lyDoHuy = '';
   dangHuy = false;
+  showXoaModal = false;
+  xoaTarget: YeuCauView | null = null;
+  dangXoa = false;
   items: YeuCauView[] = [];
   loading = false;
 
@@ -94,10 +97,22 @@ export class NhanVienComponent implements OnInit, OnDestroy {
   canHanhDong = 0;
 
   readonly skeletonRows = [1, 2, 3];
-  readonly statusOptions = Object.entries(STATUS_INFO).map(([k, v]) => ({
+  private readonly allStatusOptions = Object.entries(STATUS_INFO).map(([k, v]) => ({
     value: +k,
     label: v.label,
   }));
+  private readonly dangXuLyStatusOptions = this.allStatusOptions.filter((s) =>
+    DANG_XU_LY.includes(s.value)
+  );
+  private readonly lichSuStatusOptions = this.allStatusOptions.filter((s) =>
+    LICH_SU.includes(s.value)
+  );
+
+  get statusOptions(): { value: number; label: string }[] {
+    if (this.tab === 1) return this.dangXuLyStatusOptions;
+    if (this.tab === 2) return this.lichSuStatusOptions;
+    return this.allStatusOptions;
+  }
 
   private search$ = new Subject<string>();
   private destroy$ = new Subject<void>();
@@ -306,6 +321,40 @@ export class NhanVienComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.dangHuy = false;
+          this.toastrService.error(this.errMsg(err));
+        },
+      });
+  }
+
+  moHopXoa(item: YeuCauView): void {
+    this.xoaTarget = item;
+    this.showXoaModal = true;
+  }
+
+  dongHopXoa(): void {
+    if (this.dangXoa) return;
+    this.showXoaModal = false;
+    this.xoaTarget = null;
+  }
+
+  xacNhanXoa(): void {
+    if (!this.xoaTarget || this.dangXoa) return;
+    this.dangXoa = true;
+    this.requestService
+      .deleteYeuCau(this.xoaTarget.yeuCauId)
+      .subscribe({
+        next: () => {
+          this.dangXoa = false;
+          this.showXoaModal = false;
+          this.xoaTarget = null;
+          if (this.items.length === 1 && this.pageIndex > 0) {
+            this.pageIndex--;
+          }
+          this.toastrService.success('Đã xóa yêu cầu khỏi danh sách.');
+          this.reload();
+        },
+        error: (err) => {
+          this.dangXoa = false;
           this.toastrService.error(this.errMsg(err));
         },
       });

@@ -176,6 +176,20 @@ namespace SB.Server.Controllers
             }
         }
 
+        [HttpDelete("[action]/{id}")]
+        public async Task<IActionResult> DeleteYeuCau(int id)
+        {
+            try
+            {
+                await _requestServices.XoaAsync(CurrentUserId, id);
+                return Ok();
+            }
+            catch (SqlException ex) when (ex.Number >= 50000)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("[action]/{id}")]
         public async Task<IActionResult> BoSung(int id, [FromBody] BoSungRequest req)
         {

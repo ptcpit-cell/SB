@@ -638,7 +638,74 @@ app.post('/api/Account/ChangePassword/:userId', (req, res) => {
 // CommonController (/api/Common/*) — includes 2-tier notifications
 // =========================================================================
 app.get('/api/Common/GetChiNhanh', requireAuth, (req, res) => {
-  res.json(db.chiNhanhs);
+  res.json(db.chiNhanhs.filter((c) => c.isActived !== false));
+});
+
+app.post('/api/Common/CreateChiNhanh', requireAuth, (req, res) => {
+  const body = req.body || {};
+  const maChiNhanh = String(body.maChiNhanh ?? body.MaChiNhanh ?? '').trim();
+  const tenChiNhanh = String(body.tenChiNhanh ?? body.TenChiNhanh ?? '').trim();
+  const chiNhanhType = Number(body.chiNhanhType ?? body.ChiNhanhType ?? 3);
+  const rawParent = body.parentId ?? body.ParentId;
+  const parentId = rawParent !== null && rawParent !== undefined && rawParent !== '' && rawParent !== 'null'
+    ? Number(rawParent)
+    : null;
+
+  if (!maChiNhanh || !tenChiNhanh) {
+    return res.status(400).json({ message: 'Vui lòng nhập mã và tên chi nhánh.' });
+  }
+  if (![2, 3].includes(chiNhanhType)) {
+    return res.status(400).json({ message: 'Loại chi nhánh chỉ nhận Đại lý (2) hoặc Cửa hàng (3).' });
+  }
+
+  db.chiNhanhs.push({
+    chiNhanhId: nextId(db.chiNhanhs, 'chiNhanhId'),
+    parentId,
+    chiNhanhType,
+    maChiNhanh,
+    tenChiNhanh,
+    address: null,
+    phone: null,
+    isActived: true
+  });
+  res.json(true);
+});
+
+app.put('/api/Common/UpdateChiNhanh', requireAuth, (req, res) => {
+  const body = req.body || {};
+  const id = Number(body.chiNhanhId ?? body.ChiNhanhId);
+  const maChiNhanh = String(body.maChiNhanh ?? body.MaChiNhanh ?? '').trim();
+  const tenChiNhanh = String(body.tenChiNhanh ?? body.TenChiNhanh ?? '').trim();
+  const chiNhanhType = Number(body.chiNhanhType ?? body.ChiNhanhType ?? 3);
+  const rawParent = body.parentId ?? body.ParentId;
+  const parentId = rawParent !== null && rawParent !== undefined && rawParent !== '' && rawParent !== 'null'
+    ? Number(rawParent)
+    : null;
+
+  if (!maChiNhanh || !tenChiNhanh) {
+    return res.status(400).json({ message: 'Vui lòng nhập mã và tên chi nhánh.' });
+  }
+  if (parentId !== null && parentId === id) {
+    return res.status(400).json({ message: 'Chi nhánh cha không thể trùng với chính chi nhánh này.' });
+  }
+
+  const cn = db.chiNhanhs.find((c) => c.chiNhanhId === id);
+  if (cn) {
+    cn.parentId = parentId;
+    cn.chiNhanhType = chiNhanhType;
+    cn.maChiNhanh = maChiNhanh;
+    cn.tenChiNhanh = tenChiNhanh;
+    cn.address = null;
+    cn.phone = null;
+  }
+  res.json(true);
+});
+
+app.delete('/api/Common/DeleteChiNhanh/:id', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const cn = db.chiNhanhs.find((c) => c.chiNhanhId === id);
+  if (cn) cn.isActived = false;
+  res.json(true);
 });
 
 app.get('/api/Common/GetMyNotifications', requireAuth, (req, res) => {
@@ -1450,6 +1517,27 @@ app.post('/api/Request/CancelYeuCau/:id', requireAuth, (req, res) => {
       }
     }
   }
+  res.status(200).end();
+});
+
+app.delete('/api/Request/DeleteYeuCau/:id', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const yc = db.yeuCaus.find((x) => x.id === id && x.nguoiTaoId === req.currentUserId && !x.isDeleted);
+  if (!yc) return res.status(400).json({ message: 'Không tìm thấy yêu cầu hoặc bạn không có quyền xóa.' });
+
+  const nowIso = new Date().toISOString();
+  yc.isDeleted = true;
+  yc.updatedAt = nowIso;
+  yc.updatedBy = req.currentUserId;
+
+  for (const lt of db.lichTrinhs) {
+    if (lt.yeuCauId === id && !lt.isDeleted) {
+      lt.isDeleted = true;
+      lt.updatedAt = nowIso;
+      lt.updatedBy = req.currentUserId;
+    }
+  }
+
   res.status(200).end();
 });
 

@@ -11,6 +11,7 @@ namespace SB_Services.Services.Requests
         Task<TaoYeuCauResult> TaoAsync(int userId, TaoYeuCauRequest req);
         Task<List<NguoiCanBaoDto>> GuiAsync(int userId, int yeuCauId);
         Task<List<HuyYeuCauNotifyDto>> HuyAsync(int userId, int yeuCauId, string? lyDo);
+        Task XoaAsync(int userId, int yeuCauId);
         Task<List<NguoiCanBaoDto>> BoSungAsync(int userId, int yeuCauId, BoSungRequest req);
         Task<List<NguoiCanBaoDto>> SuaAsync(int userId, int yeuCauId, SuaYeuCauRequest req);
         Task<List<NguoiCanBaoDto>> PhanHoiDeXuatAsync(int userId, int yeuCauId, PhanHoiDeXuatRequest req);

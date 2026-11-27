@@ -52,6 +52,10 @@ export class RequestService {
   cancelYeuCau(id: number, lyDo: string | null): Observable<void> {
     return this.http.post<void>(this.baseUrl + `api/Request/CancelYeuCau/${id}`, { lyDo });
   }
+
+  deleteYeuCau(id: number): Observable<void> {
+    return this.http.delete<void>(this.baseUrl + `api/Request/DeleteYeuCau/${id}`);
+  }
   getLanhDaoChon(): Observable<LanhDaoChon[]> {
     return this.http.get<LanhDaoChon[]>(this.baseUrl + 'api/Request/GetLanhDaoChon');
   }

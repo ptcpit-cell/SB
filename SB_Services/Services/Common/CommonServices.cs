@@ -14,8 +14,54 @@ namespace SB_Services.Services.Common
         }
         public async Task<IEnumerable<ChiNhanh>> GetChiNhanhsAsync()
         {
-            string sql = @"SELECT ChiNhanhId, ParentId, ChiNhanhType, MaChiNhanh, TenChiNhanh, Address, Phone, IsActive AS IsActived FROM ChiNhanh";
+            string sql = @"SELECT ChiNhanhId, ParentId, ChiNhanhType, MaChiNhanh, TenChiNhanh, Address, Phone, IsActive AS IsActived
+                           FROM ChiNhanh
+                           WHERE IsActive = 1
+                           ORDER BY ChiNhanhId ASC";
             return await _dapperContext.GetSQLAsync<ChiNhanh>(sql);
+        }
+
+        // Thêm, sửa, xóa mềm chi nhánh
+        public async Task<bool> CreateChiNhanhAsync(ChiNhanh chiNhanh)
+        {
+            string sql = @"INSERT INTO ChiNhanh (ParentId, ChiNhanhType, MaChiNhanh, TenChiNhanh, Address, Phone, IsActive)
+                           VALUES (@ParentId, @ChiNhanhType, @MaChiNhanh, @TenChiNhanh, NULL, NULL, 1)";
+            await _dapperContext.ExecuteSQLAsync(sql, new
+            {
+                chiNhanh.ParentId,
+                chiNhanh.ChiNhanhType,
+                MaChiNhanh = chiNhanh.MaChiNhanh?.Trim(),
+                TenChiNhanh = chiNhanh.TenChiNhanh?.Trim()
+            });
+            return true;
+        }
+
+        public async Task<bool> UpdateChiNhanhAsync(ChiNhanh chiNhanh)
+        {
+            string sql = @"UPDATE ChiNhanh
+                           SET ParentId = @ParentId,
+                               ChiNhanhType = @ChiNhanhType,
+                               MaChiNhanh = @MaChiNhanh,
+                               TenChiNhanh = @TenChiNhanh,
+                               Address = NULL,
+                               Phone = NULL
+                           WHERE ChiNhanhId = @ChiNhanhId";
+            await _dapperContext.ExecuteSQLAsync(sql, new
+            {
+                chiNhanh.ChiNhanhId,
+                chiNhanh.ParentId,
+                chiNhanh.ChiNhanhType,
+                MaChiNhanh = chiNhanh.MaChiNhanh?.Trim(),
+                TenChiNhanh = chiNhanh.TenChiNhanh?.Trim()
+            });
+            return true;
+        }
+
+        public async Task<bool> DeleteChiNhanhAsync(int chiNhanhId)
+        {
+            string sql = @"UPDATE ChiNhanh SET IsActive = 0 WHERE ChiNhanhId = @ChiNhanhId";
+            await _dapperContext.ExecuteSQLAsync(sql, new { ChiNhanhId = chiNhanhId });
+            return true;
         }
         public async Task<IEnumerable<ThongBaoDTO>> GetDanhSachThongBaoAsync(int chiNhanhId, int userId)
         {

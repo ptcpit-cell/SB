@@ -1,0 +1,192 @@
+<div class="min-h-screen bg-gray-100 p-3">
+  <h4 class="uppercase bg-teal-600 rounded-lg p-2">Danh mục chi nhánh</h4>
+  <div class="container-fluid bg-white p-0 shadow-sm rounded-lg">
+    <div class="flex items-center justify-end border-b px-4 pt-3 pb-3">
+      <button class="btn btn-success btn-sm" (click)="onAdd()">
+        Thêm chi nhánh
+      </button>
+    </div>
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th class="font-medium text-center">Mã chi nhánh</th>
+          <th class="font-medium text-center">Tên chi nhánh</th>
+          <th class="font-medium text-center">Loại chi nhánh</th>
+          <th class="font-medium text-center">Chi nhánh cha</th>
+          <th class="font-medium text-center">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="!loading && pagedChiNhanh.length === 0">
+          <td colspan="5" class="text-center text-muted py-4">Chưa có chi nhánh nào.</td>
+        </tr>
+        <tr *ngFor="let cn of pagedChiNhanh">
+          <td class="text-center">{{ cn.maChiNhanh }}</td>
+          <td class="text-center">{{ cn.tenChiNhanh }}</td>
+          <td class="text-center">{{ getTypeLabel(cn.chiNhanhType) }}</td>
+          <td class="text-center">{{ getParentName(cn.parentId) }}</td>
+          <td class="text-center">
+            <div class="d-flex justify-content-center gap-3 text-gray-500">
+              <button class="btn btn-warning btn-sm" (click)="onEdit(cn)" title="Chỉnh sửa">
+                <i class="fa-regular fa-pen-to-square"></i>
+              </button>
+              <button
+                class="btn btn-danger btn-sm"
+                (click)="askDelete(cn)"
+                title="Xóa"
+              >
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <mat-paginator
+      *ngIf="total > 0"
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)"
+      aria-label="Chọn trang chi nhánh"
+    ></mat-paginator>
+  </div>
+</div>
+
+<!-- Modal thêm / chỉnh sửa chi nhánh -->
+<ng-container *ngIf="showModal">
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" (click)="closeModal()">
+    <div
+      class="modal-dialog modal-dialog-centered modal-md"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-content p-2">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ editingId ? "Chỉnh sửa chi nhánh" : "Thêm chi nhánh" }}
+          </h5>
+          <button type="button" class="btn-close" (click)="closeModal()" [disabled]="saving"></button>
+        </div>
+        <div class="modal-body p-2">
+          <form (ngSubmit)="onSave()">
+            <div class="col-md-12 row">
+              <div class="col-md-6">
+                <div>
+                  <label for="maChiNhanh" class="form-label mb-1">Mã chi nhánh</label>
+                  <input
+                    id="maChiNhanh"
+                    type="text"
+                    [(ngModel)]="codeInput"
+                    name="maChiNhanh"
+                    required
+                    autocomplete="off"
+                    class="form-control"
+                    placeholder="VD: PT7"
+                  />
+                </div>
+                <div class="mt-2">
+                  <label for="chiNhanhType" class="form-label mb-1">Loại chi nhánh</label>
+                  <select
+                    id="chiNhanhType"
+                    [(ngModel)]="chiNhanhTypeInput"
+                    name="chiNhanhType"
+                    required
+                    class="form-control form-select"
+                  >
+                    <option *ngIf="editingId > 0 && chiNhanhTypeInput === 1" [ngValue]="1">
+                      Văn phòng
+                    </option>
+                    <option *ngFor="let opt of loaiChiNhanhOptions" [ngValue]="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div>
+                  <label for="tenChiNhanh" class="form-label mb-1">Tên chi nhánh</label>
+                  <input
+                    id="tenChiNhanh"
+                    type="text"
+                    [(ngModel)]="nameInput"
+                    name="tenChiNhanh"
+                    required
+                    autocomplete="off"
+                    class="form-control"
+                    placeholder="VD: Phát Tiến 7"
+                  />
+                </div>
+                <div class="mt-2">
+                  <label for="parentId" class="form-label mb-1">Chi nhánh cha</label>
+                  <select
+                    id="parentId"
+                    [(ngModel)]="parentIdInput"
+                    name="parentId"
+                    class="form-control form-select"
+                  >
+                    <option [ngValue]="null">Chọn chi nhánh cha</option>
+                    <option
+                      *ngFor="let cn of parentOptions"
+                      [ngValue]="cn.chiNhanhId"
+                    >
+                      {{ cn.tenChiNhanh }}
+                    </option>
+                  </select>
+                  <p class="text-muted italic text-xs">
+                    Chỉ cần chọn khi chi nhánh này trực thuộc một chi nhánh khác
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer py-2">
+              <button
+                type="button"
+                (click)="closeModal()"
+                [disabled]="saving"
+                class="btn btn-danger"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <button type="submit" [disabled]="saving" class="btn btn-success">
+                <i class="fa-solid fa-floppy-disk"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>
+
+<!-- Modal xác nhận xóa mềm chi nhánh -->
+<ng-container *ngIf="showDeleteModal && deleteTarget">
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" (click)="closeDeleteModal()">
+    <div
+      class="modal-dialog modal-dialog-centered modal-sm"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-content p-2">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold text-danger mb-0">Xác nhận xóa chi nhánh</h6>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()" [disabled]="deleting"></button>
+        </div>
+        <div class="modal-body small">
+          Bạn có chắc chắn muốn xóa chi nhánh <b>{{ deleteTarget.tenChiNhanh }}</b> ({{ deleteTarget.maChiNhanh }}) không?
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeDeleteModal()" [disabled]="deleting">
+            Hủy
+          </button>
+          <button type="button" class="btn btn-danger btn-sm" (click)="confirmDelete()" [disabled]="deleting">
+            <span class="spinner-border spinner-border-sm me-1" *ngIf="deleting"></span>Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+</ng-container>
