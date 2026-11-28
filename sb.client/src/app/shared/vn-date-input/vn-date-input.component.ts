@@ -104,36 +104,49 @@ export class VnDateInputComponent implements ControlValueAccessor {
   }
 
   // ===== Nhập tay dd/MM/yyyy =====
-  onTextInput(rawValue: string): void {
-    // Giữ lại chữ số và dấu '/', tự động chèn dấu '/' khi người dùng gõ số liên tiếp
-    const digitsOnly = rawValue.replace(/\D/g, '').slice(0, 8);
-    let formatted = digitsOnly;
-    if (digitsOnly.length > 4) {
-      formatted = `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4)}`;
-    } else if (digitsOnly.length > 2) {
-      formatted = `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`;
-    }
+  onTextInput(event: Event): void {
+    const inputEl = event.target as HTMLInputElement;
+    const rawValue = inputEl.value;
+    const inputType = (event as InputEvent).inputType || '';
+    const isDeleting =
+      inputType.startsWith('delete') ||
+      (rawValue.length < this.displayText.length && !inputType.startsWith('insert'));
 
-    // Nếu người dùng tự gõ dạng d/m/yyyy có dấu '/' rõ ràng
-    if (rawValue.includes('/') && rawValue.length <= 10) {
-      const cleaned = rawValue.replace(/[^\d/]/g, '');
-      const parts = cleaned.split('/');
-      if (parts.length <= 3) {
-        formatted = cleaned;
+    const caretPos = inputEl.selectionStart ?? rawValue.length;
+    const digitsBeforeCaret = rawValue.slice(0, caretPos).replace(/\D/g, '').length;
+    const caretWasAtEnd = caretPos >= rawValue.length;
+    const justTypedSep =
+      !isDeleting && caretPos > 0 && /[/\s.-]/.test(rawValue[caretPos - 1]);
+
+    const trimmed = rawValue.trim();
+    if (!trimmed) {
+      this.displayText = '';
+      if (inputEl.value !== '') {
+        inputEl.value = '';
       }
-    }
-
-    this.displayText = formatted;
-    if (this.textInput && this.textInput.nativeElement.value !== formatted) {
-      this.textInput.nativeElement.value = formatted;
-    }
-
-    if (!formatted.trim()) {
       this.invalid = false;
       if (this.allowClear) {
         this.commitIso('');
       }
       return;
+    }
+
+    // Hỗ trợ dán trực tiếp định dạng ISO yyyy-MM-dd
+    const isoPaste = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    const formatted = isoPaste
+      ? `${isoPaste[3].padStart(2, '0')}/${isoPaste[2].padStart(2, '0')}/${isoPaste[1]}`
+      : this.formatVnDateText(rawValue, isDeleting, justTypedSep);
+
+    this.displayText = formatted;
+    if (inputEl.value !== formatted) {
+      inputEl.value = formatted;
+    }
+
+    const newCaret = this.computeCaretPos(formatted, digitsBeforeCaret, caretWasAtEnd, isDeleting);
+    try {
+      inputEl.setSelectionRange(newCaret, newCaret);
+    } catch {
+      // Bỏ qua nếu trình duyệt không hỗ trợ setSelectionRange
     }
 
     const parsedIso = this.vnToIso(formatted);
@@ -149,7 +162,8 @@ export class VnDateInputComponent implements ControlValueAccessor {
         if (this.popupOpen) this.buildCalendar();
       }
     } else {
-      this.invalid = formatted.length >= 10;
+      const digitCount = formatted.replace(/\D/g, '').length;
+      this.invalid = digitCount >= 8;
     }
   }
 
@@ -274,6 +288,97 @@ export class VnDateInputComponent implements ControlValueAccessor {
   }
 
   // ===== Helpers =====
+  private formatVnDateText(rawValue: string, isDeleting: boolean, justTypedSep: boolean): string {
+    // Chuẩn hóa mọi dấu phân cách (/, khoảng trắng, -, .) thành '/'
+    const normalized = rawValue
+      .replace(/[^\d/\s.-]/g, '')
+      .replace(/[\s.-]+/g, '/')
+      .replace(/\/{2,}/g, '/')
+      .replace(/^\/+/, '');
+
+    if (!normalized) return '';
+
+    const rawParts = normalized.split('/');
+    const p0 = rawParts[0] || '';
+    const hasSep1 = rawParts.length > 1;
+    const p1 = hasSep1 ? rawParts[1] : '';
+    const hasSep2 = rawParts.length > 2;
+    const p2 = hasSep2 ? rawParts.slice(2).join('') : '';
+
+    // Ngày (tối đa 2 chữ số, phần dư tự tràn sang tháng)
+    let day = p0.slice(0, 2);
+    const dayOverflow = p0.slice(2);
+    if (justTypedSep && hasSep1 && day.length === 1 && !dayOverflow && !p1) {
+      day = day.padStart(2, '0');
+    }
+
+    // Tháng (tối đa 2 chữ số, phần dư tự tràn sang năm)
+    const monthSource = dayOverflow + p1;
+    let month = monthSource.slice(0, 2);
+    const monthOverflow = monthSource.slice(2);
+    const hasMonthPart = hasSep1 || dayOverflow.length > 0;
+    const hasYearPart = hasSep2 || monthOverflow.length > 0;
+
+    if (justTypedSep && hasSep2 && month.length === 1 && !monthOverflow && !p2) {
+      month = month.padStart(2, '0');
+    }
+
+    // Năm (tối đa 4 chữ số)
+    const year = (monthOverflow + p2).slice(0, 4);
+
+    if (year.length > 0) {
+      return `${day}/${month}/${year}`;
+    }
+
+    if (hasYearPart) {
+      return isDeleting ? `${day}/${month}` : `${day}/${month}/`;
+    }
+
+    if (month.length > 0) {
+      if (!isDeleting && month.length === 2 && day.length === 2) {
+        return `${day}/${month}/`;
+      }
+      return `${day}/${month}`;
+    }
+
+    if (hasMonthPart) {
+      return isDeleting ? day : `${day}/`;
+    }
+
+    if (!isDeleting && day.length === 2) {
+      return `${day}/`;
+    }
+
+    return day;
+  }
+
+  private computeCaretPos(
+    formatted: string,
+    digitsBeforeCaret: number,
+    caretWasAtEnd: boolean,
+    isDeleting: boolean
+  ): number {
+    if (caretWasAtEnd) {
+      return formatted.length;
+    }
+    if (digitsBeforeCaret === 0) {
+      return 0;
+    }
+    let seenDigits = 0;
+    for (let i = 0; i < formatted.length; i++) {
+      if (/\d/.test(formatted[i])) {
+        seenDigits++;
+        if (seenDigits === digitsBeforeCaret) {
+          if (!isDeleting && (seenDigits === 2 || seenDigits === 4) && formatted[i + 1] === '/') {
+            return i + 2;
+          }
+          return i + 1;
+        }
+      }
+    }
+    return formatted.length;
+  }
+
   private commitIso(newIso: string): void {
     if (this.isoValue !== newIso) {
       this.isoValue = newIso;

@@ -150,6 +150,20 @@
   color: #1d4ed8;
 }
 
+.nv-date-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nv-date-lbl {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+
 .nv-select {
   width: auto;
   min-width: 150px;
@@ -495,6 +509,11 @@
 }
 
 @media (max-width: 576px) {
+  .nv-date-range {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
   .nv-search {
     width: 100%;
   }

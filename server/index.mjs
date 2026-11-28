@@ -1080,8 +1080,19 @@ app.get('/api/Request/GetYeuCau', requireAuth, (req, res) => {
   const nhomTrangThai = Number(req.query.nhomTrangThai ?? 0);
   const trangThai = req.query.trangThai !== undefined && req.query.trangThai !== '' ? Number(req.query.trangThai) : null;
   const lanhDaoId = req.query.lanhDaoId !== undefined && req.query.lanhDaoId !== '' ? Number(req.query.lanhDaoId) : null;
-  const tuNgay = req.query.tuNgay ? new Date(req.query.tuNgay) : null;
-  const denNgay = req.query.denNgay ? new Date(new Date(req.query.denNgay).getTime() + 86400000) : null;
+  const parseLocalDay = (raw, addDays = 0) => {
+    if (!raw) return null;
+    const str = String(raw).trim();
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(str);
+    if (m) {
+      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + addDays, 0, 0, 0, 0);
+    }
+    const dt = new Date(str);
+    if (isNaN(dt.getTime())) return null;
+    return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + addDays, 0, 0, 0, 0);
+  };
+  const tuNgay = parseLocalDay(req.query.tuNgay, 0);
+  const denNgay = parseLocalDay(req.query.denNgay, 1);
   const tuKhoa = req.query.tuKhoa ? String(req.query.tuKhoa).trim().toLowerCase() : null;
   const page = Math.max(1, Number(req.query.page ?? 1));
   const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize ?? 20)));
@@ -1096,8 +1107,11 @@ app.get('/api/Request/GetYeuCau', requireAuth, (req, res) => {
       if (nhomTrangThai === 2 && !historyStatuses.has(yc.trangThai)) return false;
       if (trangThai !== null && yc.trangThai !== trangThai) return false;
       if (lanhDaoId !== null && yc.lanhDaoId !== lanhDaoId) return false;
-      if (tuNgay && new Date(yc.createdAt) < tuNgay) return false;
-      if (denNgay && new Date(yc.createdAt) >= denNgay) return false;
+      if (tuNgay || denNgay) {
+        const created = new Date(yc.createdAt);
+        if (tuNgay && created < tuNgay) return false;
+        if (denNgay && created >= denNgay) return false;
+      }
       if (tuKhoa && !yc.tieuDe.toLowerCase().includes(tuKhoa) && !yc.maYeuCau.toLowerCase().includes(tuKhoa)) return false;
       return true;
     })

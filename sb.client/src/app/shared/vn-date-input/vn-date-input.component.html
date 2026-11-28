@@ -19,7 +19,6 @@
       #textInput
       type="text"
       inputmode="numeric"
-      maxlength="10"
       autocomplete="off"
       class="form-control form-control-sm vn-date-text"
       [class.text-center]="showNavButtons"
@@ -29,7 +28,7 @@
       [placeholder]="placeholder"
       [disabled]="disabled"
       [title]="inputTitle || 'Định dạng dd/MM/yyyy'"
-      (input)="onTextInput($any($event.target).value)"
+      (input)="onTextInput($event)"
       (blur)="onTextBlur()"
     />
     <button

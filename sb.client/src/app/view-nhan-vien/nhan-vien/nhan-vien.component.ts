@@ -91,6 +91,8 @@ export class NhanVienComponent implements OnInit, OnDestroy {
 
   tab = 1; // 0 tất cả, 1 đang xử lý, 2 lịch sử
   trangThaiLoc: number | null = null;
+  tuNgay = '';
+  denNgay = '';
   chiCanHanhDong = false;
   showExportModal = false;
   tabCount = { all: 0, dangXuLy: 0, lichSu: 0, daDuyetLich: 0 };
@@ -144,6 +146,8 @@ export class NhanVienComponent implements OnInit, OnDestroy {
     return (
       this.chiCanHanhDong ||
       this.trangThaiLoc !== null ||
+      !!this.tuNgay ||
+      !!this.denNgay ||
       this.keyword.trim().length > 0
     );
   }
@@ -156,6 +160,8 @@ export class NhanVienComponent implements OnInit, OnDestroy {
       .getDanhSach({
         nhomTrangThai: isActionOnly ? 1 : this.tab,
         trangThai: isActionOnly ? null : this.trangThaiLoc,
+        tuNgay: this.tuNgay || null,
+        denNgay: this.denNgay || null,
         tuKhoa: this.keyword,
         page: isActionOnly ? 1 : this.pageIndex + 1,
         pageSize: isActionOnly ? 50 : this.pageSize,
@@ -250,9 +256,19 @@ export class NhanVienComponent implements OnInit, OnDestroy {
     this.loadDanhSach();
   }
 
+  onLocNgay(): void {
+    if (this.tuNgay && this.denNgay && this.tuNgay > this.denNgay) {
+      this.denNgay = this.tuNgay;
+    }
+    this.pageIndex = 0;
+    this.loadDanhSach();
+  }
+
   datLaiBoLoc(): void {
     this.chiCanHanhDong = false;
     this.trangThaiLoc = null;
+    this.tuNgay = '';
+    this.denNgay = '';
     this.keyword = '';
     this.pageIndex = 0;
     this.loadDanhSach();

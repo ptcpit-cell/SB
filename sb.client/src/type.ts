@@ -94,6 +94,8 @@ export interface YeuCauThongKe {
 export interface YeuCauQuery {
   nhomTrangThai: number; // 0 tất cả, 1 đang xử lý, 2 lịch sử
   trangThai?: number | null;
+  tuNgay?: string | null;
+  denNgay?: string | null;
   tuKhoa?: string;
   page: number; // bắt đầu từ 1
   pageSize: number;

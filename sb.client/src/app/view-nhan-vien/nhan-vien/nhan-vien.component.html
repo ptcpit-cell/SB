@@ -117,6 +117,29 @@
         </div>
 
         <div class="d-flex align-items-center flex-wrap gap-2">
+          <div class="nv-date-range" title="Lọc theo ngày tạo yêu cầu">
+            <span class="nv-date-lbl">Từ</span>
+            <app-vn-date-input
+              [(ngModel)]="tuNgay"
+              (ngModelChange)="onLocNgay()"
+              [max]="denNgay || null"
+              [allowClear]="true"
+              [compact]="true"
+              placeholder="dd/MM/yyyy"
+              inputTitle="Lọc từ ngày tạo (dd/MM/yyyy)"
+            ></app-vn-date-input>
+            <span class="nv-date-lbl">đến</span>
+            <app-vn-date-input
+              [(ngModel)]="denNgay"
+              (ngModelChange)="onLocNgay()"
+              [min]="tuNgay || null"
+              [allowClear]="true"
+              [compact]="true"
+              placeholder="dd/MM/yyyy"
+              inputTitle="Lọc đến ngày tạo (dd/MM/yyyy)"
+            ></app-vn-date-input>
+          </div>
+
           <select
             class="form-select form-select-sm nv-select"
             [(ngModel)]="trangThaiLoc"
@@ -177,7 +200,7 @@
         </h6>
         <p class="small text-secondary mb-3">
           {{ hasActiveFilter
-            ? 'Thử thay đổi từ khóa hoặc đặt lại bộ lọc trạng thái.'
+            ? 'Thử thay đổi từ khóa, khoảng ngày hoặc đặt lại bộ lọc.'
             : 'Nhấn tạo yêu cầu mới để đăng ký lịch trình làm việc với lãnh đạo.' }}
         </p>
         <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="hasActiveFilter" (click)="datLaiBoLoc()">

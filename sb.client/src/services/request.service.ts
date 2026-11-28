@@ -37,6 +37,8 @@ export class RequestService {
       .set('page', q.page)
       .set('pageSize', q.pageSize);
     if (q.trangThai != null) params = params.set('trangThai', q.trangThai);
+    if (q.tuNgay) params = params.set('tuNgay', q.tuNgay);
+    if (q.denNgay) params = params.set('denNgay', q.denNgay);
     if (q.tuKhoa?.trim()) params = params.set('tuKhoa', q.tuKhoa.trim());
     return this.http.get<YeuCauItem[]>(this.baseUrl + 'api/Request/GetYeuCau', { params });
   }
